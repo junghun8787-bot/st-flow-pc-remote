@@ -1299,11 +1299,63 @@ function setupRoulette() { playUISound('click'); document.getElementById('btnSta
 function startRouletteAnimation() { playUISound('click'); alert('미니게임은 작동합니다!'); }
 
 // ==========================================
-// 🎮 하드웨어 연동: 키보드 단축키 수신 이벤트
+// 🎮 하드웨어 연동: 무선 리모컨 및 키보드 단축키 수신 이벤트
 // ==========================================
+let remoteBuffer = "";
+let remoteTimer = null;
+
+// 리모컨 번호와 책상 번호(Index) 매핑
+const remoteCodeMap = {
+    "7893409": 0,  // 1번 책상
+    "8965601": 1,  // 2번 책상
+    "5141409": 2,  // 3번 책상
+    "7498145": 3,  // 4번 책상
+    "7441889": 4,  // 5번 책상
+    "7144865": 5,  // 6번 책상
+    "10551201": 6, // 7번 책상
+    "8559585": 7,  // 8번 책상
+    "8189857": 8,  // 9번 책상
+    "2677665": 9   // 10번 책상
+};
+
 window.addEventListener('keydown', function(e) {
+    // 1. 이름이나 학원명 등 입력창(input)에 텍스트를 타이핑 중일 때는 무시
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return;
 
+    // 2. 무선 리모컨 수신 로직 (숫자가 아주 빠르게 연속으로 입력되는 것을 캐치)
+    if (e.key >= '0' && e.key <= '9') {
+        remoteBuffer += e.key;
+
+        // 리모컨은 사람이 누르는 것보다 훨씬 빠르게 숫자를 입력합니다.
+        // 100ms(0.1초) 동안 추가 입력이 없으면 일반 타이핑으로 간주하고 버퍼를 비웁니다.
+        clearTimeout(remoteTimer);
+        remoteTimer = setTimeout(() => {
+            remoteBuffer = "";
+        }, 100);
+
+        // 버퍼에 쌓인 숫자가 리모컨 매핑 코드와 일치하는지 확인
+        if (remoteCodeMap[remoteBuffer] !== undefined) {
+            let deskIndex = remoteCodeMap[remoteBuffer];
+            e.preventDefault();
+            
+            // 해당 책상의 타이머가 안 돌고 있을 때만 실행 (중복 실행 방지)
+            if (deskIndex < DESK_COUNT && !timers[deskIndex].interval) {
+                simulateHardwareButton(deskIndex);
+            }
+            
+            // 코드가 실행되면 버퍼 즉시 초기화
+            remoteBuffer = "";
+            return;
+        }
+    } else if (e.key === 'Enter') {
+        // 리모컨이 숫자 입력 후 자동으로 Enter를 치는 타입일 경우 화면 깜빡임 방지
+        if (remoteBuffer.length > 0) {
+            e.preventDefault();
+            remoteBuffer = "";
+        }
+    }
+
+    // 3. 기존 키보드 단축키 로직 (Ctrl+Alt+숫자 등) - 혹시 모를 비상용으로 유지
     let isShortcut = (e.ctrlKey && e.altKey) || (e.altKey && !e.ctrlKey) || (e.ctrlKey && e.shiftKey) || (e.metaKey && e.altKey);
 
     if (isShortcut) {
