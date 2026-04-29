@@ -144,7 +144,7 @@ customStyle.innerHTML = `
     #grid-unassigned { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)) !important; gap: 14px; align-content: start; }
     #grid-unassigned .student-btn { height: 110px !important; padding: 12px; display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
     
-    /* ⭐ 2번 요청: 워터마크 농도 진하게 상향 */
+    /* 배경 은은한 워터마크 효과 */
     .level-watermark {
         position: absolute;
         top: 50%; left: 50%;
@@ -152,17 +152,17 @@ customStyle.innerHTML = `
         font-size: 65px;
         font-weight: 900;
         color: var(--text-main);
-        opacity: 0.12; /* 0.05 -> 0.12 로 진하게 상향 */
+        opacity: 0.12; 
         z-index: 0;
         pointer-events: none;
         white-space: nowrap;
         user-select: none;
         font-family: 'JetBrains Mono', 'Pretendard', sans-serif;
     }
-    #grid-active .student-btn .level-watermark { font-size: 95px; opacity: 0.10; } /* 0.03 -> 0.10 */
-    #grid-finished .student-btn .level-watermark { font-size: 65px; opacity: 0.08; } /* 0.02 -> 0.08 */
+    #grid-active .student-btn .level-watermark { font-size: 95px; opacity: 0.10; }
+    #grid-finished .student-btn .level-watermark { font-size: 65px; opacity: 0.08; }
 
-    /* ⭐ 3번 요청: 이름이 묻히지 않게 화이트 아웃라인(테두리)과 글로우 효과 추가 */
+    /* 학생 이름 초거대화 및 글로우 효과 */
     .name-text { 
         display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; 
         font-family: var(--app-font, 'Pretendard', sans-serif) !important; 
@@ -171,19 +171,13 @@ customStyle.innerHTML = `
         margin-top: 10px; 
         z-index: 2; position: relative;
         color: var(--custom-name-color, #0f172a) !important;
-        /* 이름이 진한 워터마크 위에서 또렷이 보이도록 강력한 하얀색 테두리와 그림자 */
-        text-shadow: 
-            -1px -1px 0 rgba(255,255,255,0.8), 
-             1px -1px 0 rgba(255,255,255,0.8), 
-            -1px  1px 0 rgba(255,255,255,0.8), 
-             1px  1px 0 rgba(255,255,255,0.8), 
-             0 3px 6px rgba(0,0,0,0.2) !important;
+        text-shadow: -1px -1px 0 rgba(255,255,255,0.8), 1px -1px 0 rgba(255,255,255,0.8), -1px 1px 0 rgba(255,255,255,0.8), 1px 1px 0 rgba(255,255,255,0.8), 0 3px 6px rgba(0,0,0,0.2) !important;
     }
     #grid-unassigned .student-btn .name-text { font-size: 38px !important; margin-bottom: 2px; }
     #grid-active .student-btn .name-text { font-size: 48px !important; margin-top: 10px; margin-bottom: 20px; }
     #grid-finished .student-btn.finished .name-text { font-size: 38px !important; color: var(--text-muted) !important; opacity: 1 !important; margin-top: 0; }
 
-    /* 학년 뱃지 */
+    /* 카드용 독립 학년 뱃지 */
     .card-grade-badge {
         position: absolute;
         top: 10px;
@@ -192,7 +186,7 @@ customStyle.innerHTML = `
         font-size: 13px !important;
         font-weight: 800;
         color: var(--text-muted);
-        background: rgba(255,255,255,0.7);
+        background: rgba(255,255,255,0.6);
         padding: 3px 10px;
         border-radius: 12px;
         z-index: 2;
@@ -208,7 +202,7 @@ customStyle.innerHTML = `
         background: rgba(255, 255, 255, 0.9);
         color: #2563eb;
     }
-    #grid-finished .student-btn.finished .card-grade-badge { opacity: 0.5 !important; }
+    #grid-finished .student-btn.finished .card-grade-badge { opacity: 0.4 !important; }
 
     /* 수업 중 창 아이콘 */
     #grid-active .student-btn { width: 100% !important; height: 100% !important; margin: 0 !important; border-radius: 22px; position: absolute; top:0; left:0; display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
@@ -240,8 +234,10 @@ customStyle.innerHTML = `
     .custom-time-modal { background: var(--bg-card, #ffffff); padding: 35px; border-radius: 16px; box-shadow: 0 15px 35px rgba(0,0,0,0.4); text-align: center; width: 360px; transform: translateY(20px) scale(0.95); transition: all 0.2s ease-out; border: 1px solid var(--border, #ccc); }
     #custom-time-modal-overlay.show .custom-time-modal { transform: translateY(0) scale(1); }
     .custom-time-modal h3 { margin: 0 0 20px 0; color: var(--text-main, #333); font-size: 20px; font-weight: 900; }
+    
     .custom-time-modal input[type="time"] { font-size: 42px; padding: 15px; border: 3px solid var(--accent, #2563eb); border-radius: 12px; width: 100%; text-align: center; margin-bottom: 20px; font-family: 'JetBrains Mono', monospace; font-weight: bold; background: var(--bg-card); color: var(--text-main); outline: none; box-sizing: border-box; }
     .custom-time-modal input[type="time"]::-webkit-calendar-picker-indicator { display: none; }
+    
     .quick-time-btns { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 25px; }
     .quick-time-btns button { flex: 1; padding: 12px 0; border-radius: 8px; border: none; background: var(--btn-bg); color: var(--text-main); font-weight: 900; font-size: 15px; cursor: pointer; transition: 0.2s; box-shadow: var(--shadow-btn); }
     .quick-time-btns button:active { transform: scale(0.95); box-shadow: var(--shadow-inner); }
@@ -251,7 +247,7 @@ customStyle.innerHTML = `
     .btn-modal-save { background: var(--accent, #2563eb); color: #fff; }
     .btn-modal-cancel:hover, .btn-modal-save:hover { filter: brightness(1.1); }
 
-    /* ⭐ 1번 요청: 모드 변환 버튼 안전한 우측 영역 복구 */
+    /* 리스트 뷰 토글 버튼 (안전한 상단 여백) */
     #view-roster { position: relative; padding-top: 55px; }
     .view-toggle-btn { position: absolute; right: 20px; top: 10px; z-index: 50; background: var(--bg-card); color: var(--accent); font-weight: 900; font-family: 'Pretendard'; padding: 10px 16px; border-radius: 10px; border: 2px solid var(--accent); box-shadow: var(--shadow-btn); cursor: pointer; transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1); font-size: 14px; }
     .view-toggle-btn:hover { background: var(--accent); color: #fff; transform: translateY(-2px); box-shadow: 0 6px 12px rgba(37, 99, 235, 0.2); }
@@ -289,11 +285,11 @@ customStyle.innerHTML = `
 
     .roster-list-table tr.finished-row td { opacity: 0.8; background: #f8fafc; box-shadow: inset 0 0 10px rgba(0,0,0,0.02); animation: none; border-color: #cbd5e1; }
     
-    /* 리스트 뷰 내부 버튼 및 드롭다운 */
-    .list-seat-select { padding: 12px 14px; border-radius: 10px; border: 2px solid var(--border); background: var(--bg-main); color: var(--text-main); font-weight: 800; font-size: 16px; font-family: 'Pretendard'; outline: none; cursor: pointer; transition: 0.2s; width: 100%; max-width: 250px; text-align: left; }
+    /* ⭐ 4번 요청: 리스트 뷰 중앙정렬 완벽 지원 */
+    .list-seat-select { padding: 12px 14px; border-radius: 10px; border: 2px solid var(--border); background: var(--bg-main); color: var(--text-main); font-weight: 800; font-size: 16px; font-family: 'Pretendard'; outline: none; cursor: pointer; transition: 0.2s; width: 100%; max-width: 250px; text-align: center; text-align-last: center; }
     .list-seat-select:focus { border-color: var(--accent); }
     .list-seat-select.assigned { border-color: var(--accent); background: rgba(59, 130, 246, 0.08); color: var(--accent); }
-    .list-seat-select option { font-size: 16px; padding: 10px; }
+    .list-seat-select option { font-size: 16px; padding: 10px; text-align: center; }
 
     .list-btn-group { display: flex; gap: 8px; justify-content: center; }
     .list-action-btn { padding: 12px 16px; border: none; border-radius: 10px; font-weight: 900; font-size: 14px; cursor: pointer; color: white; font-family: 'Pretendard'; transition: 0.2s; box-shadow: var(--shadow-btn); }
@@ -398,6 +394,9 @@ function changeLanguage() {
     currentLang = document.getElementById("langSelect").value; 
     saveToStorage(); 
     applyLanguage(); 
+    // 대시보드 텍스트 업데이트
+    const dashBox = document.getElementById('header-dashboard');
+    if(dashBox) { dashBox.remove(); injectHeaderDashboard(); updateRosterCounts(); }
 }
 
 function applyLanguage() {
@@ -729,7 +728,7 @@ function renderListView() {
             }
         }
         
-        let seatOptions = `<option value="-1">${currentLang === 'en' ? 'Unassigned' : '자리 미 배정'}</option>`;
+        let seatOptions = `<option value="-1" ${sd.tIdx === -1 ? 'selected' : ''}>${currentLang === 'en' ? 'Unassigned' : '자리 미 배정'}</option>`;
         for(let i=0; i<DESK_COUNT; i++) {
             let t = timers[i];
             let isMe = (t.student === sd.name);
@@ -751,7 +750,7 @@ function renderListView() {
             }
             
             let deskPrefix = currentLang === 'en' ? `Desk ${i+1}` : `${i+1}번 책상`;
-            seatOptions += `<option value="${i}" selected="${selected}" styleOption="${styleOption}">${statusIcon} ${deskPrefix}${statusText}</option>`;
+            seatOptions += `<option value="${i}" ${selected} style="${styleOption}">${statusIcon} ${deskPrefix}${statusText}</option>`;
         }
 
         let selectClass = sd.tIdx !== -1 ? 'list-seat-select assigned' : 'list-seat-select';
@@ -1146,7 +1145,6 @@ function generateStudents() {
 
             let gradeHtml = grade ? `<div class="card-grade-badge">${grade}</div>` : '';
 
-            // ⭐ 레벨 태그 없애고 배경 워터마크로 대체 완료
             btn.innerHTML = `
                 <div class="gauge-bg"></div>
                 <div class="level-watermark">${levelLabel}</div>
