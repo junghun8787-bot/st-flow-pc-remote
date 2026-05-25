@@ -651,6 +651,7 @@ window.startLadderAnimation = function() {
     
     let maxLen = Math.max(...paths.map(p => p.totalLen));
     
+    // 선과 움직이는 아이콘을 그려주는 헬퍼 함수
     function drawPathsAndIcons(prog) {
         ctx.lineWidth = 6; ctx.lineJoin = "round";
         for(let p=0; p<cols; p++) {
@@ -692,10 +693,20 @@ window.startLadderAnimation = function() {
             else ctx.rect(curX - boxW/2, curY - boxH/2, boxW, boxH);
             ctx.fill();
             
-            ctx.fillStyle = "#fff"; ctx.font = "900 13px Pretendard";
+            ctx.fillStyle = "#fff"; 
             ctx.textAlign = "center"; ctx.textBaseline = "middle";
-            let shortName = ladderPlayers[p].length > 4 ? ladderPlayers[p].substring(0,3)+".." : ladderPlayers[p];
-            ctx.fillText(shortName, curX, curY);
+            
+            // ⭐ 하이라이트: 끝에 도달하기 전(약 250px 남았을 때)이고, 결과 발표 전이면 아이콘을 물음표로 숨김
+            let isHidden = (!isResultRevealed) && ((maxLen - prog) < 250);
+
+            if (isHidden) {
+                ctx.font = "900 16px Pretendard";
+                ctx.fillText("❓", curX, curY);
+            } else {
+                ctx.font = "900 13px Pretendard";
+                let shortName = ladderPlayers[p].length > 4 ? ladderPlayers[p].substring(0,3)+".." : ladderPlayers[p];
+                ctx.fillText(shortName, curX, curY);
+            }
         }
     }
     
@@ -710,16 +721,19 @@ window.startLadderAnimation = function() {
             isGameAnimating = false; 
             stopFunBGM(); 
             
+            // 도착하자마자 아이콘은 ❓로 숨겨진 상태 유지
             drawStaticLadder();
             drawPathsAndIcons(maxLen);
             
             document.getElementById('gameResult').innerHTML = "<span style='color:var(--text-muted);'>결과 발표... 두구두구두구! 🥁</span>";
             
+            // 2.5초(2500ms) 동안 두구두구 사운드 재생 후 짜잔! 하고 결과 공개
             playDrumroll(2500, () => {
-                isResultRevealed = true;
+                isResultRevealed = true; // 여기서 true로 바뀌면서 물음표가 다시 원래 이름으로 돌아옴
                 drawStaticLadder();
                 drawPathsAndIcons(maxLen);
                 
+                // 당첨된 사람의 궤적 빨간색으로 칠하기
                 let winnerPathObj = paths.find(p => p.finalCol === targetWinnerIndex);
                 if(winnerPathObj) {
                     ctx.strokeStyle = brandDanger; ctx.lineWidth = 12; ctx.beginPath();
@@ -1001,12 +1015,13 @@ function injectHistoryUI() {
                     <div id="historyStudentList"></div>
                 </div>
                 <div class="history-content">
-                    <div class="calendar-header">
-                        <div style="display:flex; align-items:center; gap:10px;">
-                            <button class="cal-nav-btn" onclick="changeHistoryMonth(-1)">◀ 이전</button>
-                            <h2 id="historyMonthTitle">2026년 5월</h2>
-                            <button class="cal-nav-btn" onclick="changeHistoryMonth(1)">다음 ▶</button>
-                        </div>
+<div class="calendar-header">
+    <div style="display:flex; align-items:center; gap:10px;">
+        <button class="cal-nav-btn" onclick="changeHistoryMonth(-1)">◀ 이전</button>
+        <h2 id="historyMonthTitle">2026년 5월</h2>
+        <button class="cal-nav-btn" onclick="changeHistoryMonth(1)">다음 ▶</button>
+        <button class="cal-nav-btn" onclick="goToTodayHistory()" style="background:var(--accent); color:white; border-color:var(--accent); margin-left:5px;">오늘</button>
+    </div>
                         <button class="btn-danger-outline" onclick="deleteHistoryAll()" style="padding: 8px 16px;">🚨 이 학생 전체 기록 삭제</button>
                     </div>
                     
@@ -1075,6 +1090,27 @@ window.changeHistoryMonth = function(delta) {
     closeHistoryDetail();
     renderHistoryCalendar();
 }
+window.goToTodayHistory = function() {
+    playUISound('click');
+    const now = new Date();
+    
+    // 달력의 연도와 월을 현재 실제 날짜로 되돌림
+    currentHistoryYear = now.getFullYear();
+    currentHistoryMonth = now.getMonth();
+    
+    // 열려있는 상세 팝업창이 있다면 닫기
+    const popup = document.getElementById('historyDetailPopup');
+    if(popup) popup.classList.remove('active');
+    
+    // 학생이 선택되어 있다면 '오늘 날짜'에 하이라이트(선택) 표시
+    if (currentHistoryStudent) {
+        currentSelectedDate = `${currentHistoryYear}-${String(currentHistoryMonth + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    } else {
+        currentSelectedDate = null;
+    }
+    
+    renderHistoryCalendar();
+};
 
 window.closeHistoryDetail = function() {
     const popup = document.getElementById('historyDetailPopup');
