@@ -65,43 +65,28 @@ let currentHistoryMonth = new Date().getMonth();
 let currentSelectedDate = null;
 
 const krHolidays = {
-    // 📌 매년 반복되는 고정 공휴일
     "01-01": "신정", "03-01": "삼일절", "05-05": "어린이날", "06-06": "현충일",
     "08-15": "광복절", "10-03": "개천절", "10-09": "한글날", "12-25": "기독탄신일",
-
-    // 📌 2024년
     "2024-02-09": "설연휴", "2024-02-10": "설날", "2024-02-11": "설연휴", "2024-02-12": "대체공휴일",
     "2024-04-10": "국회의원선거", "2024-05-06": "대체공휴일", "2024-05-15": "부처님오신날",
     "2024-09-16": "추석연휴", "2024-09-17": "추석", "2024-09-18": "추석연휴",
-
-    // 📌 2025년
     "2025-01-28": "설연휴", "2025-01-29": "설날", "2025-01-30": "설연휴",
     "2025-03-03": "대체공휴일", "2025-05-05": "부처님오신날", "2025-05-06": "대체공휴일",
     "2025-10-05": "추석연휴", "2025-10-06": "추석", "2025-10-07": "추석연휴", "2025-10-08": "대체공휴일",
-
-    // 📌 2026년
     "2026-02-16": "설연휴", "2026-02-17": "설날", "2026-02-18": "설연휴",
     "2026-03-02": "대체공휴일", "2026-05-24": "부처님오신날", "2026-05-25": "대체공휴일", 
     "2026-06-03": "지방선거", "2026-08-17": "대체공휴일", 
     "2026-09-24": "추석연휴", "2026-09-25": "추석", "2026-09-26": "추석연휴",
-
-    // 📌 2027년
     "2027-02-06": "설연휴", "2027-02-07": "설날", "2027-02-08": "설연휴", "2027-02-09": "대체공휴일",
     "2027-03-03": "대통령선거", "2027-05-13": "부처님오신날", 
     "2027-08-16": "대체공휴일", "2027-09-14": "추석연휴", "2027-09-15": "추석", "2027-09-16": "추석연휴", 
     "2027-10-04": "대체공휴일", "2027-10-11": "대체공휴일",
-
-    // 📌 2028년
     "2028-01-26": "설연휴", "2028-01-27": "설날", "2028-01-28": "설연휴",
     "2028-04-12": "국회의원선거", "2028-05-02": "부처님오신날", 
     "2028-10-02": "추석연휴", "2028-10-03": "추석", "2028-10-04": "추석연휴", "2028-10-05": "대체공휴일",
-
-    // 📌 2029년
     "2029-02-12": "설연휴", "2029-02-13": "설날", "2029-02-14": "설연휴",
     "2029-05-20": "부처님오신날", 
     "2029-09-21": "추석연휴", "2029-09-22": "추석", "2029-09-23": "추석연휴", "2029-09-24": "대체공휴일",
-
-    // 📌 2030년
     "2030-02-02": "설연휴", "2030-02-03": "설날", "2030-02-04": "설연휴", 
     "2030-05-06": "대체공휴일", "2030-05-09": "부처님오신날", 
     "2030-06-12": "지방선거", 
@@ -192,12 +177,6 @@ customStyle.innerHTML = `
     .card-badge-group { position: absolute; top: 10px; left: 10px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; z-index: 5; pointer-events: none; }
     .new-level-pill { font-size: 13px; font-weight: 900; padding: 4px 10px; border-radius: 8px; font-family: 'Montserrat', 'Pretendard', sans-serif; letter-spacing: 0.5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: inline-block; }
     .card-grade-badge { font-size: 13px !important; font-weight: 800; color: var(--text-muted); background: rgba(255,255,255,0.9); padding: 4px 10px; border-radius: 8px; font-family: 'Pretendard', sans-serif !important; letter-spacing: 0.5px; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    
-    /* 수업중 영역 뱃지 */
-    #grid-active .student-btn .card-badge-group { top: 14px; left: 14px; flex-direction: column !important; align-items: flex-start !important; gap: 6px !important; }
-    #grid-active .student-btn .new-level-pill, #grid-active .student-btn .card-grade-badge { font-size: 15px !important; padding: 6px 12px; }
-    #grid-finished .student-btn.finished .card-badge-group { display: none !important; }
-    
     .level-color-PRE { background: var(--selena-yellow); color: #000; } .level-color-BASIC { background: var(--selena-pink); color: #fff; } .level-color-INTER { background: var(--selena-orange); color: #fff; } .level-color-ADV { background: var(--selena-cyan); color: #fff; } .level-color-PREP { background: var(--selena-brown); color: #fff; } .level-color-GUEST { background: #94a3b8; color: #fff; }
 
     #mainHeader { position: relative; }
@@ -227,14 +206,14 @@ customStyle.innerHTML = `
     #grid-unassigned::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
     
     /* 대기중 학생 박스 */
-    #grid-unassigned .student-btn { width: 100% !important; height: 75px !important; padding: 10px 15px !important; display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: flex-start !important; border-radius: 14px !important; flex-shrink: 0; margin: 0 !important; }
+    #grid-unassigned .student-btn { width: 100% !important; height: 75px !important; padding: 10px 20px !important; display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: flex-start !important; border-radius: 14px !important; flex-shrink: 0; margin: 0 !important; }
     
-    /* ⭐ 대기중 뱃지 그룹: 세로로 나란히 정렬 */
+    /* 대기중 뱃지 그룹: 세로로 나란히 정렬 */
     #grid-unassigned .student-btn .card-badge-group { position: relative !important; top: 0 !important; left: 0 !important; margin-right: 15px !important; display: flex !important; flex-direction: column !important; align-items: center !important; gap: 4px !important; }
     #grid-unassigned .student-btn .new-level-pill, #grid-unassigned .student-btn .card-grade-badge { padding: 4px 6px !important; font-size: 11px !important; margin-right: 0 !important; width: 100%; box-sizing: border-box; text-align: center; }
     
-    /* 대기중 이름 텍스트 */
-    #grid-unassigned .student-btn .name-text { margin-top: 0 !important; font-size: 24px !important; flex: 1; text-align: left; justify-content: flex-start; }
+    /* 대기중 이름 텍스트 (오른쪽으로 살짝 이동) */
+    #grid-unassigned .student-btn .name-text { margin-top: 0 !important; font-size: 24px !important; flex: 1; text-align: left; padding-left: 10px; justify-content: flex-start; }
     
     #grid-unassigned .student-btn .card-mod-container { position: relative !important; bottom: 0 !important; left: 0 !important; flex-direction: row !important; margin-right: 6px; gap:4px; }
     #grid-unassigned .student-btn .mod-badge { padding: 2px 4px !important; font-size: 10px !important; }
@@ -246,12 +225,19 @@ customStyle.innerHTML = `
     #grid-active { display: grid !important; grid-template-columns: repeat(5, 1fr) !important; gap: 14px !important; margin: 0 !important; }
     .roster-desk-slot { height: 195px !important; }
     #grid-active .student-btn { width: 100% !important; height: 100% !important; margin: 0 !important; border-radius: 22px; position: absolute; top:0; left:0; display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
-    #grid-active .student-btn .name-text { font-size: 42px !important; margin-top: 15px !important; margin-bottom: 5px !important; }
+    
+    /* 수업중 박스 뱃지 크기 축소 및 취소 버튼 겹침 방지(left: 35px) */
+    #grid-active .student-btn .card-badge-group { top: 12px !important; left: 35px !important; flex-direction: column !important; align-items: flex-start !important; gap: 2px !important; }
+    #grid-active .student-btn .new-level-pill, #grid-active .student-btn .card-grade-badge { padding: 2px 8px !important; font-size: 11px !important; }
+    
+    /* 수업중 박스 이름 크기 증가(48px) 및 뱃지 가림 방지(margin-top 최적화) */
+    #grid-active .student-btn .name-text { font-size: 48px !important; margin-top: 10px !important; margin-bottom: 5px !important; }
 
     /* ⭐ 종료(Finished) 영역 디자인 */
     #grid-finished { display: flex !important; flex-direction: row !important; flex-wrap: wrap !important; gap: 10px !important; margin: 0 !important; }
     #grid-finished .student-btn { width: auto !important; height: 55px !important; padding: 8px 20px !important; flex-direction: row !important; border-radius: 12px !important; display: inline-flex !important; align-items: center; justify-content: center; position: relative !important; margin: 0 !important; }
     #grid-finished .student-btn .name-text { font-size: 20px !important; margin: 0 !important; }
+    #grid-finished .student-btn .card-badge-group { display: none !important; }
     #grid-finished .student-btn.finished { opacity: 0.6 !important; filter: grayscale(100%) !important; background: var(--bg-main) !important; border: 2px dashed var(--border) !important; overflow: hidden; }
 
     @keyframes active-card-neon { 0% { box-shadow: 0 0 10px #3b82f6, inset 0 0 10px #3b82f6; border-color: #3b82f6; transform: scale(1); } 50% { box-shadow: 0 0 30px #2563eb, inset 0 0 20px #2563eb; border-color: #2563eb; transform: scale(1.02); } 100% { box-shadow: 0 0 10px #3b82f6, inset 0 0 10px #3b82f6; border-color: #3b82f6; transform: scale(1); } }
@@ -396,7 +382,7 @@ window.onload = () => {
     injectRemoteSettingUI(); 
     loadData(); 
     updateDateUI(); 
-    setTimeout(applyCustomRosterLayout, 500); // 3단 분리 레이아웃 적용
+    setTimeout(applyCustomRosterLayout, 500);
 }; 
 
 setInterval(() => {
@@ -895,11 +881,9 @@ function renderHistoryCalendar() {
     for(let i=0; i<firstDay; i++) { let empty = document.createElement('div'); empty.className = 'cal-day empty-cell'; gridEl.appendChild(empty); }
     const studentData = studentHistory[currentHistoryStudent] || {};
     
-    // ⭐ 현재 선택된 학생의 생일 정보를 명단에서 가져옵니다.
     const studentInfo = studentMasterList.find(s => s.name === currentHistoryStudent);
     let bMonth = -1, bDay = -1;
     if (studentInfo && studentInfo.birthday) {
-        // MM-DD 또는 M/D 형태의 입력값을 숫자로 분리합니다.
         const match = studentInfo.birthday.match(/(\d+)[-/](\d+)/);
         if(match) { bMonth = parseInt(match[1]); bDay = parseInt(match[2]); }
     }
@@ -911,22 +895,15 @@ function renderHistoryCalendar() {
         const dayOfWeek = new Date(currentHistoryYear, currentHistoryMonth, i).getDay();
         const isSunday = dayOfWeek === 0; const isSaturday = dayOfWeek === 6;
         const holidayName = krHolidays[dateStr] || krHolidays[mmddStr]; const isAcadHoliday = academyHolidays.includes(dateStr);
-        
-        // ⭐ 달력의 현재 날짜와 학생의 생일(월, 일)이 일치하는지 확인합니다. (매년 반복)
         const isBdayCell = (bMonth === currentHistoryMonth + 1 && bDay === i);
-
+        
         const dayEl = document.createElement('div'); dayEl.className = 'cal-day';
         if(isSunday || holidayName) dayEl.classList.add('is-holiday'); if(isSaturday) dayEl.classList.add('is-saturday');
         if(currentSelectedDate === dateStr) dayEl.classList.add('active'); if(record && record.totalMinutes > 0) dayEl.classList.add('has-record');
         
-        // ⭐ 생일인 칸은 핑크색 테두리와 그림자로 돋보이게 만듭니다.
-        if(isBdayCell) { 
-            dayEl.style.borderColor = "#ff007f"; 
-            dayEl.style.boxShadow = "inset 0 0 10px rgba(255,0,127,0.1)"; 
-        }
+        if(isBdayCell) { dayEl.style.borderColor = "#ff007f"; dayEl.style.boxShadow = "inset 0 0 10px rgba(255,0,127,0.1)"; }
         
         let dateHtml = `<div class="cal-date-num">${i}`;
-        // ⭐ 날짜 옆에 예쁜 생일 뱃지를 달아줍니다.
         if(isBdayCell) dateHtml += `<span class="holiday-label" style="background:#fce7f3; color:#db2777; border: 1px solid #fbcfe8;">🎂 생일</span>`;
         if(holidayName) dateHtml += `<span class="holiday-label">${holidayName}</span>`; if(isAcadHoliday) dateHtml += `<span class="acad-holiday-label">휴무</span>`; dateHtml += `</div>`;
         
@@ -1001,7 +978,15 @@ function injectRemoteSettingUI() {
     }
 }
 
-window.saveRemoteCodes = function() { for(let i=0; i<10; i++) { let el = document.getElementById(`remoteCodeInput_${i}`); if(el && el.value) deskRemoteCodes[i] = el.value.trim(); } saveToStorage(); playUISound('click'); }
+// ⭐ 수정: 리모컨 창이 비어있어도 무조건 변수에 덮어쓰도록(동기화) 수정!
+window.saveRemoteCodes = function() { 
+    for(let i=0; i<10; i++) { 
+        let el = document.getElementById(`remoteCodeInput_${i}`); 
+        if(el) deskRemoteCodes[i] = el.value.trim(); 
+    } 
+    saveToStorage(); 
+    playUISound('click'); 
+}
 
 function injectHeaderDashboard() {
     const mainHeader = document.getElementById('mainHeader');
@@ -1060,9 +1045,26 @@ function injectListViewUI() {
 }
 
 function updateViewToggleButtonUI() { const btn = document.getElementById('btnToggleViewRoster'); if(btn) btn.innerHTML = rosterViewMode === 'card' ? '🗂️ 리스트 뷰' : '🎴 아이콘 뷰'; }
+
 window.toggleViewMode = function(mode) { playUISound('click'); rosterViewMode = mode; saveToStorage(); applyViewMode(); };
 
-function applyViewMode() { const cardWrapper = document.querySelector('.roster-columns-wrapper'); const listWrapper = document.getElementById('roster-list-wrapper'); if(!cardWrapper || !listWrapper) return; if (rosterViewMode === 'list') { cardWrapper.style.display = 'none'; listWrapper.style.display = 'block'; renderListView(); } else { cardWrapper.style.display = 'grid'; listWrapper.style.display = 'none'; generateStudents(); } updateViewToggleButtonUI(); }
+// ⭐ 수정: 리스트뷰일때 아이콘뷰를 !important 로 확실하게 끄기
+function applyViewMode() { 
+    const cardWrapper = document.querySelector('.custom-roster-layout') || document.querySelector('.roster-columns-wrapper'); 
+    const listWrapper = document.getElementById('roster-list-wrapper'); 
+    if(!cardWrapper || !listWrapper) return; 
+    
+    if (rosterViewMode === 'list') { 
+        cardWrapper.style.setProperty('display', 'none', 'important'); 
+        listWrapper.style.display = 'block'; 
+        renderListView(); 
+    } else { 
+        cardWrapper.style.setProperty('display', 'grid', 'important'); 
+        listWrapper.style.display = 'none'; 
+        generateStudents(); 
+    } 
+    updateViewToggleButtonUI(); 
+}
 
 const gradeMap = {'초1':1, '초등학교1학년':1, '초등1':1, '초2':2, '초등학교2학년':2, '초등2':2, '초3':3, '초등학교3학년':3, '초등3':3, '초4':4, '초등학교4학년':4, '초등4':4, '초5':5, '초등학교5학년':5, '초등5':5, '초6':6, '초등학교6학년':6, '초등6':6, '중1':7, '중학교1학년':7, '중등1':7, '중2':8, '중학교2학년':8, '중등2':8, '중3':9, '중학교3학년':9, '중등3':9, '고1':10, '고등학교1학년':10, '고등1':10, '고2':11, '고등학교2학년':11, '고등2':11, '고3':12, '고등학교3학년':12, '고등3':12};
 function getGradeWeight(g) { return gradeMap[g.replace(/\s+/g,'')] || 99; }
@@ -1183,8 +1185,12 @@ function loadData() {
             document.getElementById('inputAcademyName').value = academyName; document.getElementById('inputClassName').value = className;
             document.getElementById('displayAcademyName').innerText = academyName; document.getElementById('displayClassName').innerText = className; 
             
-            if(data.deskRemoteCodes) { deskRemoteCodes = data.deskRemoteCodes; }
-            for(let i=0; i<10; i++) { let el = document.getElementById(`remoteCodeInput_${i}`); if(el && deskRemoteCodes[i]) el.value = deskRemoteCodes[i]; }
+            // ⭐ 수정: 이전 백업파일에서 리모컨 값이 아예 없는 경우(undefined)를 방어하여 안전하게 불러오기
+            if(data.deskRemoteCodes && Array.isArray(data.deskRemoteCodes)) { deskRemoteCodes = data.deskRemoteCodes; }
+            for(let i=0; i<10; i++) { 
+                let el = document.getElementById(`remoteCodeInput_${i}`); 
+                if(el && deskRemoteCodes[i] !== undefined) el.value = deskRemoteCodes[i]; 
+            }
 
             if (data.studentMasterList) { studentMasterList = data.studentMasterList; } 
             renderSettingsRoster(); 
@@ -1210,7 +1216,21 @@ function loadData() {
     } catch(e) {}
 }
 
-function exportData() { saveToStorage(); const data = localStorage.getItem(STORAGE_KEY); const blob = new Blob([data], {type: "application/json"}); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `Timer_Backup_PC_${new Date().toISOString().slice(0,10)}.json`; a.click(); }
+// ⭐ 수정: 백업 버튼 누르기 직전에 현재 화면의 리모컨 인풋창 10개의 값을 강제로 다시 긁어오기!
+function exportData() { 
+    for(let i=0; i<10; i++) { 
+        let el = document.getElementById(`remoteCodeInput_${i}`); 
+        if(el) deskRemoteCodes[i] = el.value.trim(); 
+    }
+    saveToStorage(); 
+    const data = localStorage.getItem(STORAGE_KEY); 
+    const blob = new Blob([data], {type: "application/json"}); 
+    const a = document.createElement("a"); 
+    a.href = URL.createObjectURL(blob); 
+    a.download = `Timer_Backup_PC_${new Date().toISOString().slice(0,10)}.json`; 
+    a.click(); 
+}
+
 function triggerImport() { document.getElementById("importFile").click(); }
 function importData(e) { const t = i18n[currentLang] || i18n.ko; const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = function(evt) { try { const json = JSON.parse(evt.target.result); localStorage.setItem(STORAGE_KEY, JSON.stringify(json)); alert("복구 완료!"); location.reload(); } catch(err) { alert("유효하지 않은 백업입니다."); } finally { e.target.value = ''; } }; reader.readAsText(file); }
 
@@ -1291,7 +1311,6 @@ function updateStudentStatus(name) {
     if(rosterViewMode === 'list') return; 
     const tLang = i18n[currentLang] || i18n.ko; const btn = document.getElementById("btn-" + name); if (!btn) return; const lvl = studentLevels[name] || '';
     
-    // ⭐ 추가: 생일인지 확인하고, 생일이면 'bday-card' 클래스를 붙여줌
     const studentInfo = studentMasterList.find(s => s.name === name);
     const isBday = studentInfo ? isTodayBirthday(studentInfo.birthday) : false;
     btn.className = `student-btn level-${lvl} ${isBday ? 'bday-card' : ''}`; 
@@ -1339,7 +1358,6 @@ function updateBoxUI(id) {
     const tLang = i18n[currentLang] || i18n.ko; const t = timers[id]; const box = document.getElementById(`box-${id}`); if (!box) return;
     const isAssigned = t.student !== "(empty)"; const isPlaying = t.interval !== null || t.isPaused; const isRunningEmpty = !isAssigned && isPlaying; 
     
-    // ⭐ 추가: 학생이 배정되어 있다면 생일인지 확인
     let isBday = false;
     if (isAssigned) {
         const studentInfo = studentMasterList.find(s => s.name === t.student);
@@ -1460,7 +1478,6 @@ function finishSession(id) {
         studentHistory[sn][dateKey] = { totalMinutes: 0, coupon: 0, penalty: 0, note: "", timeLogs: [] };
     }
     
-    // ⭐ 출결(시작/종료) 시간 기록
     const startT = t.startTimeStr || '?-?';
     const endT = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
     if (!studentHistory[sn][dateKey].timeLogs) studentHistory[sn][dateKey].timeLogs = [];
