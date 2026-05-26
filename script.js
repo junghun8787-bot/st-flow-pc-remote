@@ -652,6 +652,7 @@ window.startLadderAnimation = function() {
     let maxLen = Math.max(...paths.map(p => p.totalLen));
     
     // 선과 움직이는 아이콘을 그려주는 헬퍼 함수
+// 선과 움직이는 아이콘을 그려주는 헬퍼 함수
     function drawPathsAndIcons(prog) {
         ctx.lineWidth = 6; ctx.lineJoin = "round";
         for(let p=0; p<cols; p++) {
@@ -686,6 +687,9 @@ window.startLadderAnimation = function() {
                 drawn += seg; curX = pathObj.nodes[i+1].x; curY = pathObj.nodes[i+1].y;
             }
             
+            // ⭐ 수정된 블라인드 로직: 전체 경로의 마지막 10% 구간에 진입했으면서, 아직 결과 발표 전이면 이름표를 가림
+            let isHidden = (!isResultRevealed) && (currentProg > pathObj.totalLen * 0.9);
+
             ctx.fillStyle = pathObj.color;
             let boxW = 54, boxH = 28;
             ctx.beginPath();
@@ -693,17 +697,15 @@ window.startLadderAnimation = function() {
             else ctx.rect(curX - boxW/2, curY - boxH/2, boxW, boxH);
             ctx.fill();
             
-            ctx.fillStyle = "#fff"; 
-            ctx.textAlign = "center"; ctx.textBaseline = "middle";
-            
-            // ⭐ 하이라이트: 끝에 도달하기 전(약 250px 남았을 때)이고, 결과 발표 전이면 아이콘을 물음표로 숨김
-            let isHidden = (!isResultRevealed) && ((maxLen - prog) < 250);
-
             if (isHidden) {
-                ctx.font = "900 16px Pretendard";
-                ctx.fillText("❓", curX, curY);
+                // 블라인드 구간: 이름 대신 '?' 표시
+                ctx.fillStyle = "#fff"; ctx.font = "900 16px Pretendard";
+                ctx.textAlign = "center"; ctx.textBaseline = "middle";
+                ctx.fillText("?", curX, curY);
             } else {
-                ctx.font = "900 13px Pretendard";
+                // 일반 구간: 원래 이름 표시
+                ctx.fillStyle = "#fff"; ctx.font = "900 13px Pretendard";
+                ctx.textAlign = "center"; ctx.textBaseline = "middle";
                 let shortName = ladderPlayers[p].length > 4 ? ladderPlayers[p].substring(0,3)+".." : ladderPlayers[p];
                 ctx.fillText(shortName, curX, curY);
             }
@@ -1751,22 +1753,44 @@ function handleDropOnTimer(name, targetIdx, fromIdx) {
         if (timers[fromIdx].student !== "(empty)") updateStudentStatus(timers[fromIdx].student); 
         if (timers[targetIdx].student !== "(empty)") updateStudentStatus(timers[targetIdx].student); 
         playUISound('assign'); if (fromRunning) startTimer(targetIdx, true); if (targetRunning) startTimer(fromIdx, true);
-    } else {
-        const target = timers[targetIdx];
-        let customTime = (studentTimes[name] || 50) * 60;
-        let mods = studentModifiers[name]; if(mods) { customTime -= (mods.coupon * 300); customTime += (mods.penalty * 300); if(customTime < 0) customTime = 0; }
-        if (target.interval || target.isPaused) {
-            target.student = name; target.remainingTime = customTime; target.totalTime = customTime; target.overTime = 0; target.isOver = false;
-            document.getElementById(`display-${targetIdx}`).innerText = formatTime(target.remainingTime);
-            if (!attendanceMap.has(name)) { assignOrderCounter++; attendanceMap.set(name, assignOrderCounter); if(finishedSet.has(name)) finishedSet.delete(name); }
-            playUISound('assign'); 
-            updateBoxUI(targetIdx); updateStudentStatus(name); updateGauge(name, target.remainingTime, target.totalTime);
-        } else {
-            target.student = name; target.remainingTime = customTime; target.totalTime = customTime;
-            if (!attendanceMap.has(name)) { assignOrderCounter++; attendanceMap.set(name, assignOrderCounter); if(finishedSet.has(name)) finishedSet.delete(name); }
-            playUISound('assign'); updateBoxUI(targetIdx); updateStudentStatus(name); updateGauge(name, customTime, customTime);
+} else {
+            const target = timers[targetIdx];
+            // 설정에서 입력한 학생별 고유 수업 시간(분)을 가져와 초 단위로 변환합니다.
+            let customTime = (studentTimes[name] || 50) * 60;
+            let mods = studentModifiers[name]; if(mods) { customTime -= (mods.coupon * 300); customTime += (mods.penalty * 300); if(customTime < 0) customTime = 0; }
+            
+            // 리모컨 버튼을 눌러 이미 타이머가 흘러가고 있는 자리에 이름을 배정하는 경우
+            if (target.interval || target.isPaused) {
+                // 1. 학생 이름을 올리기 전까지 리모컨 신호로 먼저 흘러간 시간(elapsedTime)을 계산합니다.
+                let elapsedTime = target.isOver ? (target.totalTime + target.overTime) : (target.totalTime - target.remainingTime);
+                
+                target.student = name;
+                target.totalTime = customTime; // 총 시간 기준은 학생 개인 설정 시간으로 변경
+                
+                // 2. 학생 개인의 전체 수업 시간에서 이미 리모컨 작동으로 소모된 시간을 뺍니다.
+                let newRemaining = customTime - elapsedTime;
+                
+                if (newRemaining <= 0) {
+                    target.isOver = true;
+                    target.overTime = Math.abs(newRemaining);
+                    target.remainingTime = 0;
+                } else {
+                    target.isOver = false;
+                    target.overTime = 0;
+                    target.remainingTime = newRemaining;
+                }
+                
+                document.getElementById(`display-${targetIdx}`).innerText = target.isOver ? '+'+formatTime(target.overTime) : formatTime(target.remainingTime);
+                if (!attendanceMap.has(name)) { assignOrderCounter++; attendanceMap.set(name, assignOrderCounter); if(finishedSet.has(name)) finishedSet.delete(name); }
+                playUISound('assign'); 
+                updateBoxUI(targetIdx); updateStudentStatus(name); updateGauge(name, target.remainingTime, target.totalTime);
+            } else {
+                // 완전히 멈춰있던 빈자리에 학생 이름을 처음 올리는 경우 (기존 로직 유지)
+                target.student = name; target.remainingTime = customTime; target.totalTime = customTime; target.overTime = 0; target.isOver = false;
+                if (!attendanceMap.has(name)) { assignOrderCounter++; attendanceMap.set(name, assignOrderCounter); if(finishedSet.has(name)) finishedSet.delete(name); }
+                playUISound('assign'); updateBoxUI(targetIdx); updateStudentStatus(name); updateGauge(name, customTime, customTime);
+            }
         }
-    }
     saveToStorage();
 }
 
