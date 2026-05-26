@@ -42,7 +42,7 @@ let listSortConfig = { col: 'level', asc: true };
 // ⭐ 리모컨 번호를 저장할 배열
 let deskRemoteCodes = ["7893409", "8965601", "5141409", "7498145", "7441889", "7144865", "10551201", "8559585", "8189857", "2677665"];
 
-// ⭐ 미니게임 상태 변수
+// ⭐ 미니게임 상태 변수 
 let isRouletteMode = true;
 let rouletteAngle = 0;
 let rouletteSpinning = false;
@@ -65,43 +65,28 @@ let currentHistoryMonth = new Date().getMonth();
 let currentSelectedDate = null;
 
 const krHolidays = {
-    // 📌 매년 반복되는 고정 공휴일 (연도 생략)
     "01-01": "신정", "03-01": "삼일절", "05-05": "어린이날", "06-06": "현충일",
     "08-15": "광복절", "10-03": "개천절", "10-09": "한글날", "12-25": "기독탄신일",
-
-    // 📌 2024년 (올해)
     "2024-02-09": "설연휴", "2024-02-10": "설날", "2024-02-11": "설연휴", "2024-02-12": "대체공휴일",
     "2024-04-10": "국회의원선거", "2024-05-06": "대체공휴일", "2024-05-15": "부처님오신날",
     "2024-09-16": "추석연휴", "2024-09-17": "추석", "2024-09-18": "추석연휴",
-
-    // 📌 2025년
     "2025-01-28": "설연휴", "2025-01-29": "설날", "2025-01-30": "설연휴",
     "2025-03-03": "대체공휴일", "2025-05-05": "부처님오신날", "2025-05-06": "대체공휴일",
     "2025-10-05": "추석연휴", "2025-10-06": "추석", "2025-10-07": "추석연휴", "2025-10-08": "대체공휴일",
-
-    // 📌 2026년
     "2026-02-16": "설연휴", "2026-02-17": "설날", "2026-02-18": "설연휴",
     "2026-03-02": "대체공휴일", "2026-05-24": "부처님오신날", "2026-05-25": "대체공휴일", 
     "2026-06-03": "지방선거", "2026-08-17": "대체공휴일", 
     "2026-09-24": "추석연휴", "2026-09-25": "추석", "2026-09-26": "추석연휴",
-
-    // 📌 2027년
     "2027-02-06": "설연휴", "2027-02-07": "설날", "2027-02-08": "설연휴", "2027-02-09": "대체공휴일",
     "2027-03-03": "대통령선거", "2027-05-13": "부처님오신날", 
     "2027-08-16": "대체공휴일", "2027-09-14": "추석연휴", "2027-09-15": "추석", "2027-09-16": "추석연휴", 
     "2027-10-04": "대체공휴일", "2027-10-11": "대체공휴일",
-
-    // 📌 2028년
     "2028-01-26": "설연휴", "2028-01-27": "설날", "2028-01-28": "설연휴",
     "2028-04-12": "국회의원선거", "2028-05-02": "부처님오신날", 
     "2028-10-02": "추석연휴", "2028-10-03": "추석", "2028-10-04": "추석연휴", "2028-10-05": "대체공휴일",
-
-    // 📌 2029년
     "2029-02-12": "설연휴", "2029-02-13": "설날", "2029-02-14": "설연휴",
     "2029-05-20": "부처님오신날", 
     "2029-09-21": "추석연휴", "2029-09-22": "추석", "2029-09-23": "추석연휴", "2029-09-24": "대체공휴일",
-
-    // 📌 2030년
     "2030-02-02": "설연휴", "2030-02-03": "설날", "2030-02-04": "설연휴", 
     "2030-05-06": "대체공휴일", "2030-05-09": "부처님오신날", 
     "2030-06-12": "지방선거", 
@@ -175,8 +160,12 @@ customStyle.innerHTML = `
     .card-mod-container { position:absolute; bottom:12px; left:12px; display:flex; flex-direction:column; gap:6px; z-index:10; }
     #grid-finished .student-btn.finished .card-mod-container { opacity: 0.5; pointer-events: none; }
 
+    /* ⭐ 설정창 테이블 정렬 기능 추가 CSS */
     .settings-roster-table { width: 100%; border-collapse: collapse; min-width: 650px; font-family: 'Pretendard', sans-serif; }
     .settings-roster-table th { background: var(--bg-main); padding: 10px; font-weight: 900; color: var(--text-main); border-bottom: 2px solid var(--border); text-align: center; font-size: 15px; }
+    .settings-roster-table th.sortable:hover { color: var(--accent); cursor: pointer; }
+    .settings-roster-table th.sort-asc::after { content: " ▲"; font-size: 11px; color: var(--accent); }
+    .settings-roster-table th.sort-desc::after { content: " ▼"; font-size: 11px; color: var(--accent); }
     .settings-roster-table td { padding: 4px 6px; border-bottom: 1px solid var(--border); text-align: center; vertical-align: middle; }
     .settings-roster-input { width: 100%; padding: 10px 8px; border: 2px solid var(--border); border-radius: 8px; font-family: 'Pretendard', sans-serif; font-weight: 800; text-align: center; font-size: 16px; box-sizing: border-box; transition: 0.2s; }
     .settings-roster-input:focus { outline: none; border-color: var(--accent); background: #eff6ff; }
@@ -184,12 +173,10 @@ customStyle.innerHTML = `
     .btn-delete-row { background: var(--brand-danger); color: white; border: none; border-radius: 8px; padding: 10px 12px; cursor: pointer; font-weight: 900; font-size: 14px; box-shadow: var(--shadow-btn); transition: 0.2s; white-space: nowrap; }
     .btn-delete-row:hover { transform: scale(1.05); }
 
-    .card-badge-group { position: absolute; top: 10px; left: 10px; display: flex; align-items: center; gap: 6px; z-index: 5; pointer-events: none; }
+    /* ⭐ 뱃지(레벨/학년) 그룹 레이아웃: 수직(위아래) 배치로 변경 */
+    .card-badge-group { position: absolute; top: 10px; left: 10px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; z-index: 5; pointer-events: none; }
     .new-level-pill { font-size: 13px; font-weight: 900; padding: 4px 10px; border-radius: 8px; font-family: 'Montserrat', 'Pretendard', sans-serif; letter-spacing: 0.5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: inline-block; }
     .card-grade-badge { font-size: 13px !important; font-weight: 800; color: var(--text-muted); background: rgba(255,255,255,0.9); padding: 4px 10px; border-radius: 8px; font-family: 'Pretendard', sans-serif !important; letter-spacing: 0.5px; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    #grid-active .student-btn .card-badge-group { top: 14px; left: 14px; }
-    #grid-active .student-btn .new-level-pill, #grid-active .student-btn .card-grade-badge { font-size: 15px !important; padding: 6px 12px; }
-    #grid-finished .student-btn.finished .card-badge-group { opacity: 0.5; }
     .level-color-PRE { background: var(--selena-yellow); color: #000; } .level-color-BASIC { background: var(--selena-pink); color: #fff; } .level-color-INTER { background: var(--selena-orange); color: #fff; } .level-color-ADV { background: var(--selena-cyan); color: #fff; } .level-color-PREP { background: var(--selena-brown); color: #fff; } .level-color-GUEST { background: #94a3b8; color: #fff; }
 
     #mainHeader { position: relative; }
@@ -206,19 +193,55 @@ customStyle.innerHTML = `
     .start-time-badge { position: absolute; top: 6px; right: 6px; background: #2563eb; border: 2px solid #60a5fa; color: white; font-size: 14px; font-weight: 900; padding: 6px 10px; border-radius: 8px; cursor: pointer; z-index: 10; box-shadow: 0 4px 8px rgba(0,0,0,0.4); transition: background 0.2s, transform 0.1s; }
     .start-time-badge:hover { background: #1d4ed8; transform: scale(1.05); }
 
-    #grid-unassigned { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)) !important; gap: 14px; align-content: start; }
-    #grid-unassigned .student-btn { height: 110px !important; padding: 12px; display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
+    /* ⭐ 명단창(Roster) 3단 레이아웃 대개편: 좌(대기), 우상단(수업중 5x2), 우하단(종료) */
+    .custom-roster-layout { display: grid !important; grid-template-columns: 480px 1fr !important; grid-template-rows: auto 1fr !important; gap: 20px !important; align-items: start !important; max-width: 100% !important; padding-top: 10px; }
+    .custom-col-wait { grid-column: 1 / 2 !important; grid-row: 1 / 3 !important; max-width: 480px !important; width: 100% !important; height: 100%; max-height: calc(100vh - 120px); display: flex; flex-direction: column; overflow: hidden; margin: 0 !important; flex: none !important; }
+    .custom-col-active { grid-column: 2 / 3 !important; grid-row: 1 / 2 !important; width: 100% !important; max-width: 100% !important; flex: none !important; margin: 0 !important; }
+    .custom-col-finish { grid-column: 2 / 3 !important; grid-row: 2 / 3 !important; width: 100% !important; max-width: 100% !important; flex: none !important; margin: 0 !important; }
 
-    .name-text { display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; font-family: var(--app-font, 'Pretendard', sans-serif) !important; font-weight: 900; width: 100%; letter-spacing: -0.5px; margin-top: 20px; z-index: 2; position: relative; color: var(--custom-name-color, #0f172a) !important; text-shadow: -1px -1px 0 rgba(255,255,255,0.8), 1px -1px 0 rgba(255,255,255,0.8), -1px 1px 0 rgba(255,255,255,0.8), 1px 1px 0 rgba(255,255,255,0.8), 0 3px 6px rgba(0,0,0,0.2) !important; }
-    #grid-unassigned .student-btn .name-text { font-size: 38px !important; margin-top: 15px; }
-    #grid-active .student-btn .name-text { font-size: 48px !important; margin-top: 25px; }
-    #grid-finished .student-btn.finished .name-text { font-size: 38px !important; color: var(--text-muted) !important; opacity: 1 !important; margin-top: 0; }
+    /* ⭐ 대기중 학생 목록 가로 2단 리스트 스타일로 변경 */
+    #grid-unassigned { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 10px !important; max-height: 100%; overflow-y: auto; padding-right: 5px; align-content: flex-start; flex: 1; margin: 0 !important; }
+    #grid-unassigned::-webkit-scrollbar { width: 8px; }
+    #grid-unassigned::-webkit-scrollbar-track { background: transparent; }
+    #grid-unassigned::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+    
+    /* 대기중 학생 박스 */
+    #grid-unassigned .student-btn { width: 100% !important; height: 75px !important; padding: 10px 20px !important; display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: flex-start !important; border-radius: 14px !important; flex-shrink: 0; margin: 0 !important; }
+    
+    /* 대기중 뱃지 그룹: 세로로 나란히 정렬 */
+    #grid-unassigned .student-btn .card-badge-group { position: relative !important; top: 0 !important; left: 0 !important; margin-right: 15px !important; display: flex !important; flex-direction: column !important; align-items: center !important; gap: 4px !important; }
+    #grid-unassigned .student-btn .new-level-pill, #grid-unassigned .student-btn .card-grade-badge { padding: 4px 6px !important; font-size: 11px !important; margin-right: 0 !important; width: 100%; box-sizing: border-box; text-align: center; }
+    
+    /* 대기중 이름 텍스트 (오른쪽으로 살짝 이동) */
+    #grid-unassigned .student-btn .name-text { margin-top: 0 !important; font-size: 24px !important; flex: 1; text-align: left; padding-left: 10px; justify-content: flex-start; }
+    
+    #grid-unassigned .student-btn .card-mod-container { position: relative !important; bottom: 0 !important; left: 0 !important; flex-direction: row !important; margin-right: 6px; gap:4px; }
+    #grid-unassigned .student-btn .mod-badge { padding: 2px 4px !important; font-size: 10px !important; }
+    #grid-unassigned .student-btn .quick-controls { position: absolute !important; right: 5px !important; top: 50% !important; transform: translateY(-50%) !important; width: auto !important; height: auto !important; background: rgba(255,255,255,0.95) !important; flex-direction: row !important; gap: 4px !important; padding: 4px !important; border-radius: 10px !important; opacity: 0; transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.15); z-index: 20; }
+    #grid-unassigned .student-btn:hover .quick-controls { opacity: 1; }
+    #grid-unassigned .student-btn .quick-btn { padding: 6px 10px !important; font-size: 13px !important; }
 
+    /* ⭐ 수업중(Active) 영역 5x2 배열 확보 */
+    #grid-active { display: grid !important; grid-template-columns: repeat(5, 1fr) !important; gap: 14px !important; margin: 0 !important; }
+    .roster-desk-slot { height: 195px !important; }
     #grid-active .student-btn { width: 100% !important; height: 100% !important; margin: 0 !important; border-radius: 22px; position: absolute; top:0; left:0; display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
+    
+    /* 수업중 박스 뱃지 크기 축소 및 취소 버튼 겹침 방지(left: 35px) */
+    #grid-active .student-btn .card-badge-group { top: 12px !important; left: 35px !important; flex-direction: column !important; align-items: flex-start !important; gap: 2px !important; }
+    #grid-active .student-btn .new-level-pill, #grid-active .student-btn .card-grade-badge { padding: 2px 8px !important; font-size: 11px !important; }
+    
+    /* 수업중 박스 이름 크기 증가(48px) 및 뱃지 가림 방지(margin-top 최적화) */
+    #grid-active .student-btn .name-text { font-size: 48px !important; margin-top: 10px !important; margin-bottom: 5px !important; }
+
+    /* ⭐ 종료(Finished) 영역 디자인 */
+    #grid-finished { display: flex !important; flex-direction: row !important; flex-wrap: wrap !important; gap: 10px !important; margin: 0 !important; }
+    #grid-finished .student-btn { width: auto !important; height: 55px !important; padding: 8px 20px !important; flex-direction: row !important; border-radius: 12px !important; display: inline-flex !important; align-items: center; justify-content: center; position: relative !important; margin: 0 !important; }
+    #grid-finished .student-btn .name-text { font-size: 20px !important; margin: 0 !important; }
+    #grid-finished .student-btn .card-badge-group { display: none !important; }
+    #grid-finished .student-btn.finished { opacity: 0.6 !important; filter: grayscale(100%) !important; background: var(--bg-main) !important; border: 2px dashed var(--border) !important; overflow: hidden; }
 
     @keyframes active-card-neon { 0% { box-shadow: 0 0 10px #3b82f6, inset 0 0 10px #3b82f6; border-color: #3b82f6; transform: scale(1); } 50% { box-shadow: 0 0 30px #2563eb, inset 0 0 20px #2563eb; border-color: #2563eb; transform: scale(1.02); } 100% { box-shadow: 0 0 10px #3b82f6, inset 0 0 10px #3b82f6; border-color: #3b82f6; transform: scale(1); } }
     #grid-active .student-btn.playing { border: 4px solid #3b82f6 !important; animation: active-card-neon 1.5s infinite ease-in-out !important; background: linear-gradient(145deg, #ffffff, #eff6ff) !important; z-index: 5; }
-    #grid-finished .student-btn.finished { opacity: 0.6 !important; filter: grayscale(100%) !important; background: var(--bg-main) !important; border: 2px dashed var(--border) !important; display: flex !important; flex-direction: column !important; justify-content: center !important; overflow: hidden; }
 
     /* 모달 */
     #custom-time-modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center; z-index: 9999; opacity: 0; pointer-events: none; transition: opacity 0.2s ease-in-out; }
@@ -319,6 +342,33 @@ customStyle.innerHTML = `
     .game-start-btn { margin-top: 25px; padding: 18px 40px; font-size: 26px; font-weight: 900; background: var(--accent); color: white; border: none; border-radius: 50px; cursor: pointer; box-shadow: 0 8px 20px rgba(37,99,235,0.4); transition: 0.2s; font-family: var(--app-font); }
     .game-start-btn:hover { transform: translateY(-5px) scale(1.05); box-shadow: 0 12px 25px rgba(37,99,235,0.6); }
     .active-game-tab { background: var(--accent) !important; color: white !important; transform: scale(1.05); }
+
+    /* ⭐ 생일자 전용 테두리 네온사인 및 폭죽 애니메이션 */
+    @keyframes bday-glow {
+        0% { box-shadow: 0 0 15px #ff007f, inset 0 0 10px #ff007f; border-color: #ff007f; }
+        33% { box-shadow: 0 0 15px #007fff, inset 0 0 10px #007fff; border-color: #007fff; }
+        66% { box-shadow: 0 0 15px #00ff7f, inset 0 0 10px #00ff7f; border-color: #00ff7f; }
+        100% { box-shadow: 0 0 15px #ff007f, inset 0 0 10px #ff007f; border-color: #ff007f; }
+    }
+    .bday-card {
+        animation: bday-glow 3s infinite linear !important;
+        border: 4px solid #ff007f !important;
+        position: relative; 
+    }
+    .bday-card::after {
+        content: '🎉';
+        position: absolute;
+        top: -16px;
+        left: -16px;
+        font-size: 36px;
+        z-index: 50;
+        filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
+        animation: bday-bounce 0.8s infinite alternate ease-in-out;
+    }
+    @keyframes bday-bounce {
+        from { transform: translateY(0) rotate(-10deg) scale(1); }
+        to { transform: translateY(-8px) rotate(15deg) scale(1.1); }
+    }
 `;
 document.head.appendChild(customStyle);
 
@@ -332,6 +382,7 @@ window.onload = () => {
     injectRemoteSettingUI(); 
     loadData(); 
     updateDateUI(); 
+    setTimeout(applyCustomRosterLayout, 500);
 }; 
 
 setInterval(() => {
@@ -357,7 +408,28 @@ function isTodayBirthday(birthdayStr) {
 }
 
 // =========================================================================
-// ⭐ 3. 미니게임 화면 및 로직 (ST Flow 이전 버전 감성 복구)
+// ⭐ 명단창 3단 레이아웃 개편 및 로직
+// =========================================================================
+function applyCustomRosterLayout() {
+    const gridU = document.getElementById("grid-unassigned");
+    const gridA = document.getElementById("grid-active");
+    const gridF = document.getElementById("grid-finished");
+    if(gridU && gridA && gridF) {
+        const colU = gridU.parentElement;
+        const colA = gridA.parentElement;
+        const colF = gridF.parentElement;
+        const wrapper = colU.parentElement;
+        if(wrapper) {
+            wrapper.classList.add('custom-roster-layout');
+            colU.classList.add('custom-col-wait');
+            colA.classList.add('custom-col-active');
+            colF.classList.add('custom-col-finish');
+        }
+    }
+}
+
+// =========================================================================
+// ⭐ 3. 미니게임 화면 및 로직
 // =========================================================================
 function injectGameUI() {
     const gameView = document.getElementById('view-game');
@@ -389,239 +461,114 @@ function injectGameUI() {
 window.toggleBGM = function() {
     isBgmOn = !isBgmOn;
     const btn = document.getElementById('btnBgmToggle');
-    if(isBgmOn) {
-        btn.innerText = "🔊 BGM ON";
-        btn.style.color = "var(--text-main)";
-    } else {
-        btn.innerText = "🔇 BGM OFF";
-        btn.style.color = "var(--text-muted)";
-    }
+    if(isBgmOn) { btn.innerText = "🔊 BGM ON"; btn.style.color = "var(--text-main)"; } 
+    else { btn.innerText = "🔇 BGM OFF"; btn.style.color = "var(--text-muted)"; }
     playUISound('click');
-
-    if (isGameAnimating) {
-        // 이미 진행 중인 게임이 있다면 알맞은 BGM을 켭니다
-        if (isBgmOn) startFunBGM(isRouletteMode ? 'roulette' : 'ladder');
-        else stopFunBGM();
-    }
+    if (isGameAnimating) { if (isBgmOn) startFunBGM(isRouletteMode ? 'roulette' : 'ladder'); else stopFunBGM(); }
 }
 
 window.switchGameMode = function(mode) {
-    playUISound('click');
-    document.getElementById('gameResult').innerHTML = "";
+    playUISound('click'); document.getElementById('gameResult').innerHTML = "";
     if(mode === 'ladder') {
         isRouletteMode = false;
-        document.getElementById('ladder-game-area').style.display = 'block';
-        document.getElementById('roulette-game-area').style.display = 'none';
-        document.getElementById('tabLadder').classList.add('active-game-tab');
-        document.getElementById('tabRoulette').classList.remove('active-game-tab');
+        document.getElementById('ladder-game-area').style.display = 'block'; document.getElementById('roulette-game-area').style.display = 'none';
+        document.getElementById('tabLadder').classList.add('active-game-tab'); document.getElementById('tabRoulette').classList.remove('active-game-tab');
         setupLadder();
     } else {
         isRouletteMode = true;
-        document.getElementById('ladder-game-area').style.display = 'none';
-        document.getElementById('roulette-game-area').style.display = 'block';
-        document.getElementById('tabRoulette').classList.add('active-game-tab');
-        document.getElementById('tabLadder').classList.remove('active-game-tab');
+        document.getElementById('ladder-game-area').style.display = 'none'; document.getElementById('roulette-game-area').style.display = 'block';
+        document.getElementById('tabRoulette').classList.add('active-game-tab'); document.getElementById('tabLadder').classList.remove('active-game-tab');
         setupRoulette();
     }
 };
 
 window.startFunBGM = function(type) {
-    if(!isBgmOn) return;
-    initAudio();
-    let tick = 0;
-    // 룰렛: 빰빰빰빰 올라가는 긴장감 넘치는 서커스톤
-    const notesRoulette = [392, 493, 587, 783]; 
-    // 사다리: 통통 튀는 레트로 8비트 아르페지오
-    const notesLadder = [523, 659, 783, 1046, 783, 659]; 
-    const notes = type === 'roulette' ? notesRoulette : notesLadder;
-    const speed = type === 'roulette' ? 120 : 130;
-
+    if(!isBgmOn) return; initAudio(); let tick = 0;
+    const notesRoulette = [392, 493, 587, 783]; const notesLadder = [523, 659, 783, 1046, 783, 659]; 
+    const notes = type === 'roulette' ? notesRoulette : notesLadder; const speed = type === 'roulette' ? 120 : 130;
     ladderBgmTimer = setInterval(() => {
-        if(!audioCtx) return;
-        let osc = audioCtx.createOscillator();
-        let gain = audioCtx.createGain();
-        osc.type = 'square';
-        osc.frequency.value = notes[tick % notes.length];
-        gain.gain.setValueAtTime(uiVolume * 0.08, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + (speed/1000) * 0.8);
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.start(); osc.stop(audioCtx.currentTime + (speed/1000) * 0.8);
-        tick++;
+        if(!audioCtx) return; let osc = audioCtx.createOscillator(); let gain = audioCtx.createGain(); osc.type = 'square'; osc.frequency.value = notes[tick % notes.length];
+        gain.gain.setValueAtTime(uiVolume * 0.08, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + (speed/1000) * 0.8);
+        osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + (speed/1000) * 0.8); tick++;
     }, speed); 
 }
 
-window.stopFunBGM = function() {
-    if(ladderBgmTimer) { clearInterval(ladderBgmTimer); ladderBgmTimer = null; }
-}
+window.stopFunBGM = function() { if(ladderBgmTimer) { clearInterval(ladderBgmTimer); ladderBgmTimer = null; } }
 
 window.playDrumroll = function(durationMs, callback) {
     if(!isBgmOn || !audioCtx) { setTimeout(callback, durationMs); return; }
-    let elapsed = 0;
-    let interval = 45; 
+    let elapsed = 0; let interval = 45; 
     let drumTimer = setInterval(() => {
-        let osc = audioCtx.createOscillator();
-        let gain = audioCtx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(100 + (elapsed/durationMs)*150, audioCtx.currentTime);
-        gain.gain.setValueAtTime(uiVolume * 0.3, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.04);
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.start(); osc.stop(audioCtx.currentTime + 0.04);
-        
-        elapsed += interval;
-        if(elapsed >= durationMs) {
-            clearInterval(drumTimer);
-            if(callback) callback();
-        }
+        let osc = audioCtx.createOscillator(); let gain = audioCtx.createGain(); osc.type = 'triangle';
+        osc.frequency.setValueAtTime(100 + (elapsed/durationMs)*150, audioCtx.currentTime); gain.gain.setValueAtTime(uiVolume * 0.3, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.04); osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.04); elapsed += interval;
+        if(elapsed >= durationMs) { clearInterval(drumTimer); if(callback) callback(); }
     }, interval);
 }
 
 window.setupLadder = function() {
-    playUISound('click');
-    if(animReq) { cancelAnimationFrame(animReq); animReq = null; }
-    stopFunBGM();
-    isGameAnimating = false;
-
-    const canvas = document.getElementById('ladderCanvas');
-    const ctx = canvas.getContext('2d');
-    
+    playUISound('click'); if(animReq) { cancelAnimationFrame(animReq); animReq = null; }
+    stopFunBGM(); isGameAnimating = false;
+    const canvas = document.getElementById('ladderCanvas'); const ctx = canvas.getContext('2d');
     ladderPlayers = timers.filter(t => t.student !== "(empty)").map(t => t.student);
     document.getElementById('gameResult').innerHTML = "";
-    
-    const btnStart = document.getElementById('btnStartLadder');
-    btnStart.innerText = "🚀 사다리 타기 시작!";
-    btnStart.style.display = 'none';
+    const btnStart = document.getElementById('btnStartLadder'); btnStart.innerText = "🚀 사다리 타기 시작!"; btnStart.style.display = 'none';
 
     if(ladderPlayers.length < 2) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--text-muted');
-        ctx.font = "bold 20px Pretendard";
-        ctx.textAlign = "center";
-        ctx.fillText("최소 2명 이상의 수업 중인 학생이 필요합니다.", canvas.width/2, canvas.height/2);
-        return;
+        ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--text-muted'); ctx.font = "bold 20px Pretendard"; ctx.textAlign = "center"; ctx.fillText("최소 2명 이상의 수업 중인 학생이 필요합니다.", canvas.width/2, canvas.height/2); return;
     }
 
-    const container = canvas.parentElement;
-    canvas.width = container.clientWidth;
-    canvas.height = container.clientHeight;
+    const container = canvas.parentElement; canvas.width = container.clientWidth; canvas.height = container.clientHeight;
+    generateLadderData(); isResultRevealed = false; drawStaticLadder();
     
-    generateLadderData();
-    isResultRevealed = false; 
-    drawStaticLadder();
-    
-    const w = canvas.width; const spacing = w / ladderPlayers.length;
-    ctx.globalAlpha = 1.0;
+    const w = canvas.width; const spacing = w / ladderPlayers.length; ctx.globalAlpha = 1.0;
     for(let p=0; p<ladderPlayers.length; p++) {
-        let curX = (p + 0.5) * spacing;
-        let curY = 40;
-        ctx.fillStyle = ladderColors[p % ladderColors.length];
-        let boxW = 54, boxH = 28;
-        ctx.beginPath();
-        if(ctx.roundRect) ctx.roundRect(curX - boxW/2, curY - boxH/2, boxW, boxH, 8);
-        else ctx.rect(curX - boxW/2, curY - boxH/2, boxW, boxH);
-        ctx.fill();
-        ctx.fillStyle = "#fff";
-        ctx.font = "900 13px Pretendard";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        let shortName = ladderPlayers[p].length > 4 ? ladderPlayers[p].substring(0,3)+".." : ladderPlayers[p];
-        ctx.fillText(shortName, curX, curY);
+        let curX = (p + 0.5) * spacing; let curY = 40; ctx.fillStyle = ladderColors[p % ladderColors.length]; let boxW = 54, boxH = 28;
+        ctx.beginPath(); if(ctx.roundRect) ctx.roundRect(curX - boxW/2, curY - boxH/2, boxW, boxH, 8); else ctx.rect(curX - boxW/2, curY - boxH/2, boxW, boxH); ctx.fill();
+        ctx.fillStyle = "#fff"; ctx.font = "900 13px Pretendard"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        let shortName = ladderPlayers[p].length > 4 ? ladderPlayers[p].substring(0,3)+".." : ladderPlayers[p]; ctx.fillText(shortName, curX, curY);
     }
-    
     btnStart.style.display = 'block';
 }
 
 function generateLadderData() {
-    ladderRungs = [];
-    const cols = ladderPlayers.length;
-    targetWinnerIndex = Math.floor(Math.random() * cols);
-    
-    const h = document.getElementById('ladderCanvas').height;
-    const ySteps = Math.floor(Math.random() * 10) + 25; 
-    const yGap = (h - 120) / ySteps;
-    
+    ladderRungs = []; const cols = ladderPlayers.length; targetWinnerIndex = Math.floor(Math.random() * cols);
+    const h = document.getElementById('ladderCanvas').height; const ySteps = Math.floor(Math.random() * 10) + 25; const yGap = (h - 120) / ySteps;
     for(let i=1; i<ySteps; i++) {
-        let baseY = 60 + (i * yGap);
-        let usedCols = new Set();
-        let numRungs = Math.floor(Math.random() * cols) + 1;
-        
+        let baseY = 60 + (i * yGap); let usedCols = new Set(); let numRungs = Math.floor(Math.random() * cols) + 1;
         for(let j=0; j<numRungs; j++) {
             let c = Math.floor(Math.random() * (cols - 1));
-            if(!usedCols.has(c) && !usedCols.has(c+1)) {
-                usedCols.add(c);
-                usedCols.add(c+1);
-                
-                // ⭐ 대각선을 제거하고 양쪽 높이를 완벽히 동일하게 맞춰 중복 버그 해결
-                let yPos = baseY + (Math.random() * 14 - 7);
-                ladderRungs.push({col: c, yLeft: yPos, yRight: yPos});
-            }
+            if(!usedCols.has(c) && !usedCols.has(c+1)) { usedCols.add(c); usedCols.add(c+1); let yPos = baseY + (Math.random() * 14 - 7); ladderRungs.push({col: c, yLeft: yPos, yRight: yPos}); }
         }
     }
     ladderRungs.sort((a,b) => a.yLeft - b.yLeft);
 }
 
 function drawStaticLadder() {
-    const canvas = document.getElementById('ladderCanvas');
-    const ctx = canvas.getContext('2d');
-    const w = canvas.width; const h = canvas.height;
-    const cols = ladderPlayers.length;
-    const spacing = w / cols;
-    
-    ctx.clearRect(0, 0, w, h);
-    
-    const lineColor = getComputedStyle(document.body).getPropertyValue('--border').trim();
-    const accentColor = getComputedStyle(document.body).getPropertyValue('--accent').trim();
-
-    ctx.lineWidth = 4;
-    ctx.lineCap = "round";
-    
-    // 1. 기본 세로선만 그리고, 가로선(사다리 뼈대)은 그리지 않고 숨깁니다.
-    ctx.strokeStyle = lineColor;
+    const canvas = document.getElementById('ladderCanvas'); const ctx = canvas.getContext('2d');
+    const w = canvas.width; const h = canvas.height; const cols = ladderPlayers.length; const spacing = w / cols;
+    ctx.clearRect(0, 0, w, h); const lineColor = getComputedStyle(document.body).getPropertyValue('--border').trim(); const accentColor = getComputedStyle(document.body).getPropertyValue('--accent').trim();
+    ctx.lineWidth = 4; ctx.lineCap = "round"; ctx.strokeStyle = lineColor;
+    for(let i=0; i<cols; i++) { let x = (i + 0.5) * spacing; ctx.beginPath(); ctx.moveTo(x, 40); ctx.lineTo(x, h - 40); ctx.stroke(); }
+    ctx.font = "bold 20px Pretendard"; ctx.textAlign = "center";
     for(let i=0; i<cols; i++) {
         let x = (i + 0.5) * spacing;
-        ctx.beginPath(); ctx.moveTo(x, 40); ctx.lineTo(x, h - 40); ctx.stroke();
-    }
-    
-    ctx.font = "bold 20px Pretendard";
-    ctx.textAlign = "center";
-    
-    // 2. 물음표(?)로 가리던 로직을 지우고, 시작부터 당첨/꽝을 항상 보여줍니다.
-    for(let i=0; i<cols; i++) {
-        let x = (i + 0.5) * spacing;
-        if(i === targetWinnerIndex) {
-            ctx.fillStyle = accentColor; 
-            ctx.fillText("🎁 당첨", x, h - 15);
-        } else {
-            ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--text-muted').trim();
-            ctx.fillText("꽝", x, h - 15);
-        }
+        if(i === targetWinnerIndex) { ctx.fillStyle = accentColor; ctx.fillText("🎁 당첨", x, h - 15); } 
+        else { ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--text-muted').trim(); ctx.fillText("꽝", x, h - 15); }
     }
 }
 
 window.startLadderAnimation = function() {
-    playUISound('click');
-    startFunBGM('ladder'); 
+    playUISound('click'); startFunBGM('ladder'); 
+    document.getElementById('btnStartLadder').style.display = 'none'; document.getElementById('gameResult').innerHTML = "<span style='color:var(--text-muted);'>결과를 향해 내려갑니다...👀</span>";
+    isResultRevealed = false; isGameAnimating = true; if(animReq) cancelAnimationFrame(animReq);
     
-    document.getElementById('btnStartLadder').style.display = 'none';
-    document.getElementById('gameResult').innerHTML = "<span style='color:var(--text-muted);'>결과를 향해 내려갑니다...👀</span>";
-    
-    isResultRevealed = false; 
-    isGameAnimating = true;
-    
-    if(animReq) cancelAnimationFrame(animReq);
-    
-    const canvas = document.getElementById('ladderCanvas');
-    const ctx = canvas.getContext('2d');
-    const w = canvas.width; const h = canvas.height;
-    const cols = ladderPlayers.length;
-    const spacing = w / cols;
-    const brandDanger = getComputedStyle(document.body).getPropertyValue('--brand-danger').trim() || '#ef4444';
+    const canvas = document.getElementById('ladderCanvas'); const ctx = canvas.getContext('2d');
+    const w = canvas.width; const h = canvas.height; const cols = ladderPlayers.length; const spacing = w / cols; const brandDanger = getComputedStyle(document.body).getPropertyValue('--brand-danger').trim() || '#ef4444';
     
     let colEvents = Array.from({length: cols}, () => []);
-    ladderRungs.forEach(r => {
-        colEvents[r.col].push({ yMe: r.yLeft, yTarget: r.yRight, targetCol: r.col + 1 });
-        colEvents[r.col + 1].push({ yMe: r.yRight, yTarget: r.yLeft, targetCol: r.col });
-    });
+    ladderRungs.forEach(r => { colEvents[r.col].push({ yMe: r.yLeft, yTarget: r.yRight, targetCol: r.col + 1 }); colEvents[r.col + 1].push({ yMe: r.yRight, yTarget: r.yLeft, targetCol: r.col }); });
     colEvents.forEach(events => events.sort((a,b) => a.yMe - b.yMe));
 
     let paths = []; 
@@ -630,270 +577,103 @@ window.startLadderAnimation = function() {
         while(true) {
             let nextEvent = colEvents[curCol].find(e => e.yMe > curY + 0.5);
             if(!nextEvent) { path.push({x: (curCol + 0.5) * spacing, y: h - 40}); break; }
-            path.push({x: (curCol + 0.5) * spacing, y: nextEvent.yMe});
-            curCol = nextEvent.targetCol; curY = nextEvent.yTarget;
-            path.push({x: (curCol + 0.5) * spacing, y: curY});
+            path.push({x: (curCol + 0.5) * spacing, y: nextEvent.yMe}); curCol = nextEvent.targetCol; curY = nextEvent.yTarget; path.push({x: (curCol + 0.5) * spacing, y: curY});
         }
         paths.push({ nodes: path, finalCol: curCol, color: ladderColors[p % ladderColors.length] });
     }
     
-    let progress = 0; 
-    const speed = 1.5; 
-    
-    paths.forEach(p => {
-        let totalLen = 0;
-        for(let i=0; i<p.nodes.length-1; i++) {
-            let dx = p.nodes[i+1].x - p.nodes[i].x; let dy = p.nodes[i+1].y - p.nodes[i].y;
-            totalLen += Math.sqrt(dx*dx + dy*dy);
-        }
-        p.totalLen = totalLen;
-    });
-    
+    let progress = 0; const speed = 4.5; 
+    paths.forEach(p => { let totalLen = 0; for(let i=0; i<p.nodes.length-1; i++) { let dx = p.nodes[i+1].x - p.nodes[i].x; let dy = p.nodes[i+1].y - p.nodes[i].y; totalLen += Math.sqrt(dx*dx + dy*dy); } p.totalLen = totalLen; });
     let maxLen = Math.max(...paths.map(p => p.totalLen));
     
-    // 선과 움직이는 아이콘을 그려주는 헬퍼 함수
-// 선과 움직이는 아이콘을 그려주는 헬퍼 함수
     function drawPathsAndIcons(prog) {
         ctx.lineWidth = 6; ctx.lineJoin = "round";
         for(let p=0; p<cols; p++) {
-            let pathObj = paths[p]; let drawnLen = 0;
-            ctx.strokeStyle = pathObj.color; ctx.globalAlpha = 0.5;
+            let pathObj = paths[p]; let drawnLen = 0; ctx.strokeStyle = pathObj.color; ctx.globalAlpha = 0.5;
             ctx.beginPath(); ctx.moveTo(pathObj.nodes[0].x, pathObj.nodes[0].y);
             for(let i=0; i<pathObj.nodes.length-1; i++) {
-                let dx = pathObj.nodes[i+1].x - pathObj.nodes[i].x; let dy = pathObj.nodes[i+1].y - pathObj.nodes[i].y;
-                let segLen = Math.sqrt(dx*dx + dy*dy);
-                if(drawnLen + segLen < prog) {
-                    ctx.lineTo(pathObj.nodes[i+1].x, pathObj.nodes[i+1].y); drawnLen += segLen;
-                } else {
-                    let remain = prog - drawnLen; let ratio = remain / segLen;
-                    ctx.lineTo(pathObj.nodes[i].x + dx*ratio, pathObj.nodes[i].y + dy*ratio); break;
-                }
+                let dx = pathObj.nodes[i+1].x - pathObj.nodes[i].x; let dy = pathObj.nodes[i+1].y - pathObj.nodes[i].y; let segLen = Math.sqrt(dx*dx + dy*dy);
+                if(drawnLen + segLen < prog) { ctx.lineTo(pathObj.nodes[i+1].x, pathObj.nodes[i+1].y); drawnLen += segLen; } 
+                else { let remain = prog - drawnLen; let ratio = remain / segLen; ctx.lineTo(pathObj.nodes[i].x + dx*ratio, pathObj.nodes[i].y + dy*ratio); break; }
             }
             ctx.stroke();
         }
 
         ctx.globalAlpha = 1.0;
         for(let p=0; p<cols; p++) {
-            let pathObj = paths[p];
-            let currentProg = Math.min(prog, pathObj.totalLen);
+            let pathObj = paths[p]; let currentProg = Math.min(prog, pathObj.totalLen);
             let curX = pathObj.nodes[0].x, curY = pathObj.nodes[0].y; let drawn = 0;
             for(let i=0; i<pathObj.nodes.length-1; i++) {
-                let dx = pathObj.nodes[i+1].x - pathObj.nodes[i].x; let dy = pathObj.nodes[i+1].y - pathObj.nodes[i].y;
-                let seg = Math.sqrt(dx*dx + dy*dy);
-                if(drawn + seg >= currentProg) {
-                    let ratio = (currentProg - drawn) / seg;
-                    curX = pathObj.nodes[i].x + dx*ratio; curY = pathObj.nodes[i].y + dy*ratio; break;
-                }
+                let dx = pathObj.nodes[i+1].x - pathObj.nodes[i].x; let dy = pathObj.nodes[i+1].y - pathObj.nodes[i].y; let seg = Math.sqrt(dx*dx + dy*dy);
+                if(drawn + seg >= currentProg) { let ratio = (currentProg - drawn) / seg; curX = pathObj.nodes[i].x + dx*ratio; curY = pathObj.nodes[i].y + dy*ratio; break; }
                 drawn += seg; curX = pathObj.nodes[i+1].x; curY = pathObj.nodes[i+1].y;
             }
-            
-            // ⭐ 수정된 블라인드 로직: 전체 경로의 마지막 10% 구간에 진입했으면서, 아직 결과 발표 전이면 이름표를 가림
             let isHidden = (!isResultRevealed) && (currentProg > pathObj.totalLen * 0.9);
-
-            ctx.fillStyle = pathObj.color;
-            let boxW = 54, boxH = 28;
-            ctx.beginPath();
-            if(ctx.roundRect) ctx.roundRect(curX - boxW/2, curY - boxH/2, boxW, boxH, 8);
-            else ctx.rect(curX - boxW/2, curY - boxH/2, boxW, boxH);
-            ctx.fill();
-            
-            if (isHidden) {
-                // 블라인드 구간: 이름 대신 '?' 표시
-                ctx.fillStyle = "#fff"; ctx.font = "900 16px Pretendard";
-                ctx.textAlign = "center"; ctx.textBaseline = "middle";
-                ctx.fillText("?", curX, curY);
-            } else {
-                // 일반 구간: 원래 이름 표시
-                ctx.fillStyle = "#fff"; ctx.font = "900 13px Pretendard";
-                ctx.textAlign = "center"; ctx.textBaseline = "middle";
-                let shortName = ladderPlayers[p].length > 4 ? ladderPlayers[p].substring(0,3)+".." : ladderPlayers[p];
-                ctx.fillText(shortName, curX, curY);
-            }
+            ctx.fillStyle = pathObj.color; let boxW = 54, boxH = 28; ctx.beginPath();
+            if(ctx.roundRect) ctx.roundRect(curX - boxW/2, curY - boxH/2, boxW, boxH, 8); else ctx.rect(curX - boxW/2, curY - boxH/2, boxW, boxH); ctx.fill();
+            if (isHidden) { ctx.fillStyle = "#fff"; ctx.font = "900 16px Pretendard"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("?", curX, curY); } 
+            else { ctx.fillStyle = "#fff"; ctx.font = "900 13px Pretendard"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; let shortName = ladderPlayers[p].length > 4 ? ladderPlayers[p].substring(0,3)+".." : ladderPlayers[p]; ctx.fillText(shortName, curX, curY); }
         }
     }
     
     function drawFrame() {
-        drawStaticLadder(); 
-        progress += speed;
-        drawPathsAndIcons(progress);
-        
-        if(progress < maxLen) {
-            animReq = requestAnimationFrame(drawFrame);
-        } else {
-            isGameAnimating = false; 
-            stopFunBGM(); 
-            
-            // 도착하자마자 아이콘은 ❓로 숨겨진 상태 유지
-            drawStaticLadder();
-            drawPathsAndIcons(maxLen);
-            
+        drawStaticLadder(); progress += speed; drawPathsAndIcons(progress);
+        if(progress < maxLen) { animReq = requestAnimationFrame(drawFrame); } 
+        else {
+            isGameAnimating = false; stopFunBGM(); drawStaticLadder(); drawPathsAndIcons(maxLen);
             document.getElementById('gameResult').innerHTML = "<span style='color:var(--text-muted);'>결과 발표... 두구두구두구! 🥁</span>";
-            
-            // 2.5초(2500ms) 동안 두구두구 사운드 재생 후 짜잔! 하고 결과 공개
             playDrumroll(2500, () => {
-                isResultRevealed = true; // 여기서 true로 바뀌면서 물음표가 다시 원래 이름으로 돌아옴
-                drawStaticLadder();
-                drawPathsAndIcons(maxLen);
-                
-                // 당첨된 사람의 궤적 빨간색으로 칠하기
+                isResultRevealed = true; drawStaticLadder(); drawPathsAndIcons(maxLen);
                 let winnerPathObj = paths.find(p => p.finalCol === targetWinnerIndex);
-                if(winnerPathObj) {
-                    ctx.strokeStyle = brandDanger; ctx.lineWidth = 12; ctx.beginPath();
-                    ctx.moveTo(winnerPathObj.nodes[0].x, winnerPathObj.nodes[0].y);
-                    for(let i=0; i<winnerPathObj.nodes.length-1; i++) {
-                        ctx.lineTo(winnerPathObj.nodes[i+1].x, winnerPathObj.nodes[i+1].y);
-                    }
-                    ctx.stroke();
-                }
-
-                let realWinnerName = "";
-                for(let p=0; p<cols; p++) {
-                    if(paths[p].finalCol === targetWinnerIndex) { realWinnerName = ladderPlayers[p]; break; }
-                }
-                
-                playUISound('finish');
-                document.getElementById('gameResult').innerHTML = `🎉 축하합니다! <span style="color:var(--brand-danger)">${realWinnerName}</span> 학생이 당첨되었습니다! 🎉`;
+                if(winnerPathObj) { ctx.strokeStyle = brandDanger; ctx.lineWidth = 12; ctx.beginPath(); ctx.moveTo(winnerPathObj.nodes[0].x, winnerPathObj.nodes[0].y); for(let i=0; i<winnerPathObj.nodes.length-1; i++) { ctx.lineTo(winnerPathObj.nodes[i+1].x, winnerPathObj.nodes[i+1].y); } ctx.stroke(); }
+                let realWinnerName = ""; for(let p=0; p<cols; p++) { if(paths[p].finalCol === targetWinnerIndex) { realWinnerName = ladderPlayers[p]; break; } }
+                playUISound('finish'); document.getElementById('gameResult').innerHTML = `🎉 축하합니다! <span style="color:var(--brand-danger)">${realWinnerName}</span> 학생이 당첨되었습니다! 🎉`;
+                const btnStart = document.getElementById('btnStartLadder'); btnStart.innerText = "🎬 다시 보기"; btnStart.style.display = 'block';
             });
         }
     }
-    
     animReq = requestAnimationFrame(drawFrame);
 }
 
 window.setupRoulette = function() {
-    playUISound('click');
-    if(animReq) { cancelAnimationFrame(animReq); animReq = null; }
-    stopFunBGM();
-    rouletteSpinning = false;
-    isGameAnimating = false;
-    
-    roulettePlayers = timers.filter(t => t.student !== "(empty)").map(t => t.student);
-    document.getElementById('gameResult').innerHTML = "";
-    
-    const btnStart = document.getElementById('btnStartRoulette');
-    btnStart.innerText = "🎡 룰렛 돌리기 시작!";
-    btnStart.style.display = 'none';
-
-    const canvas = document.getElementById('rouletteCanvas');
-    const ctx = canvas.getContext('2d');
-    
-    if(roulettePlayers.length < 2) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--text-muted');
-        ctx.font = "bold 20px Pretendard";
-        ctx.textAlign = "center";
-        ctx.fillText("최소 2명 이상의 수업 중인 학생이 필요합니다.", canvas.width/2, canvas.height/2);
-        return;
-    }
-
-    rouletteAngle = 0;
-    drawRoulette(rouletteAngle);
-    btnStart.style.display = 'block';
+    playUISound('click'); if(animReq) { cancelAnimationFrame(animReq); animReq = null; }
+    stopFunBGM(); rouletteSpinning = false; isGameAnimating = false;
+    roulettePlayers = timers.filter(t => t.student !== "(empty)").map(t => t.student); document.getElementById('gameResult').innerHTML = "";
+    const btnStart = document.getElementById('btnStartRoulette'); btnStart.innerText = "🎡 룰렛 돌리기 시작!"; btnStart.style.display = 'none';
+    const canvas = document.getElementById('rouletteCanvas'); const ctx = canvas.getContext('2d');
+    if(roulettePlayers.length < 2) { ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--text-muted'); ctx.font = "bold 20px Pretendard"; ctx.textAlign = "center"; ctx.fillText("최소 2명 이상의 수업 중인 학생이 필요합니다.", canvas.width/2, canvas.height/2); return; }
+    rouletteAngle = 0; drawRoulette(rouletteAngle); btnStart.style.display = 'block';
 }
 
 function drawRoulette(angle) {
-    const canvas = document.getElementById('rouletteCanvas');
-    const ctx = canvas.getContext('2d');
-    const cw = canvas.width;
-    const ch = canvas.height;
-    const cx = cw / 2;
-    const cy = ch / 2;
-    const radius = Math.min(cw, ch) / 2 - 25;
-
-    ctx.clearRect(0, 0, cw, ch);
-
-    const numSlices = roulettePlayers.length;
-    const sliceAngle = (2 * Math.PI) / numSlices;
-
+    const canvas = document.getElementById('rouletteCanvas'); const ctx = canvas.getContext('2d');
+    const cw = canvas.width; const ch = canvas.height; const cx = cw / 2; const cy = ch / 2; const radius = Math.min(cw, ch) / 2 - 25;
+    ctx.clearRect(0, 0, cw, ch); const numSlices = roulettePlayers.length; const sliceAngle = (2 * Math.PI) / numSlices;
     for(let i = 0; i < numSlices; i++) {
-        const startAngle = angle + i * sliceAngle;
-        const endAngle = startAngle + sliceAngle;
-
-        ctx.beginPath();
-        ctx.moveTo(cx, cy);
-        ctx.arc(cx, cy, radius, startAngle, endAngle);
-        ctx.closePath();
-        ctx.fillStyle = ladderColors[i % ladderColors.length];
-        ctx.fill();
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = "#ffffff";
-        ctx.stroke();
-
-        ctx.save();
-        ctx.translate(cx, cy);
-        ctx.rotate(startAngle + sliceAngle / 2);
-        ctx.textAlign = "right";
-        ctx.textBaseline = "middle";
-        ctx.fillStyle = "#ffffff";
-        ctx.font = "bold 24px Pretendard";
-        ctx.shadowColor = "rgba(0,0,0,0.4)";
-        ctx.shadowBlur = 4;
-        ctx.fillText(roulettePlayers[i], radius - 20, 0);
-        ctx.restore();
+        const startAngle = angle + i * sliceAngle; const endAngle = startAngle + sliceAngle;
+        ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, radius, startAngle, endAngle); ctx.closePath();
+        ctx.fillStyle = ladderColors[i % ladderColors.length]; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = "#ffffff"; ctx.stroke();
+        ctx.save(); ctx.translate(cx, cy); ctx.rotate(startAngle + sliceAngle / 2); ctx.textAlign = "right"; ctx.textBaseline = "middle"; ctx.fillStyle = "#ffffff"; ctx.font = "bold 24px Pretendard"; ctx.shadowColor = "rgba(0,0,0,0.4)"; ctx.shadowBlur = 4; ctx.fillText(roulettePlayers[i], radius - 20, 0); ctx.restore();
     }
-
-    ctx.beginPath();
-    ctx.arc(cx, cy, 35, 0, 2 * Math.PI);
-    ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--bg-card') || '#fff';
-    ctx.fill();
-    ctx.lineWidth = 4;
-    ctx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--accent') || '#2563eb';
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.moveTo(cx - 18, cy - radius - 15);
-    ctx.lineTo(cx + 18, cy - radius - 15);
-    ctx.lineTo(cx, cy - radius + 20);
-    ctx.closePath();
-    ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--brand-danger') || '#ef4444';
-    ctx.fill();
-    ctx.strokeStyle = "#fff";
-    ctx.lineWidth = 3;
-    ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx, cy, 35, 0, 2 * Math.PI); ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--bg-card') || '#fff'; ctx.fill(); ctx.lineWidth = 4; ctx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--accent') || '#2563eb'; ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx - 18, cy - radius - 15); ctx.lineTo(cx + 18, cy - radius - 15); ctx.lineTo(cx, cy - radius + 20); ctx.closePath(); ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--brand-danger') || '#ef4444'; ctx.fill(); ctx.strokeStyle = "#fff"; ctx.lineWidth = 3; ctx.stroke();
 }
 
 window.startRouletteAnimation = function() {
-    if(rouletteSpinning) return;
-    playUISound('start');
-    startFunBGM('roulette'); 
-    
-    document.getElementById('btnStartRoulette').style.display = 'none';
-    document.getElementById('gameResult').innerHTML = "결과 확인 중...👀";
-    rouletteSpinning = true;
-    isGameAnimating = true;
-    
-    if(animReq) cancelAnimationFrame(animReq);
-
-    let speed = Math.random() * 0.2 + 0.4; 
-    const friction = 0.993; 
-    
+    if(rouletteSpinning) return; playUISound('start'); startFunBGM('roulette'); 
+    document.getElementById('btnStartRoulette').style.display = 'none'; document.getElementById('gameResult').innerHTML = "결과 확인 중...👀";
+    rouletteSpinning = true; isGameAnimating = true; if(animReq) cancelAnimationFrame(animReq);
+    let speed = Math.random() * 0.2 + 0.4; const friction = 0.993; 
     function spin() {
-        rouletteAngle += speed;
-        drawRoulette(rouletteAngle);
-        speed *= friction;
-
-        if(speed > 0.002) {
-            animReq = requestAnimationFrame(spin);
-        } else {
-            rouletteSpinning = false;
-            isGameAnimating = false;
-            stopFunBGM(); 
-            
-            const numSlices = roulettePlayers.length;
-            const sliceAngle = (2 * Math.PI) / numSlices;
-            
-            let offsetAngle = ((3 * Math.PI / 2) - rouletteAngle) % (2 * Math.PI);
-            if(offsetAngle < 0) offsetAngle += 2 * Math.PI;
-            
-            const winningIndex = Math.floor(offsetAngle / sliceAngle);
-            const winnerName = roulettePlayers[winningIndex];
-
-            playUISound('finish');
-            document.getElementById('gameResult').innerHTML = `🎉 축하합니다! <span style="color:var(--brand-danger)">${winnerName}</span> 학생이 당첨되었습니다! 🎉`;
-
-            const btnStart = document.getElementById('btnStartRoulette');
-            btnStart.innerText = "🎬 다시 돌리기";
-            btnStart.style.display = 'block';
+        rouletteAngle += speed; drawRoulette(rouletteAngle); speed *= friction;
+        if(speed > 0.002) { animReq = requestAnimationFrame(spin); } 
+        else {
+            rouletteSpinning = false; isGameAnimating = false; stopFunBGM(); 
+            const numSlices = roulettePlayers.length; const sliceAngle = (2 * Math.PI) / numSlices;
+            let offsetAngle = ((3 * Math.PI / 2) - rouletteAngle) % (2 * Math.PI); if(offsetAngle < 0) offsetAngle += 2 * Math.PI;
+            const winningIndex = Math.floor(offsetAngle / sliceAngle); const winnerName = roulettePlayers[winningIndex];
+            playUISound('finish'); document.getElementById('gameResult').innerHTML = `🎉 축하합니다! <span style="color:var(--brand-danger)">${winnerName}</span> 학생이 당첨되었습니다! 🎉`;
+            const btnStart = document.getElementById('btnStartRoulette'); btnStart.innerText = "🎬 다시 돌리기"; btnStart.style.display = 'block';
         }
     }
     spin();
@@ -902,22 +682,53 @@ window.startRouletteAnimation = function() {
 // =========================================================================
 // ⭐ 설정창 '명단 관리' 테이블 
 // =========================================================================
+window.settingsSortConfig = { col: '', asc: true };
+
+window.sortSettingsRoster = function(col) {
+    playUISound('click');
+    const tbody = document.getElementById('settingsRosterBody'); 
+    const rows = tbody.querySelectorAll('tr');
+    let tempRoster = [];
+    rows.forEach(row => {
+        const inputs = row.querySelectorAll('input'); const select = row.querySelector('select');
+        const name = inputs[0]?.value.trim(); const grade = inputs[1]?.value.trim();
+        const level = select?.value; const time = parseInt(inputs[2]?.value) || 50; 
+        const birthday = inputs[3] ? inputs[3].value.trim() : '';
+        if(name) { tempRoster.push({name, grade, level, time, birthday}); }
+    });
+    studentMasterList = tempRoster;
+
+    if (settingsSortConfig.col === col) { settingsSortConfig.asc = !settingsSortConfig.asc; } 
+    else { settingsSortConfig.col = col; settingsSortConfig.asc = true; }
+
+    studentMasterList.sort((a, b) => {
+        let res = 0;
+        if (col === 'name') res = a.name.localeCompare(b.name, 'ko-KR');
+        else if (col === 'grade') res = getGradeWeight(a.grade) - getGradeWeight(b.grade);
+        else if (col === 'level') res = getLevelWeight(a.level) - getLevelWeight(b.level);
+        if (res === 0) res = a.name.localeCompare(b.name, 'ko-KR');
+        return settingsSortConfig.asc ? res : -res;
+    });
+
+    renderSettingsRoster();
+    ['name', 'grade', 'level'].forEach(c => { 
+        let th = document.getElementById(`th-set-${c}`); 
+        if(th) { 
+            th.classList.remove('sort-asc', 'sort-desc'); 
+            if(c === settingsSortConfig.col) th.classList.add(settingsSortConfig.asc ? 'sort-asc' : 'sort-desc'); 
+        } 
+    });
+};
+
 window.updateSelectColor = function(selectEl) {
-    const val = selectEl.value;
-    let bg = '#ffffff', color = '#000000';
-    if(val === 'PRE') { bg = 'var(--selena-yellow)'; color = '#000'; }
-    else if(val === 'BASIC') { bg = 'var(--selena-pink)'; color = '#fff'; }
-    else if(val === 'INTER') { bg = 'var(--selena-orange)'; color = '#fff'; }
-    else if(val === 'ADV') { bg = 'var(--selena-cyan)'; color = '#fff'; }
-    else if(val === 'PREP') { bg = 'var(--selena-brown)'; color = '#fff'; }
+    const val = selectEl.value; let bg = '#ffffff', color = '#000000';
+    if(val === 'PRE') { bg = 'var(--selena-yellow)'; color = '#000'; } else if(val === 'BASIC') { bg = 'var(--selena-pink)'; color = '#fff'; } else if(val === 'INTER') { bg = 'var(--selena-orange)'; color = '#fff'; } else if(val === 'ADV') { bg = 'var(--selena-cyan)'; color = '#fff'; } else if(val === 'PREP') { bg = 'var(--selena-brown)'; color = '#fff'; }
     selectEl.style.backgroundColor = bg; selectEl.style.color = color;
 };
 
 function injectSettingsRosterUI() {
-    const settingsCards = document.querySelectorAll('.settings-card');
-    let rosterCard = null;
+    const settingsCards = document.querySelectorAll('.settings-card'); let rosterCard = null;
     settingsCards.forEach(card => { if(card.innerHTML.includes('학생 명단 관리') || card.innerHTML.includes('ROSTER MANAGEMENT')) rosterCard = card; });
-
     if(rosterCard) {
         rosterCard.style.maxWidth = "100%";
         rosterCard.innerHTML = `
@@ -929,9 +740,9 @@ function injectSettingsRosterUI() {
                 <table class="settings-roster-table" id="settingsRosterTable">
                     <thead style="position: sticky; top: 0; z-index: 2; background: var(--bg-main); box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
                         <tr>
-                            <th style="width: 15%;">이름</th>
-                            <th style="width: 15%;">학년</th>
-                            <th style="width: 25%;">레벨</th>
+                            <th onclick="sortSettingsRoster('name')" class="sortable" id="th-set-name" style="width: 15%;">이름</th>
+                            <th onclick="sortSettingsRoster('grade')" class="sortable" id="th-set-grade" style="width: 15%;">학년</th>
+                            <th onclick="sortSettingsRoster('level')" class="sortable" id="th-set-level" style="width: 25%;">레벨</th>
                             <th style="width: 15%;">수업시간(분)</th>
                             <th style="width: 15%;">생일(MM-DD)</th>
                             <th style="width: 15%;">관리</th>
@@ -953,24 +764,14 @@ function renderSettingsRoster() {
 }
 
 function createStudentRowHTML(name = '', grade = '', level = 'PRE', time = 50, birthday = '') {
-    return `
-        <tr>
-            <td><input type="text" class="settings-roster-input" value="${name}" placeholder="이름"></td>
-            <td><input type="text" class="settings-roster-input" value="${grade}" placeholder="학년"></td>
-            <td>
-                <select class="settings-roster-select" onchange="updateSelectColor(this)">
-                    <option value="PRE" ${level==='PRE'?'selected':''}>PRE</option>
-                    <option value="BASIC" ${level==='BASIC'?'selected':''}>BASIC</option>
-                    <option value="INTER" ${level==='INTER'?'selected':''}>INTER</option>
-                    <option value="ADV" ${level==='ADV'?'selected':''}>ADV</option>
-                    <option value="PREP" ${level==='PREP'?'selected':''}>PREP31</option>
-                </select>
-            </td>
-            <td><input type="number" class="settings-roster-input" value="${time}" min="1" max="300"></td>
-            <td><input type="text" class="settings-roster-input" value="${birthday}" placeholder="04-23"></td>
-            <td><button class="btn-delete-row" onclick="deleteSettingsStudentRow(this)">삭제</button></td>
-        </tr>
-    `;
+    return `<tr>
+        <td><input type="text" class="settings-roster-input" value="${name}" placeholder="이름"></td>
+        <td><input type="text" class="settings-roster-input" value="${grade}" placeholder="학년"></td>
+        <td><select class="settings-roster-select" onchange="updateSelectColor(this)"><option value="PRE" ${level==='PRE'?'selected':''}>PRE</option><option value="BASIC" ${level==='BASIC'?'selected':''}>BASIC</option><option value="INTER" ${level==='INTER'?'selected':''}>INTER</option><option value="ADV" ${level==='ADV'?'selected':''}>ADV</option><option value="PREP" ${level==='PREP'?'selected':''}>PREP31</option></select></td>
+        <td><input type="number" class="settings-roster-input" value="${time}" min="1" max="300"></td>
+        <td><input type="text" class="settings-roster-input" value="${birthday}" placeholder="04-23"></td>
+        <td><button class="btn-delete-row" onclick="deleteSettingsStudentRow(this)">삭제</button></td>
+    </tr>`;
 }
 
 window.addSettingsStudentRow = function() {
@@ -994,7 +795,7 @@ window.saveSettingsRoster = function() {
 };
 
 // =========================================================================
-// ⭐ 히스토리 기록 (HISTORY) 시스템 UI 
+// ⭐ 히스토리 기록 (HISTORY) 시스템 UI (출결 시간 기록 추가)
 // =========================================================================
 function injectHistoryUI() {
     const logTabBtn = document.querySelector('.nav-tab[onclick*="log"]');
@@ -1006,38 +807,27 @@ function injectHistoryUI() {
 
     const oldLogView = document.getElementById('view-log');
     if (oldLogView) {
-        oldLogView.id = 'view-history';
-        oldLogView.className = 'view-section';
+        oldLogView.id = 'view-history'; oldLogView.className = 'view-section';
         oldLogView.innerHTML = `
             <div class="history-container">
                 <div class="history-sidebar">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                        <h3>👥 원생 목록</h3>
-                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;"><h3>👥 원생 목록</h3></div>
                     <div id="historyStudentList"></div>
                 </div>
                 <div class="history-content">
-<div class="calendar-header">
-    <div style="display:flex; align-items:center; gap:10px;">
-        <button class="cal-nav-btn" onclick="changeHistoryMonth(-1)">◀ 이전</button>
-        <h2 id="historyMonthTitle">2026년 5월</h2>
-        <button class="cal-nav-btn" onclick="changeHistoryMonth(1)">다음 ▶</button>
-        <button class="cal-nav-btn" onclick="goToTodayHistory()" style="background:var(--accent); color:white; border-color:var(--accent); margin-left:5px;">오늘</button>
-    </div>
+                    <div class="calendar-header">
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <button class="cal-nav-btn" onclick="changeHistoryMonth(-1)">◀ 이전</button>
+                            <h2 id="historyMonthTitle">2026년 5월</h2>
+                            <button class="cal-nav-btn" onclick="changeHistoryMonth(1)">다음 ▶</button>
+                            <button class="cal-nav-btn" onclick="goToTodayHistory()" style="background:var(--accent); color:white; border-color:var(--accent); margin-left:5px;">오늘</button>
+                        </div>
                         <button class="btn-danger-outline" onclick="deleteHistoryAll()" style="padding: 8px 16px;">🚨 이 학생 전체 기록 삭제</button>
                     </div>
-                    
                     <div class="cal-grid-header">
-                        <div class="cal-day-header" style="color:#ef4444;">일</div>
-                        <div class="cal-day-header">월</div>
-                        <div class="cal-day-header">화</div>
-                        <div class="cal-day-header">수</div>
-                        <div class="cal-day-header">목</div>
-                        <div class="cal-day-header">금</div>
-                        <div class="cal-day-header" style="color:#3b82f6;">토</div>
+                        <div class="cal-day-header" style="color:#ef4444;">일</div><div class="cal-day-header">월</div><div class="cal-day-header">화</div><div class="cal-day-header">수</div><div class="cal-day-header">목</div><div class="cal-day-header">금</div><div class="cal-day-header" style="color:#3b82f6;">토</div>
                     </div>
                     <div class="cal-grid" id="historyCalGrid"></div>
-                    
                     <div class="history-detail-popup" id="historyDetailPopup">
                         <button class="popup-close-btn" onclick="closeHistoryDetail()">✖</button>
                         <div class="detail-title">📅 <span id="detailDateText">날짜 선택됨</span></div>
@@ -1045,8 +835,9 @@ function injectHistoryUI() {
                             <button id="btnToggleAcadHoliday" class="btn-acad-holiday" onclick="toggleAcademyHoliday()">🏝️ 학원 휴무일로 지정</button>
                             <button id="btnDeleteDay" class="btn-danger-outline" onclick="deleteHistoryDate()">🗑️ 이 날짜만 리셋</button>
                         </div>
-                        <div class="detail-stats">
+                        <div class="detail-stats" style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:15px;">
                             <div class="detail-stat-item">⏱️ 총 학습<br><span id="detailTotalMins" style="color:var(--accent); font-size:20px; display:block; margin-top:5px;">0</span>분</div>
+                            <div class="detail-stat-item">⏰ 출결 시간<br><span id="detailTimeLogs" style="color:var(--text-main); font-size:14px; display:block; margin-top:5px; font-family:'JetBrains Mono';">-</span></div>
                             <div class="detail-stat-item">🎟️ 쿠폰<br><span id="detailCoupons" style="color:#f59e0b; font-size:20px; display:block; margin-top:5px;">0</span>개</div>
                             <div class="detail-stat-item">🚨 벌칙<br><span id="detailPenalties" style="color:var(--brand-danger); font-size:20px; display:block; margin-top:5px;">0</span>개</div>
                         </div>
@@ -1063,201 +854,113 @@ function injectHistoryUI() {
 function renderHistorySidebar() {
     const listEl = document.getElementById('historyStudentList'); if(!listEl) return;
     listEl.innerHTML = '';
-    
     studentMasterList.forEach(st => {
-        const item = document.createElement('div');
-        item.className = 'history-student-item';
+        const item = document.createElement('div'); item.className = 'history-student-item';
         if (currentHistoryStudent === st.name) item.classList.add('active');
-        
-        let crown = isTodayBirthday(st.birthday) ? " 👑" : "";
+        let crown = isTodayBirthday(st.birthday) ? " 🎉" : "";
         item.innerHTML = `<span>${st.name}${crown}</span> <span style="font-size:12px; color:var(--text-muted);">${st.level}</span>`;
-        item.onclick = () => { selectHistoryStudent(st.name); };
-        listEl.appendChild(item);
+        item.onclick = () => { selectHistoryStudent(st.name); }; listEl.appendChild(item);
     });
 }
 
-window.selectHistoryStudent = function(name) {
-    playUISound('click');
-    currentHistoryStudent = name;
-    closeHistoryDetail();
-    renderHistorySidebar();
-    renderHistoryCalendar();
-}
-
-window.changeHistoryMonth = function(delta) {
-    playUISound('click');
-    currentHistoryMonth += delta;
-    if (currentHistoryMonth > 11) { currentHistoryMonth = 0; currentHistoryYear++; }
-    else if (currentHistoryMonth < 0) { currentHistoryMonth = 11; currentHistoryYear--; }
-    closeHistoryDetail();
-    renderHistoryCalendar();
-}
+window.selectHistoryStudent = function(name) { playUISound('click'); currentHistoryStudent = name; closeHistoryDetail(); renderHistorySidebar(); renderHistoryCalendar(); }
+window.changeHistoryMonth = function(delta) { playUISound('click'); currentHistoryMonth += delta; if (currentHistoryMonth > 11) { currentHistoryMonth = 0; currentHistoryYear++; } else if (currentHistoryMonth < 0) { currentHistoryMonth = 11; currentHistoryYear--; } closeHistoryDetail(); renderHistoryCalendar(); }
 window.goToTodayHistory = function() {
-    playUISound('click');
-    const now = new Date();
-    
-    // 달력의 연도와 월을 현재 실제 날짜로 되돌림
-    currentHistoryYear = now.getFullYear();
-    currentHistoryMonth = now.getMonth();
-    
-    // 열려있는 상세 팝업창이 있다면 닫기
-    const popup = document.getElementById('historyDetailPopup');
-    if(popup) popup.classList.remove('active');
-    
-    // 학생이 선택되어 있다면 '오늘 날짜'에 하이라이트(선택) 표시
-    if (currentHistoryStudent) {
-        currentSelectedDate = `${currentHistoryYear}-${String(currentHistoryMonth + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-    } else {
-        currentSelectedDate = null;
-    }
-    
-    renderHistoryCalendar();
+    playUISound('click'); const now = new Date(); currentHistoryYear = now.getFullYear(); currentHistoryMonth = now.getMonth();
+    const popup = document.getElementById('historyDetailPopup'); if(popup) popup.classList.remove('active');
+    if (currentHistoryStudent) { currentSelectedDate = `${currentHistoryYear}-${String(currentHistoryMonth + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`; } else { currentSelectedDate = null; } renderHistoryCalendar();
 };
 
-window.closeHistoryDetail = function() {
-    const popup = document.getElementById('historyDetailPopup');
-    if(popup) popup.classList.remove('active');
-    currentSelectedDate = null;
-    renderHistoryCalendar(); 
-};
+window.closeHistoryDetail = function() { const popup = document.getElementById('historyDetailPopup'); if(popup) popup.classList.remove('active'); currentSelectedDate = null; renderHistoryCalendar(); };
 
 function renderHistoryCalendar() {
-    const gridEl = document.getElementById('historyCalGrid');
-    const titleEl = document.getElementById('historyMonthTitle');
-    if(!gridEl || !titleEl) return;
+    const gridEl = document.getElementById('historyCalGrid'); const titleEl = document.getElementById('historyMonthTitle'); if(!gridEl || !titleEl) return;
+    titleEl.innerText = `${currentHistoryYear}년 ${currentHistoryMonth + 1}월 - ${currentHistoryStudent ? currentHistoryStudent : '학생을 선택하세요'}`; gridEl.innerHTML = ''; if(!currentHistoryStudent) return; 
     
-    titleEl.innerText = `${currentHistoryYear}년 ${currentHistoryMonth + 1}월 - ${currentHistoryStudent ? currentHistoryStudent : '학생을 선택하세요'}`;
-    gridEl.innerHTML = '';
-    
-    if(!currentHistoryStudent) return; 
-    
-    const firstDay = new Date(currentHistoryYear, currentHistoryMonth, 1).getDay();
-    const daysInMonth = new Date(currentHistoryYear, currentHistoryMonth + 1, 0).getDate();
-    
-    for(let i=0; i<firstDay; i++) {
-        let empty = document.createElement('div'); empty.className = 'cal-day empty-cell'; gridEl.appendChild(empty);
-    }
-    
+    const firstDay = new Date(currentHistoryYear, currentHistoryMonth, 1).getDay(); const daysInMonth = new Date(currentHistoryYear, currentHistoryMonth + 1, 0).getDate();
+    for(let i=0; i<firstDay; i++) { let empty = document.createElement('div'); empty.className = 'cal-day empty-cell'; gridEl.appendChild(empty); }
     const studentData = studentHistory[currentHistoryStudent] || {};
     
+    const studentInfo = studentMasterList.find(s => s.name === currentHistoryStudent);
+    let bMonth = -1, bDay = -1;
+    if (studentInfo && studentInfo.birthday) {
+        const match = studentInfo.birthday.match(/(\d+)[-/](\d+)/);
+        if(match) { bMonth = parseInt(match[1]); bDay = parseInt(match[2]); }
+    }
+
     for(let i=1; i<=daysInMonth; i++) {
         const dateStr = `${currentHistoryYear}-${String(currentHistoryMonth+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
         const mmddStr = `${String(currentHistoryMonth+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
         const record = studentData[dateStr];
-        
         const dayOfWeek = new Date(currentHistoryYear, currentHistoryMonth, i).getDay();
-        const isSunday = dayOfWeek === 0;
-        const isSaturday = dayOfWeek === 6;
+        const isSunday = dayOfWeek === 0; const isSaturday = dayOfWeek === 6;
+        const holidayName = krHolidays[dateStr] || krHolidays[mmddStr]; const isAcadHoliday = academyHolidays.includes(dateStr);
+        const isBdayCell = (bMonth === currentHistoryMonth + 1 && bDay === i);
         
-        const holidayName = krHolidays[dateStr] || krHolidays[mmddStr];
-        const isAcadHoliday = academyHolidays.includes(dateStr);
+        const dayEl = document.createElement('div'); dayEl.className = 'cal-day';
+        if(isSunday || holidayName) dayEl.classList.add('is-holiday'); if(isSaturday) dayEl.classList.add('is-saturday');
+        if(currentSelectedDate === dateStr) dayEl.classList.add('active'); if(record && record.totalMinutes > 0) dayEl.classList.add('has-record');
         
-        const dayEl = document.createElement('div');
-        dayEl.className = 'cal-day';
-        if(isSunday || holidayName) dayEl.classList.add('is-holiday');
-        if(isSaturday) dayEl.classList.add('is-saturday');
-        if(currentSelectedDate === dateStr) dayEl.classList.add('active');
-        if(record && record.totalMinutes > 0) dayEl.classList.add('has-record');
+        if(isBdayCell) { dayEl.style.borderColor = "#ff007f"; dayEl.style.boxShadow = "inset 0 0 10px rgba(255,0,127,0.1)"; }
         
         let dateHtml = `<div class="cal-date-num">${i}`;
-        if(holidayName) dateHtml += `<span class="holiday-label">${holidayName}</span>`;
-        if(isAcadHoliday) dateHtml += `<span class="acad-holiday-label">휴무</span>`;
-        dateHtml += `</div>`;
+        if(isBdayCell) dateHtml += `<span class="holiday-label" style="background:#fce7f3; color:#db2777; border: 1px solid #fbcfe8;">🎂 생일</span>`;
+        if(holidayName) dateHtml += `<span class="holiday-label">${holidayName}</span>`; if(isAcadHoliday) dateHtml += `<span class="acad-holiday-label">휴무</span>`; dateHtml += `</div>`;
         
         let contentHtml = dateHtml;
-        
         if(record && record.totalMinutes > 0) {
             contentHtml += `<div class="cal-record-summary">${record.totalMinutes}분 학습</div>`;
-            let mods = [];
-            if(record.coupon > 0) mods.push(`🎟️${record.coupon}`);
-            if(record.penalty > 0) mods.push(`🚨${record.penalty}`);
+            if (record.timeLogs && record.timeLogs.length > 0) { contentHtml += `<div style="font-size:11px; color:#64748b; font-weight:bold; margin-top:3px; background:#e2e8f0; border-radius:4px; padding:2px; font-family:'JetBrains Mono', monospace;">${record.timeLogs.join('<br>')}</div>`; }
+            let mods = []; if(record.coupon > 0) mods.push(`🎟️${record.coupon}`); if(record.penalty > 0) mods.push(`🚨${record.penalty}`);
             if(mods.length > 0) contentHtml += `<div class="cal-record-mods">${mods.join(' ')}</div>`;
-            
-            if(record.note) {
-                let shortNote = record.note.length > 8 ? record.note.substring(0, 8) + '...' : record.note;
-                contentHtml += `<div class="cal-note-preview" title="${record.note}">📝 ${shortNote}</div>`;
-            }
-        } else if (isAcadHoliday) {
-            contentHtml += `<div style="margin-top:auto; text-align:center; font-size:28px; opacity:0.8;">🏝️</div>`;
-        }
+            if(record.note) { let shortNote = record.note.length > 8 ? record.note.substring(0, 8) + '...' : record.note; contentHtml += `<div class="cal-note-preview" title="${record.note}">📝 ${shortNote}</div>`; }
+        } else if (isAcadHoliday) { contentHtml += `<div style="margin-top:auto; text-align:center; font-size:28px; opacity:0.8;">🏝️</div>`; }
         
-        dayEl.innerHTML = contentHtml;
-        dayEl.onclick = () => { selectHistoryDate(dateStr, record); };
-        gridEl.appendChild(dayEl);
+        dayEl.innerHTML = contentHtml; dayEl.onclick = () => { selectHistoryDate(dateStr, record); }; gridEl.appendChild(dayEl);
     }
 }
 
 window.selectHistoryDate = function(dateStr, record) {
-    playUISound('click');
-    currentSelectedDate = dateStr;
-    renderHistoryCalendar(); 
-    
-    const popup = document.getElementById('historyDetailPopup');
-    popup.classList.add('active');
-    document.getElementById('detailDateText').innerText = `${dateStr} 상세 기록`;
-    
+    playUISound('click'); currentSelectedDate = dateStr; renderHistoryCalendar(); 
+    const popup = document.getElementById('historyDetailPopup'); popup.classList.add('active'); document.getElementById('detailDateText').innerText = `${dateStr} 상세 기록`;
     const btnAcad = document.getElementById('btnToggleAcadHoliday');
-    if(academyHolidays.includes(dateStr)) {
-        btnAcad.innerText = "✖ 휴무일 해제";
-        btnAcad.style.background = "#ef4444";
-    } else {
-        btnAcad.innerText = "🏝️ 휴무일 지정";
-        btnAcad.style.background = "#8b5cf6";
-    }
+    if(academyHolidays.includes(dateStr)) { btnAcad.innerText = "✖ 휴무일 해제"; btnAcad.style.background = "#ef4444"; } 
+    else { btnAcad.innerText = "🏝️ 휴무일 지정"; btnAcad.style.background = "#8b5cf6"; }
     
     if(record) {
         document.getElementById('detailTotalMins').innerText = record.totalMinutes;
-        document.getElementById('detailCoupons').innerText = record.coupon;
-        document.getElementById('detailPenalties').innerText = record.penalty;
-        document.getElementById('detailNoteInput').value = record.note || "";
-        document.getElementById('btnDeleteDay').style.display = "inline-block";
+        document.getElementById('detailCoupons').innerText = record.coupon || 0;
+        document.getElementById('detailPenalties').innerText = record.penalty || 0;
+        document.getElementById('detailTimeLogs').innerHTML = (record.timeLogs && record.timeLogs.length > 0) ? record.timeLogs.join('<br>') : '-';
+        document.getElementById('detailNoteInput').value = record.note || ""; document.getElementById('btnDeleteDay').style.display = "inline-block";
     } else {
-        document.getElementById('detailTotalMins').innerText = "0";
-        document.getElementById('detailCoupons').innerText = "0";
-        document.getElementById('detailPenalties').innerText = "0";
-        document.getElementById('detailNoteInput').value = "";
-        document.getElementById('btnDeleteDay').style.display = "none"; 
+        document.getElementById('detailTotalMins').innerText = "0"; document.getElementById('detailCoupons').innerText = "0"; document.getElementById('detailPenalties').innerText = "0";
+        document.getElementById('detailTimeLogs').innerHTML = "-";
+        document.getElementById('detailNoteInput').value = ""; document.getElementById('btnDeleteDay').style.display = "none"; 
     }
 }
 
 window.saveHistoryNote = function() {
-    if(!currentHistoryStudent || !currentSelectedDate) return;
-    playUISound('finish');
+    if(!currentHistoryStudent || !currentSelectedDate) return; playUISound('finish');
     if(!studentHistory[currentHistoryStudent]) studentHistory[currentHistoryStudent] = {};
-    if(!studentHistory[currentHistoryStudent][currentSelectedDate]) {
-        studentHistory[currentHistoryStudent][currentSelectedDate] = { totalMinutes: 0, coupon: 0, penalty: 0, note: "" };
-    }
+    if(!studentHistory[currentHistoryStudent][currentSelectedDate]) { studentHistory[currentHistoryStudent][currentSelectedDate] = { totalMinutes: 0, coupon: 0, penalty: 0, note: "", timeLogs: [] }; }
     studentHistory[currentHistoryStudent][currentSelectedDate].note = document.getElementById('detailNoteInput').value.trim();
     saveToStorage(); closeHistoryDetail(); 
 }
 
 window.deleteHistoryDate = function() {
-    if(!currentHistoryStudent || !currentSelectedDate) return;
-    playUISound('cancel');
-    if(confirm(`[${currentSelectedDate}] 이 날짜의 기록을 정말 삭제하시겠습니까?`)) {
-        if(studentHistory[currentHistoryStudent] && studentHistory[currentHistoryStudent][currentSelectedDate]) {
-            delete studentHistory[currentHistoryStudent][currentSelectedDate];
-            saveToStorage(); closeHistoryDetail(); 
-        }
-    }
+    if(!currentHistoryStudent || !currentSelectedDate) return; playUISound('cancel');
+    if(confirm(`[${currentSelectedDate}] 이 날짜의 기록을 정말 삭제하시겠습니까?`)) { if(studentHistory[currentHistoryStudent] && studentHistory[currentHistoryStudent][currentSelectedDate]) { delete studentHistory[currentHistoryStudent][currentSelectedDate]; saveToStorage(); closeHistoryDetail(); } }
 };
 
 window.deleteHistoryAll = function() {
-    if(!currentHistoryStudent) return;
-    playUISound('cancel');
-    if(confirm(`⚠️ 경고!\n[${currentHistoryStudent}] 학생의 "모든 누적 기록"을 영구적으로 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`)) {
-        delete studentHistory[currentHistoryStudent];
-        saveToStorage(); closeHistoryDetail(); renderHistoryCalendar();
-    }
+    if(!currentHistoryStudent) return; playUISound('cancel');
+    if(confirm(`⚠️ 경고!\n[${currentHistoryStudent}] 학생의 "모든 누적 기록"을 영구적으로 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`)) { delete studentHistory[currentHistoryStudent]; saveToStorage(); closeHistoryDetail(); renderHistoryCalendar(); }
 };
 
 window.toggleAcademyHoliday = function() {
-    if(!currentSelectedDate) return;
-    playUISound('click');
-    const idx = academyHolidays.indexOf(currentSelectedDate);
-    if(idx > -1) { academyHolidays.splice(idx, 1); } 
-    else { academyHolidays.push(currentSelectedDate); }
-    saveToStorage();
+    if(!currentSelectedDate) return; playUISound('click'); const idx = academyHolidays.indexOf(currentSelectedDate);
+    if(idx > -1) { academyHolidays.splice(idx, 1); } else { academyHolidays.push(currentSelectedDate); } saveToStorage();
     selectHistoryDate(currentSelectedDate, studentHistory[currentHistoryStudent]?.[currentSelectedDate]);
 };
 
@@ -1265,43 +968,30 @@ window.toggleAcademyHoliday = function() {
 // 공통 UI/기능 (리모컨 추가 및 오디오 볼륨 연동)
 // =========================================================================
 function injectRemoteSettingUI() {
-    const settingsCards = document.querySelectorAll('.settings-card');
-    let targetCard = null;
-    settingsCards.forEach(card => { 
-        if(card.innerHTML.includes('학원 정보 및 디스플레이') || card.innerHTML.includes('ACADEMY INFO')) targetCard = card; 
-    });
-
+    const settingsCards = document.querySelectorAll('.settings-card'); let targetCard = null;
+    settingsCards.forEach(card => { if(card.innerHTML.includes('학원 정보 및 디스플레이') || card.innerHTML.includes('ACADEMY INFO')) targetCard = card; });
     if (targetCard && !document.getElementById('remoteSelectRow')) {
-        const row = document.createElement('div'); 
-        row.id = 'remoteSelectRow'; 
-        row.className = 'settings-row';
-        row.style.background = 'var(--bg-main)'; row.style.padding = '15px'; row.style.borderRadius = '16px'; row.style.border = '1px solid var(--border)'; row.style.marginBottom = '25px';
-        
+        const row = document.createElement('div'); row.id = 'remoteSelectRow'; row.className = 'settings-row'; row.style.background = 'var(--bg-main)'; row.style.padding = '15px'; row.style.borderRadius = '16px'; row.style.border = '1px solid var(--border)'; row.style.marginBottom = '25px';
         let inputsHtml = `<span class="settings-label">📡 무선 리모컨 고유번호 설정 (1~10번 책상)</span><div style="display:grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-top: 10px;">`;
-        for(let i=0; i<10; i++) {
-            inputsHtml += `<div><label style="font-size:12px; font-weight:bold; color:var(--text-muted);">${i+1}번 책상</label><input type="text" id="remoteCodeInput_${i}" class="settings-input" style="width:100%; padding:8px; text-align:center; font-size:14px; box-sizing:border-box;" placeholder="번호 입력" onchange="saveRemoteCodes()"></div>`;
-        }
-        inputsHtml += `</div>`;
-        row.innerHTML = inputsHtml;
-        targetCard.appendChild(row);
+        for(let i=0; i<10; i++) { inputsHtml += `<div><label style="font-size:12px; font-weight:bold; color:var(--text-muted);">${i+1}번 책상</label><input type="text" id="remoteCodeInput_${i}" class="settings-input" style="width:100%; padding:8px; text-align:center; font-size:14px; box-sizing:border-box;" placeholder="번호 입력" onchange="saveRemoteCodes()"></div>`; }
+        inputsHtml += `</div>`; row.innerHTML = inputsHtml; targetCard.appendChild(row);
     }
 }
 
-window.saveRemoteCodes = function() {
-    for(let i=0; i<10; i++) {
-        let el = document.getElementById(`remoteCodeInput_${i}`);
-        if(el && el.value) deskRemoteCodes[i] = el.value.trim();
-    }
-    saveToStorage();
-    playUISound('click');
+// ⭐ 수정: 리모컨 창이 비어있어도 무조건 변수에 덮어쓰도록(동기화) 수정!
+window.saveRemoteCodes = function() { 
+    for(let i=0; i<10; i++) { 
+        let el = document.getElementById(`remoteCodeInput_${i}`); 
+        if(el) deskRemoteCodes[i] = el.value.trim(); 
+    } 
+    saveToStorage(); 
+    playUISound('click'); 
 }
 
 function injectHeaderDashboard() {
     const mainHeader = document.getElementById('mainHeader');
     if(mainHeader && !document.getElementById('header-dashboard')) {
-        const dashboard = document.createElement('div');
-        dashboard.id = 'header-dashboard'; dashboard.className = 'header-dashboard-box';
-        let t = i18n[currentLang] || i18n.ko;
+        const dashboard = document.createElement('div'); dashboard.id = 'header-dashboard'; dashboard.className = 'header-dashboard-box'; let t = i18n[currentLang] || i18n.ko;
         dashboard.innerHTML = `
             <div class="hd-title" data-i18n="dashTitle">${t.dashTitle}</div>
             <div class="hd-items-container">
@@ -1316,13 +1006,9 @@ function injectHeaderDashboard() {
 }
 
 function updateRosterCounts() {
-    const total = allNames.length; const finished = finishedSet.size; let active = 0;
-    timers.forEach(t => { if(t.student !== "(empty)") active++; });
-    const waiting = total - finished - active;
-    if(document.getElementById('hd-total')) document.getElementById('hd-total').innerText = total;
-    if(document.getElementById('hd-wait')) document.getElementById('hd-wait').innerText = waiting;
-    if(document.getElementById('hd-active')) document.getElementById('hd-active').innerText = active;
-    if(document.getElementById('hd-finish')) document.getElementById('hd-finish').innerText = finished;
+    const total = allNames.length; const finished = finishedSet.size; let active = 0; timers.forEach(t => { if(t.student !== "(empty)") active++; }); const waiting = total - finished - active;
+    if(document.getElementById('hd-total')) document.getElementById('hd-total').innerText = total; if(document.getElementById('hd-wait')) document.getElementById('hd-wait').innerText = waiting;
+    if(document.getElementById('hd-active')) document.getElementById('hd-active').innerText = active; if(document.getElementById('hd-finish')) document.getElementById('hd-finish').innerText = finished;
 }
 
 function changeLanguage() { currentLang = document.getElementById("langSelect").value; saveToStorage(); applyLanguage(); const dashBox = document.getElementById('header-dashboard'); if(dashBox) { dashBox.remove(); injectHeaderDashboard(); updateRosterCounts(); } }
@@ -1330,87 +1016,54 @@ function applyLanguage() { const t = i18n[currentLang] || i18n.ko; document.quer
 
 window.switchView = function(view) {
     playUISound('tab');
-    document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
-    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-    
+    document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active')); document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
     if(document.getElementById(`view-${view}`)) document.getElementById(`view-${view}`).classList.add('active');
-    const tabBtn = document.querySelector(`.nav-tab[onclick*='${view}']`);
-    if(tabBtn) tabBtn.classList.add('active');
-    
-    if(view === 'settings') renderSettingsRoster(); 
-    if(view === 'history') { closeHistoryDetail(); renderHistorySidebar(); } 
-    if(view === 'game') { if(isRouletteMode) setupRoulette(); else setupLadder(); }
+    const tabBtn = document.querySelector(`.nav-tab[onclick*='${view}']`); if(tabBtn) tabBtn.classList.add('active');
+    if(view === 'settings') renderSettingsRoster(); if(view === 'history') { closeHistoryDetail(); renderHistorySidebar(); } if(view === 'game') { if(isRouletteMode) setupRoulette(); else setupLadder(); }
 }
 
 function injectFontSettingUI() {
-    const settingsCards = document.querySelectorAll('.settings-card'); let acadCard = null;
-    settingsCards.forEach(card => { if(card.innerHTML.includes('학원 정보 및 디스플레이') || card.innerHTML.includes('ACADEMY INFO')) acadCard = card; });
+    const settingsCards = document.querySelectorAll('.settings-card'); let acadCard = null; settingsCards.forEach(card => { if(card.innerHTML.includes('학원 정보 및 디스플레이') || card.innerHTML.includes('ACADEMY INFO')) acadCard = card; });
     if (acadCard && !document.getElementById('fontSelectRow')) {
-        const row = document.createElement('div'); row.id = 'fontSelectRow'; row.className = 'settings-row';
-        row.style.background = 'var(--bg-main)'; row.style.padding = '15px'; row.style.borderRadius = '16px'; row.style.border = '1px solid var(--border)'; row.style.marginBottom = '25px';
-        row.innerHTML = `
-            <span class="settings-label">🔤 시스템 글꼴 (폰트) 선택</span>
-            <select id="fontSelect" class="settings-input" onchange="changeFontFamily(); playUISound('click');">
-                <option value="'Pretendard', sans-serif">1. 프리텐다드 (세련/모던/기본)</option>
-                <option value="'Noto Sans KR', sans-serif">2. 본고딕 (깔끔/정갈)</option>
-                <option value="'Noto Serif KR', serif">3. 본명조 (고급/클래식)</option>
-                <option value="'Gowun Dodum', sans-serif">4. 고운돋움 (단정/감성적)</option>
-                <option value="'SUIT', sans-serif">5. SUIT (스포티/스타일리시)</option>
-                <option value="'GmarketSans', sans-serif">6. 지마켓 산스 (힙/엣지)</option>
-                <option value="'Hahmlet', serif">7. 함렛 (트렌디/레트로)</option>
-                <option value="'Jua', sans-serif">8. 배민 주아체 (둥글/귀여운)</option>
-                <option value="'Do Hyeon', sans-serif">9. 배민 도현체 (볼드/강렬한)</option>
-                <option value="'Cafe24Ssurround', sans-serif">10. 카페24 써라운드 (발랄/개성)</option>
-            </select>
-        `;
+        const row = document.createElement('div'); row.id = 'fontSelectRow'; row.className = 'settings-row'; row.style.background = 'var(--bg-main)'; row.style.padding = '15px'; row.style.borderRadius = '16px'; row.style.border = '1px solid var(--border)'; row.style.marginBottom = '25px';
+        row.innerHTML = `<span class="settings-label">🔤 시스템 글꼴 (폰트) 선택</span><select id="fontSelect" class="settings-input" onchange="changeFontFamily(); playUISound('click');"><option value="'Pretendard', sans-serif">1. 프리텐다드 (세련/모던/기본)</option><option value="'Noto Sans KR', sans-serif">2. 본고딕 (깔끔/정갈)</option><option value="'Noto Serif KR', serif">3. 본명조 (고급/클래식)</option><option value="'Gowun Dodum', sans-serif">4. 고운돋움 (단정/감성적)</option><option value="'SUIT', sans-serif">5. SUIT (스포티/스타일리시)</option><option value="'GmarketSans', sans-serif">6. 지마켓 산스 (힙/엣지)</option><option value="'Hahmlet', serif">7. 함렛 (트렌디/레트로)</option><option value="'Jua', sans-serif">8. 배민 주아체 (둥글/귀여운)</option><option value="'Do Hyeon', sans-serif">9. 배민 도현체 (볼드/강렬한)</option><option value="'Cafe24Ssurround', sans-serif">10. 카페24 써라운드 (발랄/개성)</option></select>`;
         if (acadCard.children.length > 2) acadCard.insertBefore(row, acadCard.children[2]); else acadCard.appendChild(row);
     }
 }
 
-window.changeFontFamily = function() {
-    const select = document.getElementById("fontSelect"); if(!select) return; currentFontFamily = select.value;
-    document.documentElement.style.setProperty('--app-font', currentFontFamily); document.body.style.fontFamily = currentFontFamily;
-    saveToStorage(); if(rosterViewMode === 'list') renderListView(); else generateStudents(); 
-};
+window.changeFontFamily = function() { const select = document.getElementById("fontSelect"); if(!select) return; currentFontFamily = select.value; document.documentElement.style.setProperty('--app-font', currentFontFamily); document.body.style.fontFamily = currentFontFamily; saveToStorage(); if(rosterViewMode === 'list') renderListView(); else generateStudents(); };
 
 function injectListViewUI() {
     const rosterSection = document.getElementById('view-roster'); if(!rosterSection) return;
     if(!document.getElementById('roster-list-wrapper')) {
         const listWrapper = document.createElement('div'); listWrapper.id = 'roster-list-wrapper'; listWrapper.style.display = 'none';
-        listWrapper.innerHTML = `
-            <table class="roster-list-table">
-                <thead>
-                    <tr>
-                        <th onclick="sortList('name')" class="sortable" id="th-name" style="width: 10%;">이름</th>
-                        <th onclick="sortList('grade')" class="sortable" id="th-grade" style="width: 8%;">학년</th>
-                        <th onclick="sortList('level')" class="sortable" id="th-level" style="width: 10%;">레벨</th>
-                        <th onclick="sortList('seat')" class="sortable" id="th-seat" style="width: 20%;">자리 배정</th>
-                        <th onclick="sortList('startTime')" class="sortable" id="th-startTime" style="width: 13%;">시작 시간</th>
-                        <th onclick="sortList('time')" class="sortable" id="th-time" style="width: 12%;">타이머</th>
-                        <th style="width: 27%;">관리</th>
-                    </tr>
-                </thead>
-                <tbody id="rosterListBody"></tbody>
-            </table>
-        `;
+        listWrapper.innerHTML = `<table class="roster-list-table"><thead><tr><th onclick="sortList('name')" class="sortable" id="th-name" style="width: 10%;">이름</th><th onclick="sortList('grade')" class="sortable" id="th-grade" style="width: 8%;">학년</th><th onclick="sortList('level')" class="sortable" id="th-level" style="width: 10%;">레벨</th><th onclick="sortList('seat')" class="sortable" id="th-seat" style="width: 20%;">자리 배정</th><th onclick="sortList('startTime')" class="sortable" id="th-startTime" style="width: 13%;">시작 시간</th><th onclick="sortList('time')" class="sortable" id="th-time" style="width: 12%;">타이머</th><th style="width: 27%;">관리</th></tr></thead><tbody id="rosterListBody"></tbody></table>`;
         rosterSection.insertBefore(listWrapper, rosterSection.firstChild);
     }
-    if(!document.getElementById('btnToggleViewRoster')) {
-        const btn = document.createElement('button'); btn.id = 'btnToggleViewRoster'; btn.className = 'view-toggle-btn';
-        btn.onclick = () => { toggleViewMode(rosterViewMode === 'card' ? 'list' : 'card'); }; rosterSection.appendChild(btn);
-    }
+    if(!document.getElementById('btnToggleViewRoster')) { const btn = document.createElement('button'); btn.id = 'btnToggleViewRoster'; btn.className = 'view-toggle-btn'; btn.onclick = () => { toggleViewMode(rosterViewMode === 'card' ? 'list' : 'card'); }; rosterSection.appendChild(btn); }
     updateViewToggleButtonUI();
 }
 
 function updateViewToggleButtonUI() { const btn = document.getElementById('btnToggleViewRoster'); if(btn) btn.innerHTML = rosterViewMode === 'card' ? '🗂️ 리스트 뷰' : '🎴 아이콘 뷰'; }
+
 window.toggleViewMode = function(mode) { playUISound('click'); rosterViewMode = mode; saveToStorage(); applyViewMode(); };
 
-function applyViewMode() {
-    const cardWrapper = document.querySelector('.roster-columns-wrapper'); const listWrapper = document.getElementById('roster-list-wrapper');
-    if(!cardWrapper || !listWrapper) return;
-    if (rosterViewMode === 'list') { cardWrapper.style.display = 'none'; listWrapper.style.display = 'block'; renderListView(); } 
-    else { cardWrapper.style.display = 'grid'; listWrapper.style.display = 'none'; generateStudents(); }
-    updateViewToggleButtonUI();
+// ⭐ 수정: 리스트뷰일때 아이콘뷰를 !important 로 확실하게 끄기
+function applyViewMode() { 
+    const cardWrapper = document.querySelector('.custom-roster-layout') || document.querySelector('.roster-columns-wrapper'); 
+    const listWrapper = document.getElementById('roster-list-wrapper'); 
+    if(!cardWrapper || !listWrapper) return; 
+    
+    if (rosterViewMode === 'list') { 
+        cardWrapper.style.setProperty('display', 'none', 'important'); 
+        listWrapper.style.display = 'block'; 
+        renderListView(); 
+    } else { 
+        cardWrapper.style.setProperty('display', 'grid', 'important'); 
+        listWrapper.style.display = 'none'; 
+        generateStudents(); 
+    } 
+    updateViewToggleButtonUI(); 
 }
 
 const gradeMap = {'초1':1, '초등학교1학년':1, '초등1':1, '초2':2, '초등학교2학년':2, '초등2':2, '초3':3, '초등학교3학년':3, '초등3':3, '초4':4, '초등학교4학년':4, '초등4':4, '초5':5, '초등학교5학년':5, '초등5':5, '초6':6, '초등학교6학년':6, '초등6':6, '중1':7, '중학교1학년':7, '중등1':7, '중2':8, '중학교2학년':8, '중등2':8, '중3':9, '중학교3학년':9, '중등3':9, '고1':10, '고등학교1학년':10, '고등1':10, '고2':11, '고등학교2학년':11, '고등2':11, '고3':12, '고등학교3학년':12, '고등3':12};
@@ -1418,38 +1071,26 @@ function getGradeWeight(g) { return gradeMap[g.replace(/\s+/g,'')] || 99; }
 const levelMap = {'PRE':1, 'BASIC':2, 'INTER':3, 'ADV':4, 'PREP':5, 'GUEST':6};
 function getLevelWeight(l) { return levelMap[l] || 99; }
 
-window.sortList = function(col) {
-    playUISound('click'); if (listSortConfig.col === col) { listSortConfig.asc = !listSortConfig.asc; } else { listSortConfig.col = col; listSortConfig.asc = true; }
-    ['name', 'grade', 'level', 'seat', 'startTime', 'time'].forEach(c => { let th = document.getElementById(`th-${c}`); if(th) { th.classList.remove('sort-asc', 'sort-desc'); if(c === col) th.classList.add(listSortConfig.asc ? 'sort-asc' : 'sort-desc'); } }); renderListView();
-}
+window.sortList = function(col) { playUISound('click'); if (listSortConfig.col === col) { listSortConfig.asc = !listSortConfig.asc; } else { listSortConfig.col = col; listSortConfig.asc = true; } ['name', 'grade', 'level', 'seat', 'startTime', 'time'].forEach(c => { let th = document.getElementById(`th-${c}`); if(th) { th.classList.remove('sort-asc', 'sort-desc'); if(c === col) th.classList.add(listSortConfig.asc ? 'sort-asc' : 'sort-desc'); } }); renderListView(); }
 
 function renderListView() {
-    if(rosterViewMode !== 'list') return;
-    const tbody = document.getElementById('rosterListBody'); if(!tbody) return;
-
+    if(rosterViewMode !== 'list') return; const tbody = document.getElementById('rosterListBody'); if(!tbody) return;
     let studentsData = allNames.map(name => {
         const lvl = studentLevels[name] || ''; const grade = studentGrades[name] || '';
         const tIdx = timers.findIndex(t => t.student === name); const t = tIdx !== -1 ? timers[tIdx] : null;
         const isFinished = finishedSet.has(name);
-        
         const studentInfo = studentMasterList.find(s => s.name === name);
         const isBday = studentInfo ? isTodayBirthday(studentInfo.birthday) : false;
-
         return { name, grade, level: lvl, tIdx, isFinished, timerData: t, isBday };
     });
 
     studentsData.sort((a, b) => { let res = 0; if (listSortConfig.col === 'name') res = a.name.localeCompare(b.name, 'ko-KR'); else if (listSortConfig.col === 'grade') res = getGradeWeight(a.grade) - getGradeWeight(b.grade); else if (listSortConfig.col === 'level') res = getLevelWeight(a.level) - getLevelWeight(b.level); else if (listSortConfig.col === 'seat') { let sA = a.tIdx === -1 ? 99 : a.tIdx; let sB = b.tIdx === -1 ? 99 : b.tIdx; res = sA - sB; } else if (listSortConfig.col === 'startTime') { let ta = (a.timerData && a.timerData.startTimeStr) ? a.timerData.startTimeStr : '99:99'; let tb = (b.timerData && b.timerData.startTimeStr) ? b.timerData.startTimeStr : '99:99'; res = ta.localeCompare(tb); } else if (listSortConfig.col === 'time') { let timeA = 999999, timeB = 999999; if(a.timerData) { timeA = a.timerData.isOver ? -a.timerData.overTime : a.timerData.remainingTime; } if(b.timerData) { timeB = b.timerData.isOver ? -b.timerData.overTime : b.timerData.remainingTime; } res = timeA - timeB; } if (res === 0) res = a.name.localeCompare(b.name, 'ko-KR'); return listSortConfig.asc ? res : -res; });
 
     let html = ''; const tLang = i18n[currentLang] || i18n.ko;
-
     studentsData.forEach(sd => {
-        let levelLabel = (sd.level === 'PREP') ? 'PREP31' : (sd.level === 'ADV' ? 'ADV' : sd.level); 
-        let rowClass = ''; let customMins = studentTimes[sd.name] || 50;
-        let timerHtml = `<span style="font-size:32px; font-weight:900;">${String(customMins).padStart(2,'0')}:00</span>`; let startTimeHtml = '-';
-        
-        if (sd.isFinished) {
-            rowClass = 'finished-row'; timerHtml = `<span style="font-size:20px; font-weight:900; color:var(--text-muted); background: rgba(0,0,0,0.05); padding: 6px 12px; border-radius: 8px;">🏁 수업 완료</span>`;
-        } else if (sd.timerData) {
+        let levelLabel = (sd.level === 'PREP') ? 'PREP31' : (sd.level === 'ADV' ? 'ADV' : sd.level); let rowClass = ''; let customMins = studentTimes[sd.name] || 50; let timerHtml = `<span style="font-size:32px; font-weight:900;">${String(customMins).padStart(2,'0')}:00</span>`; let startTimeHtml = '-';
+        if (sd.isFinished) { rowClass = 'finished-row'; timerHtml = `<span style="font-size:20px; font-weight:900; color:var(--text-muted); background: rgba(0,0,0,0.05); padding: 6px 12px; border-radius: 8px;">🏁 수업 완료</span>`; } 
+        else if (sd.timerData) {
             if (sd.timerData.interval !== null || sd.timerData.isPaused) rowClass = 'row-playing';
             if (sd.timerData.startTimeStr) startTimeHtml = `<span class="editable-log-time" onclick="editActiveStartTime('${sd.name}')" style="cursor:pointer; color:var(--accent); font-weight:900; font-size:22px;">${sd.timerData.startTimeStr}</span>`;
             let clickAction = `onclick="goToTimer('${sd.name}')" class="clickable-timer" style="cursor:pointer;"`;
@@ -1460,29 +1101,28 @@ function renderListView() {
         
         let seatOptions = `<option value="-1" ${sd.tIdx === -1 ? 'selected' : ''}>자리 미 배정</option>`;
         for(let i=0; i<DESK_COUNT; i++) {
-            let t = timers[i]; let isMe = (t.student === sd.name); let selected = isMe ? 'selected' : '';
-            let statusIcon = '🪑'; let statusText = ''; let styleOption = '';
+            let t = timers[i]; let isMe = (t.student === sd.name); let selected = isMe ? 'selected' : ''; let statusIcon = '🪑'; let statusText = ''; let styleOption = '';
             if (t.interval !== null || t.isPaused) { if (t.student === "(empty)") { statusIcon = '🚨'; statusText = ' (버튼 눌림!)'; styleOption = `style="background:#fee2e2; color:#ef4444; font-weight:bold;"`; } else { statusIcon = t.isPaused ? '⏸️' : '▶️'; statusText = isMe ? '' : ` (${t.student})`; } } else { if (t.student !== "(empty)") { statusIcon = '⏹️'; statusText = isMe ? '' : ` (${t.student})`; } }
             seatOptions += `<option value="${i}" ${selected} style="${styleOption}">${statusIcon} ${i+1}번 책상${statusText}</option>`;
         }
 
-        let selectClass = sd.tIdx !== -1 ? 'list-seat-select assigned' : 'list-seat-select';
-        let btns = '';
+        let selectClass = sd.tIdx !== -1 ? 'list-seat-select assigned' : 'list-seat-select'; let btns = '';
         if(!sd.isFinished) {
             if(sd.tIdx !== -1) { let t = sd.timerData; if(!t.interval && !t.isOver && !t.isPaused) btns += `<button class="list-action-btn l-btn-start" onclick="startTimer(${sd.tIdx})">${tLang.btnStart}</button>`; else if(t.isPaused) btns += `<button class="list-action-btn l-btn-start" onclick="resumeTimer(${sd.tIdx})">▶️ 재개</button>`; if(t.interval || t.isPaused) btns += `<button class="list-action-btn l-btn-stop" onclick="stopTimer(${sd.tIdx})">${tLang.btnStop}</button>`; btns += `<button class="list-action-btn l-btn-finish" onclick="finishSession(${sd.tIdx})">${tLang.btnFinish}</button>`; btns += `<button class="list-action-btn l-btn-cancel" onclick="cancelSession(${sd.tIdx})">${tLang.btnCancel}</button>`; } else { if (sd.level === 'GUEST') btns += `<button class="list-action-btn l-btn-cancel" onclick="removeGuest('${sd.name}')">✖ 삭제</button>`; }
         } else { btns += `<button class="list-action-btn l-btn-cancel" onclick="finishedSet.delete('${sd.name}'); applyViewMode();">🔄 대기열 복구</button>`; }
 
         let lvlColor = '#94a3b8'; if(sd.level==='PRE') lvlColor='var(--selena-yellow)'; else if(sd.level==='BASIC') lvlColor='var(--selena-pink)'; else if(sd.level==='INTER') lvlColor='var(--selena-orange)'; else if(sd.level==='ADV') lvlColor='var(--selena-cyan)'; else if(sd.level==='PREP') lvlColor='var(--selena-brown)';
         let lvlFontColor = sd.level==='PRE' ? '#000' : '#fff';
-
         let mods = studentModifiers[sd.name] || {coupon:0, penalty:0}; let listMods = '';
         if(mods.coupon > 0) listMods += `<span class="mod-badge coupon" onclick="removeModifier('${sd.name}', 'coupon', event)">🎟️x${mods.coupon}</span>`;
         if(mods.penalty > 0) listMods += `<span class="mod-badge penalty" onclick="removeModifier('${sd.name}', 'penalty', event)">🚨x${mods.penalty}</span>`;
 
+        let bdayIcon = sd.isBday ? '<span style="font-size:22px; animation: bday-bounce 0.8s infinite alternate ease-in-out; display:inline-block; margin-right:6px;">🎉</span>' : '';
+
         html += `
             <tr class="${rowClass}">
                 <td style="font-weight:900; font-size:24px; text-align:center !important; color:var(--text-main); font-family: var(--app-font, 'Pretendard', sans-serif);">
-                    ${sd.isBday ? '👑 ' : ''}${sd.name}
+                    ${bdayIcon}${sd.name}
                     ${listMods ? `<div style="display:flex; justify-content:center; gap:4px; margin-top:6px;">${listMods}</div>` : ''}
                 </td>
                 <td style="color:var(--text-muted); font-weight:800; font-size:18px;"><span class="list-grade-badge">${sd.grade || '-'}</span></td>
@@ -1506,13 +1146,7 @@ function updateCustomNames() { academyName = document.getElementById('inputAcade
 function changeNameColor() { const val = document.getElementById("nameColorSelect").value; const root = document.documentElement; if (val === 'black') { root.style.setProperty('--custom-name-color', '#000000'); } else if (val === 'white') { root.style.setProperty('--custom-name-color', '#ffffff'); } else { root.style.setProperty('--custom-name-color', '#0f172a'); } saveToStorage(); }
 function changeTheme() { currentTheme = document.getElementById("themeSelect").value; document.body.className = "theme-" + currentTheme; saveToStorage(); }
 
-// ⭐ 오디오 볼륨 설정 시 미리듣기(Preview) 기능 연결
-function updateVolumes() { 
-    alarmVolume = document.getElementById('volAlarm').value / 100; 
-    ttsVolume = document.getElementById('volTTS').value / 100; 
-    uiVolume = document.getElementById('volUI').value / 100; 
-    saveToStorage(); 
-}
+function updateVolumes() { alarmVolume = document.getElementById('volAlarm').value / 100; ttsVolume = document.getElementById('volTTS').value / 100; uiVolume = document.getElementById('volUI').value / 100; saveToStorage(); }
 
 function changeDeskCount() { const newCount = parseInt(document.getElementById("deskCountSelect").value); if(newCount < timers.length) { for(let i=newCount; i<timers.length; i++) { if(timers[i].student !== "(empty)") { if(!confirm(`타이머 ${newCount+1}번 이상에 배치된 학생이 있습니다. 강제 취소됩니다.`)) { document.getElementById("deskCountSelect").value = DESK_COUNT; return; } break; } } for(let i=newCount; i<timers.length; i++) { stopTimer(i); if(timers[i].student !== "(empty)") { attendanceMap.delete(timers[i].student); updateStudentStatus(timers[i].student); } } timers.length = newCount; } else if(newCount > timers.length) { for(let i=timers.length; i<newCount; i++) { timers.push({ student: "(empty)", remainingTime: 0, totalTime: 0, overTime: 0, interval: null, isOver: false, isPaused: false, lastTick: 0 }); } } DESK_COUNT = newCount; createInitialGrid(); generateStudents(); saveToStorage(); }
 
@@ -1551,10 +1185,11 @@ function loadData() {
             document.getElementById('inputAcademyName').value = academyName; document.getElementById('inputClassName').value = className;
             document.getElementById('displayAcademyName').innerText = academyName; document.getElementById('displayClassName').innerText = className; 
             
-            if(data.deskRemoteCodes) { deskRemoteCodes = data.deskRemoteCodes; }
-            for(let i=0; i<10; i++) {
-                let el = document.getElementById(`remoteCodeInput_${i}`);
-                if(el && deskRemoteCodes[i]) el.value = deskRemoteCodes[i];
+            // ⭐ 수정: 이전 백업파일에서 리모컨 값이 아예 없는 경우(undefined)를 방어하여 안전하게 불러오기
+            if(data.deskRemoteCodes && Array.isArray(data.deskRemoteCodes)) { deskRemoteCodes = data.deskRemoteCodes; }
+            for(let i=0; i<10; i++) { 
+                let el = document.getElementById(`remoteCodeInput_${i}`); 
+                if(el && deskRemoteCodes[i] !== undefined) el.value = deskRemoteCodes[i]; 
             }
 
             if (data.studentMasterList) { studentMasterList = data.studentMasterList; } 
@@ -1581,7 +1216,21 @@ function loadData() {
     } catch(e) {}
 }
 
-function exportData() { saveToStorage(); const data = localStorage.getItem(STORAGE_KEY); const blob = new Blob([data], {type: "application/json"}); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `Timer_Backup_PC_${new Date().toISOString().slice(0,10)}.json`; a.click(); }
+// ⭐ 수정: 백업 버튼 누르기 직전에 현재 화면의 리모컨 인풋창 10개의 값을 강제로 다시 긁어오기!
+function exportData() { 
+    for(let i=0; i<10; i++) { 
+        let el = document.getElementById(`remoteCodeInput_${i}`); 
+        if(el) deskRemoteCodes[i] = el.value.trim(); 
+    }
+    saveToStorage(); 
+    const data = localStorage.getItem(STORAGE_KEY); 
+    const blob = new Blob([data], {type: "application/json"}); 
+    const a = document.createElement("a"); 
+    a.href = URL.createObjectURL(blob); 
+    a.download = `Timer_Backup_PC_${new Date().toISOString().slice(0,10)}.json`; 
+    a.click(); 
+}
+
 function triggerImport() { document.getElementById("importFile").click(); }
 function importData(e) { const t = i18n[currentLang] || i18n.ko; const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = function(evt) { try { const json = JSON.parse(evt.target.result); localStorage.setItem(STORAGE_KEY, JSON.stringify(json)); alert("복구 완료!"); location.reload(); } catch(err) { alert("유효하지 않은 백업입니다."); } finally { e.target.value = ''; } }; reader.readAsText(file); }
 
@@ -1644,12 +1293,8 @@ function generateStudents() {
             const lvl = studentLevels[n]; const grade = studentGrades[n];
             const btn = document.createElement("button"); btn.id = "btn-" + n; 
             let levelLabel = (lvl === 'PREP') ? 'PREP31' : (lvl === 'ADV' ? 'ADV' : lvl); if(lvl === 'GUEST') levelLabel = 'GUEST';
-            
-            const studentInfo = studentMasterList.find(s => s.name === n);
-            const isBday = studentInfo ? isTodayBirthday(studentInfo.birthday) : false;
-            let displayBday = isBday ? "👑 " : "";
 
-            btn.innerHTML = `<div class="gauge-bg"></div><button class="card-cancel-btn" onclick="event.stopPropagation(); cancelFromCard('${n}')">✖</button><button class="guest-delete-btn" onclick="event.stopPropagation(); removeGuest('${n}')">✖</button><div class="alarm-alert-text">${tLang.statusTimeUp}</div><div class="card-badge-group"><div class="new-level-pill level-color-${lvl}">${levelLabel}</div>${grade ? `<div class="card-grade-badge">${grade}</div>` : ''}</div><div class="name-text">${displayBday}${n}</div><div class="quick-controls"><button class="quick-btn q-start" onclick="event.stopPropagation(); quickStart('${n}')">${tLang.quickStart}</button><button class="quick-btn q-finish" onclick="event.stopPropagation(); quickFinish('${n}')">${tLang.quickFinish}</button></div>`;
+            btn.innerHTML = `<div class="gauge-bg"></div><button class="card-cancel-btn" onclick="event.stopPropagation(); cancelFromCard('${n}')">✖</button><button class="guest-delete-btn" onclick="event.stopPropagation(); removeGuest('${n}')">✖</button><div class="alarm-alert-text">${tLang.statusTimeUp}</div><div class="card-badge-group"><div class="new-level-pill level-color-${lvl}">${levelLabel}</div>${grade ? `<div class="card-grade-badge">${grade}</div>` : ''}</div><div class="name-text">${n}</div><div class="quick-controls"><button class="quick-btn q-start" onclick="event.stopPropagation(); quickStart('${n}')">${tLang.quickStart}</button><button class="quick-btn q-finish" onclick="event.stopPropagation(); quickFinish('${n}')">${tLang.quickFinish}</button></div>`;
             btn.draggable = true; btn.style.order = index;
             btn.ondragstart = (e) => { draggedName = n; draggedNameForList = n; let tIdx = timers.findIndex(t => t.student === n); draggedFromIndex = tIdx !== -1 ? tIdx : null; e.dataTransfer.effectAllowed = 'move'; playUISound('click'); };
             btn.ondragenter = (e) => { e.preventDefault(); btn.classList.add("drag-over"); }; btn.ondragover = (e) => { e.preventDefault(); btn.classList.add("drag-over"); }; btn.ondragleave = (e) => { btn.classList.remove("drag-over"); };
@@ -1665,7 +1310,11 @@ function generateStudents() {
 function updateStudentStatus(name) {
     if(rosterViewMode === 'list') return; 
     const tLang = i18n[currentLang] || i18n.ko; const btn = document.getElementById("btn-" + name); if (!btn) return; const lvl = studentLevels[name] || '';
-    btn.className = `student-btn level-${lvl}`; 
+    
+    const studentInfo = studentMasterList.find(s => s.name === name);
+    const isBday = studentInfo ? isTodayBirthday(studentInfo.birthday) : false;
+    btn.className = `student-btn level-${lvl} ${isBday ? 'bday-card' : ''}`; 
+    
     let badge = btn.querySelector(".status-badge"); if (!badge) { badge = document.createElement("div"); badge.className = "status-badge"; btn.appendChild(badge); } badge.style.background = ""; badge.style.color = ""; badge.style.display = ""; 
     let timeBadge = btn.querySelector(".start-time-badge"); if (!timeBadge) { timeBadge = document.createElement("div"); timeBadge.className = "start-time-badge"; btn.appendChild(timeBadge); } timeBadge.style.display = "none"; 
     
@@ -1708,7 +1357,14 @@ function createInitialGrid() {
 function updateBoxUI(id) {
     const tLang = i18n[currentLang] || i18n.ko; const t = timers[id]; const box = document.getElementById(`box-${id}`); if (!box) return;
     const isAssigned = t.student !== "(empty)"; const isPlaying = t.interval !== null || t.isPaused; const isRunningEmpty = !isAssigned && isPlaying; 
-    box.className = `timer-box ${t.isOver ? 'done' : ''} ${isPlaying ? 'playing' : ''}`;
+    
+    let isBday = false;
+    if (isAssigned) {
+        const studentInfo = studentMasterList.find(s => s.name === t.student);
+        isBday = studentInfo ? isTodayBirthday(studentInfo.birthday) : false;
+    }
+    box.className = `timer-box ${t.isOver ? 'done' : ''} ${isPlaying ? 'playing' : ''} ${isBday ? 'bday-card' : ''}`;
+    
     const lvl = studentLevels[t.student] || ''; const panelClass = isAssigned && lvl ? `info-panel timer-bg-${lvl}` : 'info-panel';
     const panelStyle = (isAssigned || isRunningEmpty) ? "" : "background: transparent; border: 2px dashed var(--border); box-shadow: none !important;";
     const nameDisplay = isAssigned ? `<span style="font-family: var(--app-font, 'Pretendard', sans-serif);">${t.student}</span>` : (isRunningEmpty ? `<span style="font-size: 22px; color: var(--accent); font-weight:900; animation: blinker 1.5s linear infinite;">매칭 대기중...</span>` : '&nbsp;');
@@ -1753,44 +1409,33 @@ function handleDropOnTimer(name, targetIdx, fromIdx) {
         if (timers[fromIdx].student !== "(empty)") updateStudentStatus(timers[fromIdx].student); 
         if (timers[targetIdx].student !== "(empty)") updateStudentStatus(timers[targetIdx].student); 
         playUISound('assign'); if (fromRunning) startTimer(targetIdx, true); if (targetRunning) startTimer(fromIdx, true);
-} else {
-            const target = timers[targetIdx];
-            // 설정에서 입력한 학생별 고유 수업 시간(분)을 가져와 초 단위로 변환합니다.
-            let customTime = (studentTimes[name] || 50) * 60;
-            let mods = studentModifiers[name]; if(mods) { customTime -= (mods.coupon * 300); customTime += (mods.penalty * 300); if(customTime < 0) customTime = 0; }
+    } else {
+        const target = timers[targetIdx];
+        let customTime = (studentTimes[name] || 50) * 60;
+        let mods = studentModifiers[name]; if(mods) { customTime -= (mods.coupon * 300); customTime += (mods.penalty * 300); if(customTime < 0) customTime = 0; }
+        
+        if (target.interval || target.isPaused) {
+            let elapsedTime = target.isOver ? (target.totalTime + target.overTime) : (target.totalTime - target.remainingTime);
+            target.student = name;
+            target.totalTime = customTime; 
+            let newRemaining = customTime - elapsedTime;
             
-            // 리모컨 버튼을 눌러 이미 타이머가 흘러가고 있는 자리에 이름을 배정하는 경우
-            if (target.interval || target.isPaused) {
-                // 1. 학생 이름을 올리기 전까지 리모컨 신호로 먼저 흘러간 시간(elapsedTime)을 계산합니다.
-                let elapsedTime = target.isOver ? (target.totalTime + target.overTime) : (target.totalTime - target.remainingTime);
-                
-                target.student = name;
-                target.totalTime = customTime; // 총 시간 기준은 학생 개인 설정 시간으로 변경
-                
-                // 2. 학생 개인의 전체 수업 시간에서 이미 리모컨 작동으로 소모된 시간을 뺍니다.
-                let newRemaining = customTime - elapsedTime;
-                
-                if (newRemaining <= 0) {
-                    target.isOver = true;
-                    target.overTime = Math.abs(newRemaining);
-                    target.remainingTime = 0;
-                } else {
-                    target.isOver = false;
-                    target.overTime = 0;
-                    target.remainingTime = newRemaining;
-                }
-                
-                document.getElementById(`display-${targetIdx}`).innerText = target.isOver ? '+'+formatTime(target.overTime) : formatTime(target.remainingTime);
-                if (!attendanceMap.has(name)) { assignOrderCounter++; attendanceMap.set(name, assignOrderCounter); if(finishedSet.has(name)) finishedSet.delete(name); }
-                playUISound('assign'); 
-                updateBoxUI(targetIdx); updateStudentStatus(name); updateGauge(name, target.remainingTime, target.totalTime);
+            if (newRemaining <= 0) {
+                target.isOver = true; target.overTime = Math.abs(newRemaining); target.remainingTime = 0;
             } else {
-                // 완전히 멈춰있던 빈자리에 학생 이름을 처음 올리는 경우 (기존 로직 유지)
-                target.student = name; target.remainingTime = customTime; target.totalTime = customTime; target.overTime = 0; target.isOver = false;
-                if (!attendanceMap.has(name)) { assignOrderCounter++; attendanceMap.set(name, assignOrderCounter); if(finishedSet.has(name)) finishedSet.delete(name); }
-                playUISound('assign'); updateBoxUI(targetIdx); updateStudentStatus(name); updateGauge(name, customTime, customTime);
+                target.isOver = false; target.overTime = 0; target.remainingTime = newRemaining;
             }
+            
+            document.getElementById(`display-${targetIdx}`).innerText = target.isOver ? '+'+formatTime(target.overTime) : formatTime(target.remainingTime);
+            if (!attendanceMap.has(name)) { assignOrderCounter++; attendanceMap.set(name, assignOrderCounter); if(finishedSet.has(name)) finishedSet.delete(name); }
+            playUISound('assign'); 
+            updateBoxUI(targetIdx); updateStudentStatus(name); updateGauge(name, target.remainingTime, target.totalTime);
+        } else {
+            target.student = name; target.remainingTime = customTime; target.totalTime = customTime; target.overTime = 0; target.isOver = false;
+            if (!attendanceMap.has(name)) { assignOrderCounter++; attendanceMap.set(name, assignOrderCounter); if(finishedSet.has(name)) finishedSet.delete(name); }
+            playUISound('assign'); updateBoxUI(targetIdx); updateStudentStatus(name); updateGauge(name, customTime, customTime);
         }
+    }
     saveToStorage();
 }
 
@@ -1830,8 +1475,14 @@ function finishSession(id) {
     
     if(!studentHistory[sn]) studentHistory[sn] = {};
     if(!studentHistory[sn][dateKey]) {
-        studentHistory[sn][dateKey] = { totalMinutes: 0, coupon: 0, penalty: 0, note: "" };
+        studentHistory[sn][dateKey] = { totalMinutes: 0, coupon: 0, penalty: 0, note: "", timeLogs: [] };
     }
+    
+    const startT = t.startTimeStr || '?-?';
+    const endT = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+    if (!studentHistory[sn][dateKey].timeLogs) studentHistory[sn][dateKey].timeLogs = [];
+    studentHistory[sn][dateKey].timeLogs.push(`[${startT} ~ ${endT}]`);
+
     studentHistory[sn][dateKey].totalMinutes += actualMinutes;
     studentHistory[sn][dateKey].coupon += mods.coupon;
     studentHistory[sn][dateKey].penalty += mods.penalty;
@@ -1864,9 +1515,60 @@ function playDeskStartTTS(deskNum) { if (!window.speechSynthesis) return; let vo
 
 function playAlarmTTS(studentName) { return new Promise(resolve => { const voiceType = document.getElementById("ttsVoiceSelect")?.value || "1"; if (voiceType === "0" || !window.speechSynthesis) return resolve(); window.__tts_queue.push(() => new Promise(taskResolve => { let voices = window.speechSynthesis.getVoices(); if (voices.length === 0) { setTimeout(() => { resolve(); taskResolve(); }, 100); return; } window.speechSynthesis.cancel(); const getKoVoice = () => voices.find(v => v.name.includes('Google') && v.lang.includes('ko')) || voices.find(v => v.name.includes('Natural') && v.lang.includes('ko')) || voices.find(v => v.lang.includes('ko')); const getEnVoice = () => voices.find(v => v.name === 'Google US English') || voices.find(v => v.lang.includes('en-US')) || voices.find(v => v.lang.includes('en')); let u1, u2; let isFinished = false; let fallbackTimer = setTimeout(() => { finalize(); }, 5000); const finalize = () => { if(!isFinished) { isFinished = true; clearTimeout(fallbackTimer); resolve(); taskResolve(); } }; if (voiceType === "1") { u1 = new SpeechSynthesisUtterance(`${studentName}! ${studentName}!`); u1.volume = ttsVolume; u1.rate = 1.05; u1.pitch = 1.1; u1.lang = 'ko-KR'; let koVoice = getKoVoice(); if (koVoice) u1.voice = koVoice; u1.onend = finalize; u1.onerror = finalize; window.speechSynthesis.speak(u1); } else if (voiceType === "2" || voiceType === "3") { u1 = new SpeechSynthesisUtterance(`${studentName}!`); u1.volume = ttsVolume; u1.rate = 1.05; u1.pitch = 1.1; u1.lang = 'ko-KR'; let koVoice = getKoVoice(); if (koVoice) u1.voice = koVoice; let phrase = voiceType === "2" ? "Let's go home!" : "Time's up! It's time to go home!"; u2 = new SpeechSynthesisUtterance(phrase); u2.volume = ttsVolume; u2.rate = 1.05; u2.pitch = 1.1; u2.lang = 'en-US'; let enVoice = getEnVoice(); if (enVoice) u2.voice = enVoice; u2.onend = finalize; u2.onerror = finalize; window.speechSynthesis.speak(u1); window.speechSynthesis.speak(u2); } else { finalize(); } })); processTTSQueue(); }); }
 
-function playMelody(type) { return new Promise(resolve => { initAudio(); const melodies = [ [523.25, 659.25, 783.99, 1046.50], [440, 554.37, 659.25, 880], [880, 880, 880, 880], [392, 329.63, 261.63], [261.63, 392, 523.25, 783.99], [1046.5, 0, 1046.5, 0, 1046.5] ]; let notes = melodies[type] || melodies[0]; let now = audioCtx.currentTime; let noteLength = 0.25; notes.forEach((freq, i) => { if (freq === 0) return; let osc = audioCtx.createOscillator(); let gain = audioCtx.createGain(); osc.type = 'sine'; osc.frequency.value = freq; gain.gain.setValueAtTime(0, now + i*noteLength); gain.gain.linearRampToValueAtTime(alarmVolume, now + i*noteLength + 0.02); gain.gain.exponentialRampToValueAtTime(0.01, now + i*noteLength + noteLength); osc.connect(gain); gain.connect(audioCtx.destination); osc.start(now + i*noteLength); osc.stop(now + i*noteLength + noteLength); }); setTimeout(resolve, notes.length * noteLength * 1000 + 200); }); }
+function playMelody(type) { 
+    return new Promise(resolve => { 
+        initAudio(); 
+        const melodies = [ 
+            [523.25, 659.25, 783.99, 1046.50], [440, 554.37, 659.25, 880], [880, 880, 880, 880], [392, 329.63, 261.63], [261.63, 392, 523.25, 783.99], 
+            [1046.5, 0, 1046.5, 0, 1046.5], [1046.5, 1174.66, 1318.51, 1567.98], [130.81, 196.00], [587.33, 739.99, 880], [440, 349.23, 523.25, 493.88], 
+            [659.25, 523.25, 659.25, 523.25], [392, 440, 493.88, 523.25, 587.33], [1046.5, 783.99, 523.25], [440, 440, 0, 440, 440], [523.25, 392, 329.63, 261.63], 
+            [880, 659.25, 880, 659.25], [261.63, 329.63, 392, 523.25, 659.25], [783.99, 587.33, 440, 349.23], [1046.5, 1046.5, 1046.5, 1046.5, 1046.5], [523.25, 659.25, 587.33, 698.46, 659.25, 783.99],
+            [330, 261, 293, 196, 0, 196, 293, 330, 261], [659, 622, 659, 622, 659, 494, 587, 523, 440], [523, 659, 784, 1046], [392, 330, 0, 392, 330], [1046, 0, 1046, 0, 1046, 0, 1046, 0, 1046] 
+        ]; 
+        let notes = melodies[type] || melodies[0]; 
+        let now = audioCtx.currentTime; 
+        let noteLength = 0.25; 
+        if(type === 2 || type === 5 || type === 13 || type === 18 || type === 24) noteLength = 0.15;
+        if(type === 20 || type === 21 || type === 22) noteLength = 0.35;
+        
+        notes.forEach((freq, i) => { 
+            if (freq === 0) return; 
+            let osc = audioCtx.createOscillator(); let gain = audioCtx.createGain(); 
+            osc.type = (type === 2 || type === 9 || type === 18 || type === 24) ? 'square' : 'sine'; 
+            osc.frequency.value = freq; 
+            gain.gain.setValueAtTime(0, now + i*noteLength); 
+            gain.gain.linearRampToValueAtTime(alarmVolume, now + i*noteLength + 0.02); 
+            gain.gain.exponentialRampToValueAtTime(0.01, now + i*noteLength + noteLength); 
+            osc.connect(gain); gain.connect(audioCtx.destination); 
+            osc.start(now + i*noteLength); osc.stop(now + i*noteLength + noteLength); 
+        }); 
+        setTimeout(resolve, notes.length * noteLength * 1000 + 200); 
+    }); 
+}
 
-function playUISound(type) { if (!audioCtx) initAudio(); const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.connect(gain); gain.connect(audioCtx.destination); const now = audioCtx.currentTime; let v = uiVolume; if (v === 0) return; if (type === 'tab' || type === 'click') { let st = parseInt(document.getElementById('uiSoundType')?.value) || 0; if(st === 0) { osc.type = 'sine'; osc.frequency.setValueAtTime(600, now); osc.frequency.exponentialRampToValueAtTime(800, now + 0.1); gain.gain.setValueAtTime(v * 0.15, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1); osc.start(now); osc.stop(now + 0.1); } } else if (type === 'assign') { osc.type = 'triangle'; osc.frequency.setValueAtTime(880, now); gain.gain.setValueAtTime(v * 0.15, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15); osc.start(now); osc.stop(now + 0.15); } else if (type === 'start') { osc.type = 'square'; osc.frequency.setValueAtTime(440, now); osc.frequency.linearRampToValueAtTime(880, now + 0.1); gain.gain.setValueAtTime(v * 0.08, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1); osc.start(now); osc.stop(now + 0.1); } else if (type === 'stop') { osc.type = 'square'; osc.frequency.setValueAtTime(880, now); osc.frequency.linearRampToValueAtTime(440, now + 0.1); gain.gain.setValueAtTime(v * 0.08, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1); osc.start(now); osc.stop(now + 0.1); } else if (type === 'finish') { osc.type = 'sine'; osc.frequency.setValueAtTime(1046.5, now); gain.gain.setValueAtTime(v * 0.2, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3); osc.start(now); osc.stop(now + 0.3); } else if (type === 'cancel') { osc.type = 'sine'; osc.frequency.setValueAtTime(400, now); osc.frequency.exponentialRampToValueAtTime(150, now + 0.2); gain.gain.setValueAtTime(v * 0.2, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2); osc.start(now); osc.stop(now + 0.2); } }
+function playUISound(type) { 
+    if (!audioCtx) initAudio(); 
+    const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.connect(gain); gain.connect(audioCtx.destination); const now = audioCtx.currentTime; let v = uiVolume; if (v === 0) return; 
+    
+    if (type === 'tab' || type === 'click') { 
+        let st = parseInt(document.getElementById('uiSoundType')?.value) || 0; 
+        if(st === 0) { osc.type = 'sine'; osc.frequency.setValueAtTime(600, now); osc.frequency.exponentialRampToValueAtTime(800, now + 0.1); gain.gain.setValueAtTime(v * 0.15, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1); osc.start(now); osc.stop(now + 0.1); } 
+        else if(st === 1) { osc.type = 'sine'; osc.frequency.setValueAtTime(400, now); osc.frequency.exponentialRampToValueAtTime(450, now + 0.05); gain.gain.setValueAtTime(v * 0.2, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05); osc.start(now); osc.stop(now + 0.05); }
+        else if(st === 2) { osc.type = 'triangle'; osc.frequency.setValueAtTime(800, now); osc.frequency.exponentialRampToValueAtTime(1000, now + 0.03); gain.gain.setValueAtTime(v * 0.1, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.03); osc.start(now); osc.stop(now + 0.03); }
+        else if(st === 3) { osc.type = 'sine'; osc.frequency.setValueAtTime(200, now); osc.frequency.exponentialRampToValueAtTime(150, now + 0.1); gain.gain.setValueAtTime(v * 0.3, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1); osc.start(now); osc.stop(now + 0.1); }
+        else if(st === 4) { osc.type = 'square'; osc.frequency.setValueAtTime(1200, now); osc.frequency.exponentialRampToValueAtTime(1000, now + 0.08); gain.gain.setValueAtTime(v * 0.05, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08); osc.start(now); osc.stop(now + 0.08); }
+        else if(st === 5) { osc.type = 'sine'; osc.frequency.setValueAtTime(2000, now); osc.frequency.exponentialRampToValueAtTime(2500, now + 0.02); gain.gain.setValueAtTime(v * 0.1, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.02); osc.start(now); osc.stop(now + 0.02); }
+        else if(st === 6) { osc.type = 'triangle'; osc.frequency.setValueAtTime(300, now); osc.frequency.exponentialRampToValueAtTime(200, now + 0.06); gain.gain.setValueAtTime(v * 0.25, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.06); osc.start(now); osc.stop(now + 0.06); }
+        else if(st === 7) { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(800, now); osc.frequency.exponentialRampToValueAtTime(850, now + 0.1); gain.gain.setValueAtTime(v * 0.08, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1); osc.start(now); osc.stop(now + 0.1); }
+        else if(st === 8) { osc.type = 'sine'; osc.frequency.setValueAtTime(500, now); osc.frequency.exponentialRampToValueAtTime(300, now + 0.15); gain.gain.setValueAtTime(v * 0.2, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15); osc.start(now); osc.stop(now + 0.15); }
+        else if(st === 9) { osc.type = 'sine'; osc.frequency.setValueAtTime(1500, now); osc.frequency.exponentialRampToValueAtTime(1800, now + 0.2); gain.gain.setValueAtTime(v * 0.1, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2); osc.start(now); osc.stop(now + 0.2); }
+    } 
+    else if (type === 'assign') { osc.type = 'triangle'; osc.frequency.setValueAtTime(880, now); gain.gain.setValueAtTime(v * 0.15, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15); osc.start(now); osc.stop(now + 0.15); } 
+    else if (type === 'start') { osc.type = 'square'; osc.frequency.setValueAtTime(440, now); osc.frequency.linearRampToValueAtTime(880, now + 0.1); gain.gain.setValueAtTime(v * 0.08, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1); osc.start(now); osc.stop(now + 0.1); } 
+    else if (type === 'stop') { osc.type = 'square'; osc.frequency.setValueAtTime(880, now); osc.frequency.linearRampToValueAtTime(440, now + 0.1); gain.gain.setValueAtTime(v * 0.08, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1); osc.start(now); osc.stop(now + 0.1); } 
+    else if (type === 'finish') { osc.type = 'sine'; osc.frequency.setValueAtTime(1046.5, now); gain.gain.setValueAtTime(v * 0.2, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3); osc.start(now); osc.stop(now + 0.3); } 
+    else if (type === 'cancel') { osc.type = 'sine'; osc.frequency.setValueAtTime(400, now); osc.frequency.exponentialRampToValueAtTime(150, now + 0.2); gain.gain.setValueAtTime(v * 0.2, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2); osc.start(now); osc.stop(now + 0.2); } 
+}
 
 // ⭐ 미리듣기 함수 연결 부분
 let lastTestTime = 0; 
@@ -1884,16 +1586,8 @@ window.previewRealtime = function(type) {
         if (now - lastTestTime > 150) { 
             lastTestTime = now; 
             initAudio(); 
-            let osc = audioCtx.createOscillator(); 
-            let gain = audioCtx.createGain(); 
-            osc.type = 'sine'; 
-            osc.frequency.value = 880; 
-            gain.gain.setValueAtTime(alarmVolume, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-            osc.connect(gain); 
-            gain.connect(audioCtx.destination); 
-            osc.start(audioCtx.currentTime); 
-            osc.stop(audioCtx.currentTime + 0.1); 
+            let melodyType = parseInt(document.getElementById("melodyType").value || "0"); 
+            playMelody(melodyType); 
         } 
     } 
     else if (type === 'ui') { 
