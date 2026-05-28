@@ -64,6 +64,11 @@ let currentHistoryYear = new Date().getFullYear();
 let currentHistoryMonth = new Date().getMonth(); 
 let currentSelectedDate = null;
 
+// ⭐ 주간 출결 뷰 상태 관리
+let historyViewMode = 'monthly'; // 'monthly' 또는 'weekly'
+let currentWeeklyDate = new Date();
+let weeklySortConfig = { col: 'name', asc: true }; // 주간 뷰 정렬 상태 추가
+
 const krHolidays = {
     "01-01": "신정", "03-01": "삼일절", "05-05": "어린이날", "06-06": "현충일",
     "08-15": "광복절", "10-03": "개천절", "10-09": "한글날", "12-25": "기독탄신일",
@@ -173,7 +178,7 @@ customStyle.innerHTML = `
     .btn-delete-row { background: var(--brand-danger); color: white; border: none; border-radius: 8px; padding: 10px 12px; cursor: pointer; font-weight: 900; font-size: 14px; box-shadow: var(--shadow-btn); transition: 0.2s; white-space: nowrap; }
     .btn-delete-row:hover { transform: scale(1.05); }
 
-    /* ⭐ 뱃지(레벨/학년) 그룹 레이아웃: 수직(위아래) 배치로 변경 */
+    /* ⭐ 뱃지(레벨/학년) 그룹 레이아웃 */
     .card-badge-group { position: absolute; top: 10px; left: 10px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; z-index: 5; pointer-events: none; }
     .new-level-pill { font-size: 13px; font-weight: 900; padding: 4px 10px; border-radius: 8px; font-family: 'Montserrat', 'Pretendard', sans-serif; letter-spacing: 0.5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: inline-block; }
     .card-grade-badge { font-size: 13px !important; font-weight: 800; color: var(--text-muted); background: rgba(255,255,255,0.9); padding: 4px 10px; border-radius: 8px; font-family: 'Pretendard', sans-serif !important; letter-spacing: 0.5px; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
@@ -193,47 +198,34 @@ customStyle.innerHTML = `
     .start-time-badge { position: absolute; top: 6px; right: 6px; background: #2563eb; border: 2px solid #60a5fa; color: white; font-size: 14px; font-weight: 900; padding: 6px 10px; border-radius: 8px; cursor: pointer; z-index: 10; box-shadow: 0 4px 8px rgba(0,0,0,0.4); transition: background 0.2s, transform 0.1s; }
     .start-time-badge:hover { background: #1d4ed8; transform: scale(1.05); }
 
-    /* ⭐ 명단창(Roster) 3단 레이아웃 대개편: 좌(대기), 우상단(수업중 5x2), 우하단(종료) */
+    /* ⭐ 명단창(Roster) 3단 레이아웃 */
     .custom-roster-layout { display: grid !important; grid-template-columns: 480px 1fr !important; grid-template-rows: auto 1fr !important; gap: 20px !important; align-items: start !important; max-width: 100% !important; padding-top: 10px; }
     .custom-col-wait { grid-column: 1 / 2 !important; grid-row: 1 / 3 !important; max-width: 480px !important; width: 100% !important; height: 100%; max-height: calc(100vh - 120px); display: flex; flex-direction: column; overflow: hidden; margin: 0 !important; flex: none !important; }
     .custom-col-active { grid-column: 2 / 3 !important; grid-row: 1 / 2 !important; width: 100% !important; max-width: 100% !important; flex: none !important; margin: 0 !important; }
     .custom-col-finish { grid-column: 2 / 3 !important; grid-row: 2 / 3 !important; width: 100% !important; max-width: 100% !important; flex: none !important; margin: 0 !important; }
 
-    /* ⭐ 대기중 학생 목록 가로 2단 리스트 스타일로 변경 */
     #grid-unassigned { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 10px !important; max-height: 100%; overflow-y: auto; padding-right: 5px; align-content: flex-start; flex: 1; margin: 0 !important; }
     #grid-unassigned::-webkit-scrollbar { width: 8px; }
     #grid-unassigned::-webkit-scrollbar-track { background: transparent; }
     #grid-unassigned::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
     
-    /* 대기중 학생 박스 */
     #grid-unassigned .student-btn { width: 100% !important; height: 75px !important; padding: 10px 20px !important; display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: flex-start !important; border-radius: 14px !important; flex-shrink: 0; margin: 0 !important; }
-    
-    /* 대기중 뱃지 그룹: 세로로 나란히 정렬 */
     #grid-unassigned .student-btn .card-badge-group { position: relative !important; top: 0 !important; left: 0 !important; margin-right: 15px !important; display: flex !important; flex-direction: column !important; align-items: center !important; gap: 4px !important; }
     #grid-unassigned .student-btn .new-level-pill, #grid-unassigned .student-btn .card-grade-badge { padding: 4px 6px !important; font-size: 11px !important; margin-right: 0 !important; width: 100%; box-sizing: border-box; text-align: center; }
-    
-    /* 대기중 이름 텍스트 (오른쪽으로 살짝 이동) */
     #grid-unassigned .student-btn .name-text { margin-top: 0 !important; font-size: 24px !important; flex: 1; text-align: left; padding-left: 10px; justify-content: flex-start; }
-    
     #grid-unassigned .student-btn .card-mod-container { position: relative !important; bottom: 0 !important; left: 0 !important; flex-direction: row !important; margin-right: 6px; gap:4px; }
     #grid-unassigned .student-btn .mod-badge { padding: 2px 4px !important; font-size: 10px !important; }
     #grid-unassigned .student-btn .quick-controls { position: absolute !important; right: 5px !important; top: 50% !important; transform: translateY(-50%) !important; width: auto !important; height: auto !important; background: rgba(255,255,255,0.95) !important; flex-direction: row !important; gap: 4px !important; padding: 4px !important; border-radius: 10px !important; opacity: 0; transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.15); z-index: 20; }
     #grid-unassigned .student-btn:hover .quick-controls { opacity: 1; }
     #grid-unassigned .student-btn .quick-btn { padding: 6px 10px !important; font-size: 13px !important; }
 
-    /* ⭐ 수업중(Active) 영역 5x2 배열 확보 */
     #grid-active { display: grid !important; grid-template-columns: repeat(5, 1fr) !important; gap: 14px !important; margin: 0 !important; }
     .roster-desk-slot { height: 195px !important; }
     #grid-active .student-btn { width: 100% !important; height: 100% !important; margin: 0 !important; border-radius: 22px; position: absolute; top:0; left:0; display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
-    
-    /* 수업중 박스 뱃지 크기 축소 및 취소 버튼 겹침 방지(left: 35px) */
     #grid-active .student-btn .card-badge-group { top: 12px !important; left: 35px !important; flex-direction: column !important; align-items: flex-start !important; gap: 2px !important; }
     #grid-active .student-btn .new-level-pill, #grid-active .student-btn .card-grade-badge { padding: 2px 8px !important; font-size: 11px !important; }
-    
-    /* 수업중 박스 이름 크기 증가(48px) 및 뱃지 가림 방지(margin-top 최적화) */
     #grid-active .student-btn .name-text { font-size: 48px !important; margin-top: 10px !important; margin-bottom: 5px !important; }
 
-    /* ⭐ 종료(Finished) 영역 디자인 */
     #grid-finished { display: flex !important; flex-direction: row !important; flex-wrap: wrap !important; gap: 10px !important; margin: 0 !important; }
     #grid-finished .student-btn { width: auto !important; height: 55px !important; padding: 8px 20px !important; flex-direction: row !important; border-radius: 12px !important; display: inline-flex !important; align-items: center; justify-content: center; position: relative !important; margin: 0 !important; }
     #grid-finished .student-btn .name-text { font-size: 20px !important; margin: 0 !important; }
@@ -286,40 +278,6 @@ customStyle.innerHTML = `
     .roster-waiting-text { color: var(--accent); font-weight: 900; font-size: 18px; text-align: center; animation: blinker 1.5s linear infinite; text-shadow: 0 0 8px rgba(59,130,246,0.3); pointer-events: none; margin-bottom: 8px; font-family: 'Pretendard'; }
     .clickable-timer { display: inline-block; transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1); } .clickable-timer:hover { transform: scale(1.1); filter: brightness(1.2); }
 
-    /* ⭐ 학생 기록 캘린더 */
-    #view-history { padding: 20px; font-family: var(--app-font, 'Pretendard', sans-serif); display: none; }
-    #view-history.active { display: block; }
-    .history-container { display: flex; gap: 20px; height: calc(100vh - 120px); min-height: 600px; position: relative; }
-    .history-sidebar { width: 280px; background: var(--bg-card); border-radius: 16px; border: 2px solid var(--border); padding: 15px; overflow-y: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-    .history-sidebar h3 { margin-top: 0; padding-bottom: 10px; border-bottom: 2px solid var(--border); color: var(--text-main); font-weight: 900; }
-    .history-student-item { padding: 14px 12px; border-bottom: 1px solid var(--border); cursor: pointer; font-weight: 800; font-size: 16px; border-radius: 8px; transition: all 0.2s; display: flex; justify-content: space-between; align-items: center; }
-    .history-student-item:hover { background: rgba(37,99,235,0.05); color: var(--accent); transform: translateX(5px); }
-    .history-student-item.active { background: var(--accent); color: white; border-color: var(--accent); box-shadow: 0 4px 10px rgba(37,99,235,0.3); transform: translateX(5px); }
-    .history-content { flex: 1; background: var(--bg-card); border-radius: 16px; border: 2px solid var(--border); padding: 25px; display: flex; flex-direction: column; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow: hidden; }
-    .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-    .calendar-header h2 { margin: 0; font-size: 24px; font-weight: 900; color: var(--accent); }
-    .cal-nav-btn { background: var(--bg-main); border: 2px solid var(--border); font-size: 18px; padding: 8px 16px; border-radius: 10px; cursor: pointer; font-weight: bold; transition: 0.2s; }
-    .cal-nav-btn:hover { background: var(--accent); color: white; border-color: var(--accent); }
-    
-    .cal-grid-header { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 8px; padding-right: 5px; }
-    .cal-day-header { text-align: center; font-weight: 900; padding: 8px 0; border-bottom: 3px solid var(--border); color: var(--text-muted); font-size: 15px; display: flex; justify-content: center; align-items: center; }
-    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; flex: 1; overflow-y: auto; padding-right: 5px; align-content: start; }
-    .cal-day { border: 2px solid var(--border); border-radius: 10px; padding: 10px; cursor: pointer; transition: all 0.2s; display:flex; flex-direction:column; background: #fff; min-height: 100px; }
-    .cal-day:hover { border-color: var(--accent); transform: scale(1.02); box-shadow: 0 4px 8px rgba(0,0,0,0.05); z-index:2; position:relative; }
-    .cal-day.active { border-color: var(--accent); background: rgba(37,99,235,0.05); box-shadow: inset 0 0 0 2px var(--accent); }
-    .cal-day.has-record { background: #f0fdf4; border-color: #86efac; }
-    .cal-day.empty-cell { background: transparent; border: none; cursor: default; pointer-events: none; }
-    
-    .cal-day.is-holiday .cal-date-num { color: #ef4444; }
-    .cal-day.is-saturday .cal-date-num { color: #3b82f6; }
-    .holiday-label { font-size: 11px; color: #ef4444; font-weight: bold; margin-left: 6px; background: #fee2e2; padding: 2px 5px; border-radius: 4px; white-space:nowrap;}
-    .acad-holiday-label { font-size: 11px; color: #fff; background: #8b5cf6; padding: 2px 5px; border-radius: 4px; margin-left: 6px; white-space:nowrap;}
-    
-    .cal-date-num { font-weight: 900; font-size: 16px; color: var(--text-main); margin-bottom: 6px; display:flex; align-items:center; }
-    .cal-record-summary { font-size: 16px; font-weight: 900; color: #059669; margin-top: auto; line-height: 1.4; }
-    .cal-record-mods { font-size: 12px; color: var(--brand-danger); }
-    .cal-note-preview { font-size: 12px; color: #64748b; background: #f1f5f9; padding: 4px 6px; border-radius: 6px; margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 700; border: 1px solid #e2e8f0; max-width: 100%; box-sizing: border-box; display: block; }
-
     /* 상세 기록 팝업 스타일 */
     .history-detail-popup { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--bg-card, #ffffff); padding: 25px 30px; border-radius: 16px; box-shadow: 0 15px 40px rgba(0,0,0,0.25); border: 2px solid var(--accent); z-index: 9999; width: 450px; max-width: 90vw; display: none; font-family: var(--app-font, 'Pretendard', sans-serif); }
     .history-detail-popup.active { display: block; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
@@ -338,37 +296,98 @@ customStyle.innerHTML = `
     .btn-acad-holiday { background: #8b5cf6; color: white; border: none; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-weight: 900; font-size:14px; transition: 0.2s; box-shadow: 0 2px 4px rgba(139,92,246,0.3); }
     .btn-acad-holiday:hover { background: #7c3aed; transform: translateY(-2px); }
 
-    /* ⭐ 게임 전용 버튼 및 캔버스 레이아웃 */
+    /* ⭐ 게임 전용 버튼 */
     .game-start-btn { margin-top: 25px; padding: 18px 40px; font-size: 26px; font-weight: 900; background: var(--accent); color: white; border: none; border-radius: 50px; cursor: pointer; box-shadow: 0 8px 20px rgba(37,99,235,0.4); transition: 0.2s; font-family: var(--app-font); }
     .game-start-btn:hover { transform: translateY(-5px) scale(1.05); box-shadow: 0 12px 25px rgba(37,99,235,0.6); }
     .active-game-tab { background: var(--accent) !important; color: white !important; transform: scale(1.05); }
 
-    /* ⭐ 생일자 전용 테두리 네온사인 및 폭죽 애니메이션 */
-    @keyframes bday-glow {
-        0% { box-shadow: 0 0 15px #ff007f, inset 0 0 10px #ff007f; border-color: #ff007f; }
-        33% { box-shadow: 0 0 15px #007fff, inset 0 0 10px #007fff; border-color: #007fff; }
-        66% { box-shadow: 0 0 15px #00ff7f, inset 0 0 10px #00ff7f; border-color: #00ff7f; }
-        100% { box-shadow: 0 0 15px #ff007f, inset 0 0 10px #ff007f; border-color: #ff007f; }
-    }
-    .bday-card {
-        animation: bday-glow 3s infinite linear !important;
-        border: 4px solid #ff007f !important;
-        position: relative; 
-    }
-    .bday-card::after {
-        content: '🎉';
-        position: absolute;
-        top: -16px;
-        left: -16px;
-        font-size: 36px;
-        z-index: 50;
-        filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
-        animation: bday-bounce 0.8s infinite alternate ease-in-out;
-    }
-    @keyframes bday-bounce {
-        from { transform: translateY(0) rotate(-10deg) scale(1); }
-        to { transform: translateY(-8px) rotate(15deg) scale(1.1); }
-    }
+    @keyframes bday-glow { 0% { box-shadow: 0 0 15px #ff007f, inset 0 0 10px #ff007f; border-color: #ff007f; } 33% { box-shadow: 0 0 15px #007fff, inset 0 0 10px #007fff; border-color: #007fff; } 66% { box-shadow: 0 0 15px #00ff7f, inset 0 0 10px #00ff7f; border-color: #00ff7f; } 100% { box-shadow: 0 0 15px #ff007f, inset 0 0 10px #ff007f; border-color: #ff007f; } }
+    .bday-card { animation: bday-glow 3s infinite linear !important; border: 4px solid #ff007f !important; position: relative; }
+    .bday-card::after { content: '🎉'; position: absolute; top: -16px; left: -16px; font-size: 36px; z-index: 50; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); animation: bday-bounce 0.8s infinite alternate ease-in-out; }
+    @keyframes bday-bounce { from { transform: translateY(0) rotate(-10deg) scale(1); } to { transform: translateY(-8px) rotate(15deg) scale(1.1); } }
+
+    /* ⭐ 학생 기록: 탭 전환 및 캘린더 뷰 CSS */
+    .history-sidebar { width: 280px; background: var(--bg-card); border-radius: 16px; border: 2px solid var(--border); padding: 15px; overflow-y: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    .history-sidebar h3 { margin-top: 0; padding-bottom: 10px; border-bottom: 2px solid var(--border); color: var(--text-main); font-weight: 900; }
+    .history-student-item { padding: 14px 12px; border-bottom: 1px solid var(--border); cursor: pointer; font-weight: 800; font-size: 16px; border-radius: 8px; transition: all 0.2s; display: flex; justify-content: space-between; align-items: center; }
+    .history-student-item:hover { background: rgba(37,99,235,0.05); color: var(--accent); transform: translateX(5px); }
+    .history-student-item.active { background: var(--accent); color: white; border-color: var(--accent); box-shadow: 0 4px 10px rgba(37,99,235,0.3); transform: translateX(5px); }
+    .history-content { flex: 1; background: var(--bg-card); border-radius: 16px; border: 2px solid var(--border); padding: 25px; display: flex; flex-direction: column; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow: hidden; }
+    .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .calendar-header h2 { margin: 0; font-size: 24px; font-weight: 900; color: var(--accent); }
+    .cal-nav-btn { background: var(--bg-main); border: 2px solid var(--border); font-size: 18px; padding: 8px 16px; border-radius: 10px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+    .cal-nav-btn:hover { background: var(--accent); color: white; border-color: var(--accent); }
+    .cal-grid-header { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 8px; padding-right: 5px; }
+    .cal-day-header { text-align: center; font-weight: 900; padding: 8px 0; border-bottom: 3px solid var(--border); color: var(--text-muted); font-size: 15px; display: flex; justify-content: center; align-items: center; }
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; flex: 1; overflow-y: auto; padding-right: 5px; align-content: start; }
+    .cal-day { border: 2px solid var(--border); border-radius: 10px; padding: 10px; cursor: pointer; transition: all 0.2s; display:flex; flex-direction:column; background: #fff; min-height: 100px; }
+    .cal-day:hover { border-color: var(--accent); transform: scale(1.02); box-shadow: 0 4px 8px rgba(0,0,0,0.05); z-index:2; position:relative; }
+    .cal-day.active { border-color: var(--accent); background: rgba(37,99,235,0.05); box-shadow: inset 0 0 0 2px var(--accent); }
+    .cal-day.has-record { background: #f0fdf4; border-color: #86efac; }
+    .cal-day.empty-cell { background: transparent; border: none; cursor: default; pointer-events: none; }
+    .cal-day.is-holiday .cal-date-num { color: #ef4444; }
+    .cal-day.is-saturday .cal-date-num { color: #3b82f6; }
+    .holiday-label { font-size: 11px; color: #ef4444; font-weight: bold; margin-left: 6px; background: #fee2e2; padding: 2px 5px; border-radius: 4px; white-space:nowrap;}
+    .acad-holiday-label { font-size: 11px; color: #fff; background: #8b5cf6; padding: 2px 5px; border-radius: 4px; margin-left: 6px; white-space:nowrap;}
+    .cal-date-num { font-weight: 900; font-size: 16px; color: var(--text-main); margin-bottom: 6px; display:flex; align-items:center; }
+    .cal-record-summary { font-size: 16px; font-weight: 900; color: #059669; margin-top: auto; line-height: 1.4; }
+    .cal-record-mods { font-size: 12px; color: var(--brand-danger); }
+    .cal-note-preview { font-size: 12px; color: #64748b; background: #f1f5f9; padding: 4px 6px; border-radius: 6px; margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 700; border: 1px solid #e2e8f0; max-width: 100%; box-sizing: border-box; display: block; }
+    
+    .history-top-bar { display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 20px; position: relative; }
+    .history-tab-btn { padding: 12px 30px; font-size: 18px; font-weight: 900; border-radius: 12px; border: 2px solid var(--border); background: var(--bg-main); color: var(--text-muted); cursor: pointer; transition: 0.2s; font-family: var(--app-font); }
+    .history-tab-btn.active { background: var(--accent); color: white; border-color: var(--accent); box-shadow: 0 4px 12px rgba(37,99,235,0.2); transform: scale(1.05); }
+    
+    .monthly-history-container { display: none; gap: 20px; height: calc(100vh - 180px); min-height: 600px; position: relative; width: 100%; }
+    .monthly-history-container.active { display: flex; }
+    
+    #weekly-history-container { display: none; background: var(--bg-card); border-radius: 16px; border: 2px solid var(--border); padding: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); height: calc(100vh - 180px); min-height: 600px; flex-direction: column; width: 100%; box-sizing: border-box; }
+    #weekly-history-container.active { display: flex; }
+    
+    .export-btn { background: #10b981; color: white; border: none; padding: 10px 18px; border-radius: 10px; font-weight: 900; font-size: 15px; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 10px rgba(16,185,129,0.2); font-family: var(--app-font); position: absolute; right: 0; }
+    .export-btn:hover { background: #059669; transform: translateY(-2px); box-shadow: 0 6px 14px rgba(16,185,129,0.3); }
+
+    /* ⭐ 학생 기록: 주간 전체 출결 뷰 특화 CSS 업데이트 (고급화 및 Sticky 수정) */
+    .weekly-table-wrapper { flex: 1; overflow-y: auto; overflow-x: auto; margin-top: 15px; border-radius: 12px; border: 1px solid var(--border); background: #fff; }
+    .weekly-table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 1400px; table-layout: fixed; }
+    
+    .weekly-table th { background: #f8fafc; font-weight: 900; color: var(--text-main); font-size: 15px; text-align: center; border-right: 1px solid var(--border); margin: 0; }
+    
+    /* 1단 헤더 (날짜 부분) */
+    .weekly-table th.main-date-th { position: sticky; top: 0; z-index: 10; height: 50px; border-bottom: 1px solid var(--border); box-sizing: border-box; }
+    
+    /* 2단 헤더 (시작/종료 부분) */
+    .weekly-table th.sub-th { position: sticky; top: 50px; z-index: 10; height: 40px; font-size: 14px !important; color: var(--text-muted); background: #f1f5f9; border-bottom: 2px solid var(--border); box-sizing: border-box; }
+    
+    /* 좌측 고정 컬럼 (이름, 학년) */
+    .fixed-col-name { position: sticky; left: 0; z-index: 12; background: #f8fafc; border-right: 1px solid var(--border); }
+    .fixed-col-grade { position: sticky; left: 130px; z-index: 12; background: #f8fafc; border-right: 2px solid #cbd5e1 !important; box-shadow: 2px 0 5px rgba(0,0,0,0.03); }
+    
+    /* TBODY 셀 스타일 */
+    .weekly-table td { padding: 14px 8px; text-align: center; vertical-align: middle; background: #fff; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); transition: background 0.1s; }
+    .weekly-table tr:hover td { background: #f8fafc; }
+    
+    /* 날짜 구분선 (종료 컬럼 우측을 조금 더 진하게) */
+    .col-divider { border-right: 2px solid #cbd5e1 !important; }
+    
+    /* 텍스트 크기 및 가독성 세련되게 업그레이드 */
+    .weekly-name-cell { font-size: 22px !important; font-weight: 900 !important; color: var(--text-main); }
+    .weekly-grade-cell { font-size: 16px !important; color: var(--text-muted); font-weight: 800; }
+    .weekly-time-cell { font-size: 19px !important; font-family: 'JetBrains Mono', monospace; font-weight: bold; color: var(--text-main); }
+    
+    /* 빈 시간 표시 */
+    .time-empty { color: #cbd5e1; font-weight: 400; font-size: 16px; }
+
+    /* 정렬 아이콘 디자인 */
+    .weekly-table th.sortable { transition: color 0.2s; user-select: none; cursor: pointer; }
+    .weekly-table th.sortable:hover { color: var(--accent); }
+    .weekly-table th.sort-asc::after { content: " ▲"; font-size: 12px; color: var(--accent); }
+    .weekly-table th.sort-desc::after { content: " ▼"; font-size: 12px; color: var(--accent); }
+
+    /* ⭐ 오늘 날짜 테두리만 깔끔하게 하이라이트 (배경색 제거) */
+    .today-header-top { border-top: 3px solid var(--accent) !important; }
+    .today-start-cell { border-left: 3px solid var(--accent) !important; }
+    .today-end-cell { border-right: 3px solid var(--accent) !important; }
 `;
 document.head.appendChild(customStyle);
 
@@ -795,7 +814,7 @@ window.saveSettingsRoster = function() {
 };
 
 // =========================================================================
-// ⭐ 히스토리 기록 (HISTORY) 시스템 UI (출결 시간 기록 추가)
+// ⭐ 히스토리 기록 (HISTORY) 시스템 UI 
 // =========================================================================
 function injectHistoryUI() {
     const logTabBtn = document.querySelector('.nav-tab[onclick*="log"]');
@@ -809,25 +828,36 @@ function injectHistoryUI() {
     if (oldLogView) {
         oldLogView.id = 'view-history'; oldLogView.className = 'view-section';
         oldLogView.innerHTML = `
-            <div class="history-container">
+            <div class="history-top-bar">
+                <button id="tab-history-monthly" class="history-tab-btn active" onclick="switchHistoryMode('monthly')">👤 월간 개인 기록</button>
+                <button id="tab-history-weekly" class="history-tab-btn" onclick="switchHistoryMode('weekly')">🗓️ 주간 전체 출결</button>
+            </div>
+
+            <!-- 월간 개인 기록 컨테이너 -->
+            <div id="monthly-history-container" class="monthly-history-container active history-container">
                 <div class="history-sidebar">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;"><h3>👥 원생 목록</h3></div>
                     <div id="historyStudentList"></div>
                 </div>
                 <div class="history-content">
-                    <div class="calendar-header">
+                    <div class="calendar-header" style="position: relative;">
                         <div style="display:flex; align-items:center; gap:10px;">
                             <button class="cal-nav-btn" onclick="changeHistoryMonth(-1)">◀ 이전</button>
                             <h2 id="historyMonthTitle">2026년 5월</h2>
                             <button class="cal-nav-btn" onclick="changeHistoryMonth(1)">다음 ▶</button>
                             <button class="cal-nav-btn" onclick="goToTodayHistory()" style="background:var(--accent); color:white; border-color:var(--accent); margin-left:5px;">오늘</button>
                         </div>
-                        <button class="btn-danger-outline" onclick="deleteHistoryAll()" style="padding: 8px 16px;">🚨 이 학생 전체 기록 삭제</button>
+                        <div style="display:flex; gap:10px;">
+                            <button class="btn-danger-outline" onclick="deleteHistoryAll()" style="padding: 8px 12px; font-size:13px;">🚨 전체 기록 삭제</button>
+                            <button class="export-btn" onclick="exportMonthlyToExcel()" style="position: static; padding: 8px 12px; font-size:13px;">💾 엑셀 저장</button>
+                        </div>
                     </div>
                     <div class="cal-grid-header">
                         <div class="cal-day-header" style="color:#ef4444;">일</div><div class="cal-day-header">월</div><div class="cal-day-header">화</div><div class="cal-day-header">수</div><div class="cal-day-header">목</div><div class="cal-day-header">금</div><div class="cal-day-header" style="color:#3b82f6;">토</div>
                     </div>
                     <div class="cal-grid" id="historyCalGrid"></div>
+                    
+                    <!-- 상세 팝업 -->
                     <div class="history-detail-popup" id="historyDetailPopup">
                         <button class="popup-close-btn" onclick="closeHistoryDetail()">✖</button>
                         <div class="detail-title">📅 <span id="detailDateText">날짜 선택됨</span></div>
@@ -845,6 +875,25 @@ function injectHistoryUI() {
                         <button class="detail-save-btn" onclick="saveHistoryNote()">💾 메모 저장 및 닫기</button>
                         <div style="clear:both;"></div>
                     </div>
+                </div>
+            </div>
+
+            <!-- 주간 전체 출결 컨테이너 -->
+            <div id="weekly-history-container">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; position: relative;">
+                    <div style="display:flex; align-items:center; gap:10px; margin: 0 auto;">
+                        <button class="cal-nav-btn" onclick="changeWeeklyDate(-7)">◀ 이전 주</button>
+                        <h2 id="weeklyTitle" style="margin: 0; font-size: 24px; font-weight: 900; color: var(--accent);">2026.05.18 ~ 2026.05.24</h2>
+                        <button class="cal-nav-btn" onclick="changeWeeklyDate(7)">다음 주 ▶</button>
+                        <button class="cal-nav-btn" onclick="goToThisWeek()" style="background:var(--accent); color:white; border-color:var(--accent); margin-left:5px;">이번 주</button>
+                    </div>
+                    <button class="export-btn" onclick="exportWeeklyToExcel()">💾 이 주간 표 엑셀 저장</button>
+                </div>
+                <div class="weekly-table-wrapper">
+                    <table class="weekly-table">
+                        <thead id="weeklyTableHead"></thead>
+                        <tbody id="weeklyTableBody"></tbody>
+                    </table>
                 </div>
             </div>
         `;
@@ -965,7 +1014,7 @@ window.toggleAcademyHoliday = function() {
 };
 
 // =========================================================================
-// 공통 UI/기능 (리모컨 추가 및 오디오 볼륨 연동)
+// 공통 UI/기능
 // =========================================================================
 function injectRemoteSettingUI() {
     const settingsCards = document.querySelectorAll('.settings-card'); let targetCard = null;
@@ -978,7 +1027,6 @@ function injectRemoteSettingUI() {
     }
 }
 
-// ⭐ 수정: 리모컨 창이 비어있어도 무조건 변수에 덮어쓰도록(동기화) 수정!
 window.saveRemoteCodes = function() { 
     for(let i=0; i<10; i++) { 
         let el = document.getElementById(`remoteCodeInput_${i}`); 
@@ -1048,7 +1096,6 @@ function updateViewToggleButtonUI() { const btn = document.getElementById('btnTo
 
 window.toggleViewMode = function(mode) { playUISound('click'); rosterViewMode = mode; saveToStorage(); applyViewMode(); };
 
-// ⭐ 수정: 리스트뷰일때 아이콘뷰를 !important 로 확실하게 끄기
 function applyViewMode() { 
     const cardWrapper = document.querySelector('.custom-roster-layout') || document.querySelector('.roster-columns-wrapper'); 
     const listWrapper = document.getElementById('roster-list-wrapper'); 
@@ -1185,7 +1232,6 @@ function loadData() {
             document.getElementById('inputAcademyName').value = academyName; document.getElementById('inputClassName').value = className;
             document.getElementById('displayAcademyName').innerText = academyName; document.getElementById('displayClassName').innerText = className; 
             
-            // ⭐ 수정: 이전 백업파일에서 리모컨 값이 아예 없는 경우(undefined)를 방어하여 안전하게 불러오기
             if(data.deskRemoteCodes && Array.isArray(data.deskRemoteCodes)) { deskRemoteCodes = data.deskRemoteCodes; }
             for(let i=0; i<10; i++) { 
                 let el = document.getElementById(`remoteCodeInput_${i}`); 
@@ -1216,7 +1262,6 @@ function loadData() {
     } catch(e) {}
 }
 
-// ⭐ 수정: 백업 버튼 누르기 직전에 현재 화면의 리모컨 인풋창 10개의 값을 강제로 다시 긁어오기!
 function exportData() { 
     for(let i=0; i<10; i++) { 
         let el = document.getElementById(`remoteCodeInput_${i}`); 
@@ -1503,7 +1548,7 @@ function updateGauge(studentName, remaining, total) { const btn = document.getEl
 function formatTime(t) { return `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`; }
 
 // ==========================================
-// ⭐ 4. 오디오 & 미리듣기 기능 완벽 복구
+// 4. 오디오 & 미리듣기 기능
 // ==========================================
 function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
 function triggerAlarm(id) { timers[id].isOver = true; if(timers[id].student !== "(empty)") updateStudentStatus(timers[id].student); updateBoxUI(id); let melodyType = parseInt(document.getElementById("melodyType")?.value || "0"); playMelody(melodyType); let ttsName = timers[id].student !== "(empty)" ? timers[id].student : `${id + 1}번 책상`; playAlarmTTS(ttsName); }
@@ -1570,7 +1615,6 @@ function playUISound(type) {
     else if (type === 'cancel') { osc.type = 'sine'; osc.frequency.setValueAtTime(400, now); osc.frequency.exponentialRampToValueAtTime(150, now + 0.2); gain.gain.setValueAtTime(v * 0.2, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2); osc.start(now); osc.stop(now + 0.2); } 
 }
 
-// ⭐ 미리듣기 함수 연결 부분
 let lastTestTime = 0; 
 let ttsTimeout = null;
 
@@ -1635,3 +1679,304 @@ window.addEventListener('keydown', function(e) {
         if (remoteBuffer.length > 0) { e.preventDefault(); remoteBuffer = ""; } 
     }
 });
+
+// =========================================================================
+// ⭐ 학생 기록 추가 기능 (월간/주간 탭 전환 및 엑셀 다운로드)
+// =========================================================================
+
+window.switchHistoryMode = function(mode) {
+    playUISound('tab');
+    historyViewMode = mode;
+    
+    document.getElementById('tab-history-monthly').classList.remove('active');
+    document.getElementById('tab-history-weekly').classList.remove('active');
+    document.getElementById(`tab-history-${mode}`).classList.add('active');
+
+    if (mode === 'monthly') {
+        document.getElementById('weekly-history-container').classList.remove('active');
+        document.getElementById('monthly-history-container').classList.add('active');
+        renderHistorySidebar();
+        renderHistoryCalendar();
+    } else {
+        document.getElementById('monthly-history-container').classList.remove('active');
+        document.getElementById('weekly-history-container').classList.add('active');
+        renderWeeklyTable();
+    }
+}
+
+// 특정 날짜가 속한 주의 월요일 구하기
+function getMonday(d) {
+    let date = new Date(d);
+    let day = date.getDay();
+    let diff = date.getDate() - day + (day === 0 ? -6 : 1); 
+    return new Date(date.setDate(diff));
+}
+
+window.changeWeeklyDate = function(days) {
+    playUISound('click');
+    currentWeeklyDate.setDate(currentWeeklyDate.getDate() + days);
+    renderWeeklyTable();
+}
+
+window.goToThisWeek = function() {
+    playUISound('click');
+    currentWeeklyDate = new Date();
+    renderWeeklyTable();
+}
+
+// 주간 전체 출결표 정렬 함수
+window.sortWeekly = function(col) {
+    playUISound('click');
+    if(weeklySortConfig.col === col) {
+        weeklySortConfig.asc = !weeklySortConfig.asc;
+    } else {
+        weeklySortConfig.col = col;
+        weeklySortConfig.asc = true;
+    }
+    renderWeeklyTable();
+}
+
+// 시간 로그에서 시작시간과 종료시간만 예쁘게 추출하는 함수
+function extractStartEnd(logs) {
+    if (!logs || logs.length === 0) return { start: '-', end: '-' };
+    let start = '-', end = '-';
+    // 첫 로그에서 시작 시간 추출
+    let firstMatch = logs[0].match(/\[(.*?)\s*~\s*(.*?)\]/);
+    if (firstMatch) start = firstMatch[1].trim();
+    // 마지막 로그에서 종료 시간 추출
+    let lastMatch = logs[logs.length - 1].match(/\[(.*?)\s*~\s*(.*?)\]/);
+    if (lastMatch) end = lastMatch[2].trim();
+    return { start, end };
+}
+
+window.renderWeeklyTable = function() {
+    let monday = getMonday(currentWeeklyDate);
+    let days = [];
+    let weekDaysKr = ['월', '화', '수', '목', '금', '토', '일'];
+    
+    // 월~일 날짜 배열 생성
+    for(let i=0; i<7; i++) {
+        let tempDate = new Date(monday);
+        tempDate.setDate(monday.getDate() + i);
+        days.push(tempDate);
+    }
+    
+    let startStr = `${days[0].getFullYear()}.${String(days[0].getMonth()+1).padStart(2,'0')}.${String(days[0].getDate()).padStart(2,'0')}`;
+    let endStr = `${days[6].getFullYear()}.${String(days[6].getMonth()+1).padStart(2,'0')}.${String(days[6].getDate()).padStart(2,'0')}`;
+    document.getElementById('weeklyTitle').innerText = `${startStr} ~ ${endStr}`;
+    
+    // 데이터 준비 및 정렬 적용
+    let studentsData = allNames.map(name => {
+        let info = studentMasterList.find(s => s.name === name) || {};
+        return { name: name, grade: info.grade || '' };
+    });
+
+    studentsData.sort((a, b) => {
+        let res = 0;
+        if(weeklySortConfig.col === 'name') {
+            res = a.name.localeCompare(b.name, 'ko-KR');
+        } else if(weeklySortConfig.col === 'grade') {
+            res = getGradeWeight(a.grade) - getGradeWeight(b.grade);
+        }
+        if(res === 0) res = a.name.localeCompare(b.name, 'ko-KR');
+        return weeklySortConfig.asc ? res : -res;
+    });
+
+    let nameSortClass = weeklySortConfig.col === 'name' ? (weeklySortConfig.asc ? 'sort-asc' : 'sort-desc') : '';
+    let gradeSortClass = weeklySortConfig.col === 'grade' ? (weeklySortConfig.asc ? 'sort-asc' : 'sort-desc') : '';
+
+    let todayStr = `${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}`;
+
+    // 테이블 헤더 (thead) 렌더링 - 2단 헤더 구성 및 Sticky 처리
+    let theadHtml = `<tr>
+        <th rowspan="2" onclick="sortWeekly('name')" class="main-date-th fixed-col-name sortable ${nameSortClass}" style="width:130px; min-width:130px; z-index:13;">이름</th>
+        <th rowspan="2" onclick="sortWeekly('grade')" class="main-date-th fixed-col-grade sortable ${gradeSortClass}" style="width:100px; min-width:100px; z-index:13;">학년</th>
+    `;
+    let subHeadHtml = `<tr>`;
+
+    days.forEach((d, idx) => {
+        let dateKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        let isToday = (dateKey === todayStr);
+        let isWeekend = (idx === 5) ? 'color:#3b82f6;' : (idx === 6 ? 'color:#ef4444;' : '');
+        
+        let todayTopClass = isToday ? 'today-header-top' : '';
+        let todayStartClass = isToday ? 'today-start-cell' : '';
+        let todayEndClass = isToday ? 'today-end-cell' : '';
+        
+        // top header (날짜)
+        theadHtml += `<th colspan="2" class="main-date-th col-divider ${todayTopClass} ${todayStartClass} ${todayEndClass}" style="${isWeekend} width:11%;">
+            ${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} (${weekDaysKr[idx]})
+        </th>`;
+        
+        // sub header (시작/종료)
+        subHeadHtml += `
+            <th class="sub-th ${todayStartClass}">시작</th>
+            <th class="sub-th col-divider ${todayEndClass}">종료</th>
+        `;
+    });
+    theadHtml += `</tr>` + subHeadHtml + `</tr>`;
+    document.getElementById('weeklyTableHead').innerHTML = theadHtml;
+    
+    // 테이블 바디 (tbody) 렌더링
+    let tbodyHtml = '';
+    
+    studentsData.forEach((sd, sIdx) => {
+        let isLastRow = (sIdx === studentsData.length - 1);
+        
+        tbodyHtml += `<tr>`;
+        tbodyHtml += `<td class="weekly-name-cell fixed-col-name" style="z-index:4;">${sd.name}</td>`;
+        tbodyHtml += `<td class="weekly-grade-cell fixed-col-grade" style="z-index:4;">${sd.grade || '-'}</td>`;
+        
+        days.forEach(d => {
+            let dateKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+            let isToday = (dateKey === todayStr);
+            
+            let todayStartClass = isToday ? 'today-start-cell' : '';
+            let todayEndClass = isToday ? 'today-end-cell' : '';
+            // 마지막 줄일 경우 오늘 날짜 하단 테두리 추가
+            let todayBottomClass = (isToday && isLastRow) ? 'border-bottom: 3px solid var(--accent) !important;' : '';
+
+            let record = (studentHistory[sd.name] && studentHistory[sd.name][dateKey]) ? studentHistory[sd.name][dateKey] : null;
+            
+            let startCell = '-';
+            let endCell = '-';
+            let cellStyle = '';
+
+            if (record && record.timeLogs && record.timeLogs.length > 0) {
+                let ext = extractStartEnd(record.timeLogs);
+                startCell = ext.start;
+                endCell = ext.end;
+                cellStyle = 'weekly-time-cell';
+            } else if (academyHolidays.includes(dateKey)) {
+                // 휴무일 경우
+                tbodyHtml += `<td colspan="2" class="col-divider ${todayStartClass} ${todayEndClass}" style="background:#f8fafc; color:#8b5cf6; font-weight:900; font-size:16px; text-align:center; letter-spacing: 5px; ${todayBottomClass}">🏝️ 휴무</td>`;
+                return; // skip standard 2 cells
+            } else {
+                cellStyle = 'time-empty';
+            }
+            
+            tbodyHtml += `<td class="${cellStyle} ${todayStartClass}" style="${todayBottomClass}">${startCell}</td>`;
+            tbodyHtml += `<td class="${cellStyle} col-divider ${todayEndClass}" style="${todayBottomClass}">${endCell}</td>`;
+        });
+        tbodyHtml += `</tr>`;
+    });
+    
+    document.getElementById('weeklyTableBody').innerHTML = tbodyHtml;
+}
+
+
+// =========================================================================
+// ⭐ 엑셀 (CSV) 내보내기 기능
+// =========================================================================
+
+// CSV 다운로드 유틸리티 (한글 깨짐 방지 위해 BOM 추가)
+function downloadCSV(csvContent, fileName) {
+    const BOM = "\uFEFF";
+    const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = fileName;
+    link.style.display = "none";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+// 1. 월간 뷰: 현재 선택된 학생의 현재 달 기록 내보내기
+window.exportMonthlyToExcel = function() {
+    if (!currentHistoryStudent) { alert("학생을 먼저 선택해 주세요."); return; }
+    playUISound('click');
+    
+    let csvData = ["날짜,요일,총학습시간(분),출결로그,쿠폰,벌칙,비고"]; 
+    const daysInMonth = new Date(currentHistoryYear, currentHistoryMonth + 1, 0).getDate();
+    const daysArr = ['일', '월', '화', '수', '목', '금', '토'];
+    const studentData = studentHistory[currentHistoryStudent] || {};
+
+    for (let i = 1; i <= daysInMonth; i++) {
+        let dateStr = `${currentHistoryYear}-${String(currentHistoryMonth+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+        let dayOfWeek = new Date(currentHistoryYear, currentHistoryMonth, i).getDay();
+        let record = studentData[dateStr];
+        
+        let row = [];
+        row.push(dateStr); 
+        row.push(daysArr[dayOfWeek]); 
+        
+        if (record && record.totalMinutes > 0) {
+            row.push(record.totalMinutes);
+            let logStr = (record.timeLogs && record.timeLogs.length > 0) ? record.timeLogs.join(" / ") : "-";
+            row.push(`"${logStr}"`); 
+            row.push(record.coupon || 0);
+            row.push(record.penalty || 0);
+            let noteStr = record.note ? record.note.replace(/\n/g, " ") : "";
+            row.push(`"${noteStr}"`);
+        } else if (academyHolidays.includes(dateStr)) {
+            row.push(0, "학원 휴무일", 0, 0, "");
+        } else {
+            row.push(0, "-", 0, 0, "");
+        }
+        csvData.push(row.join(","));
+    }
+
+    let fileName = `${currentHistoryStudent}_${currentHistoryYear}년_${currentHistoryMonth+1}월_기록.csv`;
+    downloadCSV(csvData.join("\n"), fileName);
+}
+
+// 2. 주간 뷰: 분리된 시작/종료 시간에 맞춰 엑셀 내보내기
+window.exportWeeklyToExcel = function() {
+    playUISound('click');
+    
+    let monday = getMonday(currentWeeklyDate);
+    let days = [];
+    let weekDaysKr = ['월', '화', '수', '목', '금', '토', '일'];
+    
+    let headerRow1 = ["이름", "학년"];
+    let headerRow2 = ["", ""]; 
+    
+    // 날짜 및 2단 헤더 생성
+    for(let i=0; i<7; i++) {
+        let tempDate = new Date(monday);
+        tempDate.setDate(monday.getDate() + i);
+        days.push(tempDate);
+        
+        let dateStr = `${String(tempDate.getMonth()+1).padStart(2,'0')}.${String(tempDate.getDate()).padStart(2,'0')} (${weekDaysKr[i]})`;
+        headerRow1.push(dateStr, ""); // 시작/종료 두 칸 차지하므로 하나는 공란
+        headerRow2.push("시작", "종료");
+    }
+    
+    let csvData = [headerRow1.join(","), headerRow2.join(",")];
+
+    let studentsData = allNames.map(name => {
+        let info = studentMasterList.find(s => s.name === name) || {};
+        return { name: name, grade: info.grade || '' };
+    });
+
+    studentsData.sort((a, b) => {
+        let res = 0;
+        if(weeklySortConfig.col === 'name') res = a.name.localeCompare(b.name, 'ko-KR');
+        else if(weeklySortConfig.col === 'grade') res = getGradeWeight(a.grade) - getGradeWeight(b.grade);
+        if(res === 0) res = a.name.localeCompare(b.name, 'ko-KR');
+        return weeklySortConfig.asc ? res : -res;
+    });
+
+    studentsData.forEach(sd => {
+        let row = [sd.name, sd.grade];
+        days.forEach(d => {
+            let dateKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+            let record = (studentHistory[sd.name] && studentHistory[sd.name][dateKey]) ? studentHistory[sd.name][dateKey] : null;
+            
+            if (record && record.timeLogs && record.timeLogs.length > 0) {
+                let ext = extractStartEnd(record.timeLogs);
+                row.push(`"${ext.start}"`, `"${ext.end}"`);
+            } else if (academyHolidays.includes(dateKey)) {
+                row.push("휴무", "");
+            } else {
+                row.push("-", "-");
+            }
+        });
+        csvData.push(row.join(","));
+    });
+    
+    let startStr = `${days[0].getFullYear()}${String(days[0].getMonth()+1).padStart(2,'0')}${String(days[0].getDate()).padStart(2,'0')}`;
+    let fileName = `주간출결표_${startStr}_시작주.csv`;
+    downloadCSV(csvData.join("\n"), fileName);
+}
