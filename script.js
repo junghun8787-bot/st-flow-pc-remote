@@ -1556,7 +1556,23 @@ function triggerAlarm(id) { timers[id].isOver = true; if(timers[id].student !== 
 window.__tts_queue = []; let __is_tts_playing = false; 
 if (window.speechSynthesis) { window.speechSynthesis.onvoiceschanged = function() { window.speechSynthesis.getVoices(); }; window.speechSynthesis.getVoices(); }
 function processTTSQueue() { if (__is_tts_playing || window.__tts_queue.length === 0) return; __is_tts_playing = true; let task = window.__tts_queue.shift(); task().then(() => { __is_tts_playing = false; processTTSQueue(); }); }
-function playDeskStartTTS(deskNum) { if (!window.speechSynthesis) return; let voices = window.speechSynthesis.getVoices(); let u = new SpeechSynthesisUtterance(); u.volume = ttsVolume; u.rate = 1.05; u.text = `Desk number ${deskNum} start`; u.lang = 'en-US'; let enVoice = voices.find(v => v.name.includes('Female') && v.lang.includes('en')) || voices.find(v => v.name.includes('Zira')) || voices.find(v => v.name.includes('Google') && v.lang.includes('en')); if (enVoice) u.voice = enVoice; window.speechSynthesis.speak(u); }
+function playDeskStartTTS(deskNum) { 
+    if (!window.speechSynthesis) return; 
+    let voices = window.speechSynthesis.getVoices(); 
+    let u = new SpeechSynthesisUtterance(); 
+    u.volume = ttsVolume; 
+    
+    // 강세를 위해 말하는 속도를 기존(1.05)보다 살짝 늦춰서 또박또박 말하게 함
+    u.rate = 0.9; 
+    
+    // Desk를 빼고, 쉼표와 느낌표를 배치하여 번호를 강조해서 끊어 읽도록 유도
+    u.text = `Number, ${deskNum}!!, start.`; 
+    
+    u.lang = 'en-US'; 
+    let enVoice = voices.find(v => v.name.includes('Female') && v.lang.includes('en')) || voices.find(v => v.name.includes('Zira')) || voices.find(v => v.name.includes('Google') && v.lang.includes('en')); 
+    if (enVoice) u.voice = enVoice; 
+    window.speechSynthesis.speak(u); 
+}
 
 function playAlarmTTS(studentName) { return new Promise(resolve => { const voiceType = document.getElementById("ttsVoiceSelect")?.value || "1"; if (voiceType === "0" || !window.speechSynthesis) return resolve(); window.__tts_queue.push(() => new Promise(taskResolve => { let voices = window.speechSynthesis.getVoices(); if (voices.length === 0) { setTimeout(() => { resolve(); taskResolve(); }, 100); return; } window.speechSynthesis.cancel(); const getKoVoice = () => voices.find(v => v.name.includes('Google') && v.lang.includes('ko')) || voices.find(v => v.name.includes('Natural') && v.lang.includes('ko')) || voices.find(v => v.lang.includes('ko')); const getEnVoice = () => voices.find(v => v.name === 'Google US English') || voices.find(v => v.lang.includes('en-US')) || voices.find(v => v.lang.includes('en')); let u1, u2; let isFinished = false; let fallbackTimer = setTimeout(() => { finalize(); }, 5000); const finalize = () => { if(!isFinished) { isFinished = true; clearTimeout(fallbackTimer); resolve(); taskResolve(); } }; if (voiceType === "1") { u1 = new SpeechSynthesisUtterance(`${studentName}! ${studentName}!`); u1.volume = ttsVolume; u1.rate = 1.05; u1.pitch = 1.1; u1.lang = 'ko-KR'; let koVoice = getKoVoice(); if (koVoice) u1.voice = koVoice; u1.onend = finalize; u1.onerror = finalize; window.speechSynthesis.speak(u1); } else if (voiceType === "2" || voiceType === "3") { u1 = new SpeechSynthesisUtterance(`${studentName}!`); u1.volume = ttsVolume; u1.rate = 1.05; u1.pitch = 1.1; u1.lang = 'ko-KR'; let koVoice = getKoVoice(); if (koVoice) u1.voice = koVoice; let phrase = voiceType === "2" ? "Let's go home!" : "Time's up! It's time to go home!"; u2 = new SpeechSynthesisUtterance(phrase); u2.volume = ttsVolume; u2.rate = 1.05; u2.pitch = 1.1; u2.lang = 'en-US'; let enVoice = getEnVoice(); if (enVoice) u2.voice = enVoice; u2.onend = finalize; u2.onerror = finalize; window.speechSynthesis.speak(u1); window.speechSynthesis.speak(u2); } else { finalize(); } })); processTTSQueue(); }); }
 
