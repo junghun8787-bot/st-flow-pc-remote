@@ -5,7 +5,10 @@ const STATIC_ASSETS = [
   './script.js',
   './style.css',
   './manifest.json',
-  './logo.png'
+  './logo.png',
+  './icon-192.png',
+  './icon-512.png',
+  './apple-touch-icon.png'
 ];
 
 self.addEventListener('install', (event) => {
