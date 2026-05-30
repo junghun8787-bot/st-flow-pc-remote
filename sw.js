@@ -1,15 +1,45 @@
-// sw.js 파일 내용
-self.addEventListener('install', (e) => {
-  console.log('[Service Worker] 설치 완료');
-  self.skipWaiting();
+const CACHE_NAME = 'st-flow-v5.5.0';
+const STATIC_ASSETS = [
+  './',
+  './index.html',
+  './script.js',
+  './style.css',
+  './manifest.json',
+  './logo.png'
+];
+
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then((cache) => cache.addAll(STATIC_ASSETS))
+      .then(() => self.skipWaiting())
+  );
 });
 
-self.addEventListener('activate', (e) => {
-  console.log('[Service Worker] 활성화 완료');
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys()
+      .then((keys) => Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))))
+      .then(() => self.clients.claim())
+  );
 });
 
-// 크롬이 진짜 앱인지 검사할 때 확인하는 필수 오프라인 응답 코드
-self.addEventListener('fetch', (e) => {
-  // 여기에 오프라인 캐시 로직이 들어가지만, 
-  // 일단 이 이벤트 리스너가 존재하는 것만으로도 앱 설치 조건이 충족됩니다.
+self.addEventListener('fetch', (event) => {
+  if (event.request.method !== 'GET') return;
+
+  event.respondWith(
+    caches.match(event.request).then((cached) => {
+      const networkFetch = fetch(event.request)
+        .then((response) => {
+          if (response && response.status === 200 && event.request.url.startsWith(self.location.origin)) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
+          return response;
+        })
+        .catch(() => cached);
+
+      return cached || networkFetch;
+    })
+  );
 });

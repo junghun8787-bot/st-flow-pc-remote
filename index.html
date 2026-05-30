@@ -3,13 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="description" content="ST Flow - 영어학원 수업 타이머, 출결 관리, 학생 기록 PWA">
+<meta name="theme-color" content="#3b82f6">
+<meta name="mobile-web-app-capable" content="yes">
 <title>ST Flow v5.5.0 (Smart 3D Edition)</title>
 <link rel="manifest" href="manifest.json">
-
+<link rel="icon" href="logo.png" type="image/png">
 <link rel="apple-touch-icon" href="logo.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ST Flow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700;800&family=Montserrat:wght@500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -38,13 +46,13 @@
         <aside class="sidebar">
             <nav class="sidebar-tabs" id="navTabs">
                 <div class="nav-tab active btn-3d" onclick="switchView('roster')">
-                    <span class="nav-icon">📋</span><span class="nav-text" data-i18n="nav1">학생 명단</span>
+                    <span class="nav-icon">📋</span><span class="nav-text" data-i18n="nav1">투데이 플로우</span>
                 </div>
                 <div class="nav-tab btn-3d" onclick="switchView('timer')">
                     <span class="nav-icon">⏰</span><span class="nav-text" data-i18n="nav2">타이머</span>
                 </div>
                 <div class="nav-tab btn-3d" onclick="switchView('history')">
-                    <span class="nav-icon">📊</span><span class="nav-text" data-i18n="nav3">출석/종료 기록</span>
+                    <span class="nav-icon">📅</span><span class="nav-text" data-i18n="nav3">학생 기록</span>
                 </div>
                 <div class="nav-tab btn-3d" onclick="switchView('settings')">
                     <span class="nav-icon">⚙️</span><span class="nav-text" data-i18n="nav4">설정</span>
@@ -60,7 +68,7 @@
             <section id="view-roster" class="view-section active">
                 <div class="roster-columns-wrapper">
                     <div class="roster-column">
-                        <h2 class="group-title"><span class="icon-accent" style="color: var(--text-muted);" data-i18n="grpWait">⏳ 반 학생들 (Students List)</span></h2>
+                        <h2 class="group-title"><span class="icon-accent" style="color: var(--text-muted);" data-i18n="grpWait">⏳ 오늘 등원 대기 명단</span></h2>
                         <div class="guest-input-container">
                             <input type="text" id="guestNameInput" class="guest-input" placeholder="게스트 이름 (Enter)" style="flex: 1;" onkeypress="if(event.key==='Enter') addGuest()">
                             <input type="text" id="guestGradeInput" class="guest-input" placeholder="학년 (선택)" style="width: 90px;" onkeypress="if(event.key==='Enter') addGuest()">
@@ -85,82 +93,10 @@
                 <div id="grid" class="timer-grid"></div>
             </section>
 
-            <section id="view-log" class="view-section">
-                <div class="log-container">
-                    <div class="log-columns">
-                        <div class="log-column-wrapper">
-                            <div class="log-column-title btn-3d" data-i18n="logStart">▶️ 시작 기록 (START)</div>
-                            <div id="log-left" class="log-column"></div>
-                        </div>
-                        <div class="log-column-wrapper">
-                            <div class="log-column-title btn-3d" data-i18n="logFinish">🏁 종료 및 완료 (FINISH)</div>
-                            <div id="log-right" class="log-column"></div>
-                        </div>
-                    </div>
-                </div>
-                <div style="display: flex; justify-content: flex-end; gap: 15px;">
-                    <button class="admin-btn btn-3d" style="background: linear-gradient(135deg, #f59e0b, #b45309); color:#fff; width: auto; padding: 18px 30px; font-size: 18px;" onclick="askSoftReset(); playUISound('click');" data-i18n="softReset">🔄 타이머 및 로그 초기화</button>
-                    <button class="admin-btn btn-3d primary" style="width: auto; padding: 18px 50px; font-size: 18px;" onclick="saveLogAction(); playUISound('click');" data-i18n="exportLog">💾 수업 로그 내보내기 (.txt)</button>
-                </div>
-            </section>
+            <section id="view-history" class="view-section" aria-label="학생 기록"></section>
 
             <section id="view-settings" class="view-section">
                 <div class="settings-grid">
-                    <div class="settings-card roster-card">
-                        <h3><span class="icon-accent">📋</span> <span data-i18n="rosterMgt">학생 명단 관리</span></h3>
-                        
-                        <div class="roster-dashboard">
-                            <div class="level-input-box box-PRE">
-                                <span class="level-title" style="color:var(--selena-yellow); text-shadow: 0 1px 2px rgba(0,0,0,0.1);">PRE</span>
-                                <div style="display:flex; gap:8px;">
-                                    <div id="studentInput_PRE" class="editable-roster" contenteditable="true" data-placeholder="이름 (엔터)" style="flex:1;"></div>
-                                    <div id="gradeInput_PRE" class="editable-roster" contenteditable="true" data-placeholder="학년" style="flex:0.6; background:rgba(0,0,0,0.02);"></div>
-                                </div>
-                            </div>
-                            <div class="level-input-box box-BASIC">
-                                <span class="level-title" style="color:var(--selena-pink);">BASIC</span>
-                                <div style="display:flex; gap:8px;">
-                                    <div id="studentInput_BASIC" class="editable-roster" contenteditable="true" data-placeholder="이름 (엔터)" style="flex:1;"></div>
-                                    <div id="gradeInput_BASIC" class="editable-roster" contenteditable="true" data-placeholder="학년" style="flex:0.6; background:rgba(0,0,0,0.02);"></div>
-                                </div>
-                            </div>
-                            <div class="level-input-box box-INTER">
-                                <span class="level-title" style="color:var(--selena-orange);">INTER</span>
-                                <div style="display:flex; gap:8px;">
-                                    <div id="studentInput_INTER" class="editable-roster" contenteditable="true" data-placeholder="이름 (엔터)" style="flex:1;"></div>
-                                    <div id="gradeInput_INTER" class="editable-roster" contenteditable="true" data-placeholder="학년" style="flex:0.6; background:rgba(0,0,0,0.02);"></div>
-                                </div>
-                            </div>
-                            <div class="level-input-box box-ADV">
-                                <span class="level-title" style="color:var(--selena-cyan);">ADVANCED</span>
-                                <div style="display:flex; gap:8px;">
-                                    <div id="studentInput_ADV" class="editable-roster" contenteditable="true" data-placeholder="이름 (엔터)" style="flex:1;"></div>
-                                    <div id="gradeInput_ADV" class="editable-roster" contenteditable="true" data-placeholder="학년" style="flex:0.6; background:rgba(0,0,0,0.02);"></div>
-                                </div>
-                            </div>
-                            <div class="level-input-box box-PREP">
-                                <span class="level-title" style="color:var(--selena-brown);">PREP31</span>
-                                <div style="display:flex; gap:8px;">
-                                    <div id="studentInput_PREP" class="editable-roster" contenteditable="true" data-placeholder="이름 (엔터)" style="flex:1;"></div>
-                                    <div id="gradeInput_PREP" class="editable-roster" contenteditable="true" data-placeholder="학년" style="flex:0.6; background:rgba(0,0,0,0.02);"></div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="settings-row" style="margin-top: 30px; background:var(--bg-main); padding:20px; border-radius:16px; border: 1px solid var(--accent); box-shadow:var(--shadow-btn);">
-                            <span class="settings-label" style="color: var(--accent);">🗂️ 학생 명단창 표시 모드 선택</span>
-                            <select id="viewModeSelect" class="settings-input" onchange="toggleViewMode(this.value); playUISound('click');">
-                                <option value="card">🎴 기존 아이콘 모드 (카드 뷰)</option>
-                                <option value="list">📝 엑셀 형식 모드 (리스트 뷰)</option>
-                            </select>
-                        </div>
-                        
-                        <div style="text-align: center; display: flex; justify-content: center; gap: 15px; margin-top: 35px;">
-                            <button class="admin-btn btn-3d primary" onclick="generateStudents(); playUISound('click');" style="width: auto; padding: 16px 40px;" data-i18n="saveRoster">💾 명단 저장하기</button>
-                            <button class="admin-btn btn-3d" onclick="switchView('roster');" style="width: auto; padding: 16px 40px; background: var(--bg-card); color: var(--text-main); border: 2px solid var(--border);">📋 명단 창으로 가기</button>
-                        </div>
-                    </div>
-
                     <div class="settings-card">
                         <h3><span class="icon-accent">🏫</span> <span data-i18n="acadInfo">학원 정보 및 디스플레이</span></h3>
                         
@@ -336,44 +272,7 @@
                 </div>
             </section>
 
-            <section id="view-game" class="view-section">
-                <div class="settings-card" style="align-items: center; max-width: 1000px; margin: 0 auto;">
-                    <h3><span class="icon-accent">🎲</span> 미니 게임 (수업 중 학생 대상)</h3>
-                    
-                    <div style="display:flex; gap:10px; margin-bottom:20px; justify-content: center; width: 100%;">
-                        <button class="btn-3d active-game-tab" id="tabLadder" onclick="switchGameMode('ladder')" style="padding:12px 25px; font-weight:800; border-radius:12px; font-size: 16px;">🪜 사다리 타기</button>
-                        <button class="btn-3d" id="tabRoulette" onclick="switchGameMode('roulette')" style="padding:12px 25px; font-weight:800; border-radius:12px; font-size: 16px;">🎡 룰렛 돌리기</button>
-                    </div>
-
-                    <p style="color: var(--text-muted); font-weight: 600; margin-bottom: 25px;">현재 타이머에 배정된 학생들을 대상으로 랜덤 이벤트를 진행합니다.</p>
-                    
-                    <div style="display:flex; gap:15px; margin-bottom:30px; justify-content: center; width: 100%; align-items: center;">
-                        <button class="btn-3d-sm" id="btnBgmToggle" onclick="toggleBGM()" style="padding: 14px 20px; font-weight: 800; font-size: 15px;">🔊 BGM ON</button>
-                    </div>
-                    
-                    <div id="ladder-game-area" style="width:100%;">
-                        <div style="display:flex; gap:15px; margin-bottom:15px; justify-content: center; width: 100%;">
-                            <button class="admin-btn btn-3d primary" onclick="setupLadder()" style="width:auto; padding:16px 30px; font-size: 16px; margin: 0;">🔄 사다리 생성하기</button>
-                            <button class="admin-btn btn-3d" id="btnStartLadder" onclick="startLadderAnimation()" style="width:auto; padding:16px 30px; font-size: 16px; background:var(--brand-success); color:white; margin: 0; display: none;">🚀 사다리 타기 시작!</button>
-                        </div>
-                        <div class="ladder-canvas-container">
-                            <canvas id="ladderCanvas" width="900" height="500"></canvas>
-                        </div>
-                    </div>
-
-                    <div id="roulette-game-area" style="width:100%; display:none;">
-                        <div style="display:flex; gap:15px; margin-bottom:15px; justify-content: center; width: 100%;">
-                            <button class="admin-btn btn-3d primary" onclick="setupRoulette()" style="width:auto; padding:16px 30px; font-size: 16px; margin: 0;">🔄 룰렛 생성하기</button>
-                            <button class="admin-btn btn-3d" id="btnStartRoulette" onclick="startRouletteAnimation()" style="width:auto; padding:16px 30px; font-size: 16px; background:var(--brand-success); color:white; margin: 0; display: none;">🎡 룰렛 돌리기 시작!</button>
-                        </div>
-                        <div class="ladder-canvas-container" style="display:flex; justify-content:center; align-items:center; background:transparent; border:none; box-shadow:none;">
-                            <canvas id="rouletteCanvas" width="500" height="500" style="filter: drop-shadow(0 10px 15px rgba(0,0,0,0.1));"></canvas>
-                        </div>
-                    </div>
-                    
-                    <div id="gameResult"></div>
-                </div>
-            </section>
+            <section id="view-game" class="view-section" aria-label="미니 게임"></section>
             
             <footer class="global-footer">
                 Designed & Developed by <span>Tony (ShinJungHoon)</span>
@@ -382,7 +281,8 @@
     </div>
 </div>
 
-<script src="script.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mobile-drag-drop@2.3.0-rc.1/index.min.js" defer></script>
+<script src="script.js" defer></script>
 
 </body>
 </html>

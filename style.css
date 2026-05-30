@@ -10,9 +10,8 @@
    8. VIEW: LOG & SETTINGS
    9. VIEW: GAME (미니게임 - 사다리, 룰렛)
    10. FOOTER
+   Fonts: Pretendard, Montserrat, JetBrains Mono — loaded via index.html
 ========================================================================== */
-
-@import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;900&family=JetBrains+Mono:wght@700;800&family=Montserrat:wght@500;700;900&display=swap');
 
 :root {
     --bg-main: #f8fafc; 

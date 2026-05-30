@@ -28,7 +28,10 @@ let academyHolidays = [];
 let studentRegularOffs = {}; // ⭐ 매주 정규 휴무 요일 저장 { "학생이름": [0, 1] } (0=일, 1=월...)
 
 let customStudentOrder = []; 
-let guestList = []; 
+let guestList = [];
+
+let dayClosedDate = null;
+let operationalDate = null; 
 
 let academyName = "향촌삼성영어학원"; 
 let className = "Maple Classroom";
@@ -41,7 +44,8 @@ let currentLang = 'ko';
 let currentFontFamily = "'Pretendard', sans-serif"; 
 
 let rosterViewMode = 'card'; 
-let listSortConfig = { col: 'level', asc: true }; 
+let listSortConfig = { col: 'level', asc: true };
+let waitSortConfig = { col: 'custom', asc: true }; 
 
 // ⭐ 리모컨 번호를 저장할 배열
 let deskRemoteCodes = ["7893409", "8965601", "5141409", "7498145", "7441889", "7144865", "10551201", "8559585", "8189857", "2677665"];
@@ -82,8 +86,8 @@ const krHolidays = {
 };
 
 const i18n = {
-    ko: { nav1: "학생 명단", nav2: "타이머", nav3: "학생 기록", nav4: "설정", nav5: "미니 게임", rosterMgt: "학생 명단 관리", saveRoster: "💾 명단 저장하기", placeholder: "이름 입력", acadInfo: "학원 정보 및 디스플레이", acadName: "학원 이름", className: "반 이름", timerCount: "⏱️ 타이머 개수 설정", colorTheme: "색상 테마 (30종)", nameColor: "이름 색상 (10종)", audioSetup: "오디오 및 효과음 설정", alarmMelody: "알람 멜로디", uiSound: "UI 클릭음", ttsVoice: "🗣️ TTS 음성 안내", volAlarm: "🔊 알람 볼륨", volTTS: "🗣️ 음성 볼륨", volUI: "🖱️ 클릭 볼륨", sysCtrl: "시스템 백업 및 초기화", backupCreate: "📦 백업 파일 저장 (.json)", backupRestore: "📂 백업 파일 불러오기 (.json)", softReset: "🔄 타이머 및 로그 초기화", hardReset: "⚠️ 모든 설정 공장 초기화", btnStart: "시작", btnStop: "정지", btnCancel: "취소", btnFinish: "수업 완료", btnClear: "초기화", statusAssign: "✔ 자리배정", statusPlaying: "▶️ 수업 중", statusTimeUp: "🔔 시간 종료", statusFinish: "🏁 완료", quickStart: "▶️ 시작", quickFinish: "🏁 종료", grpWait: "⏳ 오늘 등원 대기 명단", grpActive: "▶️ 수업 중 (진행중)", grpFinish: "🏁 수업 완료 (종료됨)", langText: "🌐 Language / 언어", days: ['일', '월', '화', '수', '목', '금', '토'], alertSoft: "타이머 기록과 출결 로그만 초기화합니다.\n진행하시겠습니까?", alertHard: "⚠️ 경고 ⚠️\n모든 설정이 초기화됩니다.\n정말 공장 초기화하시겠습니까?", alertResetDone: "기록이 리셋되었습니다.", alertFactoryDone: "초기화 완료.", alertBackupDone: "복구 완료!", alertBackupFail: "백업 파일이 유효하지 않습니다.", dashTitle: "📋 현황판", dashTotal: "전체", dashWait: "대기", dashActive: "수업 중", dashFinish: "종료" },
-    en: { nav1: "STUDENTS", nav2: "TIMER", nav3: "HISTORY", nav4: "SETTING", nav5: "MINI GAME", rosterMgt: "ROSTER MANAGEMENT", saveRoster: "💾 SAVE ROSTER DATA", placeholder: "Name", acadInfo: "ACADEMY INFO & DISPLAY", acadName: "Academy Name", className: "Class Name", timerCount: "⏱️ Timer Dashboard Count", colorTheme: "Color Theme (30 Colors)", nameColor: "Name Color", audioSetup: "AUDIO SETUP", alarmMelody: "Alarm Melody", uiSound: "UI Click Sound", ttsVoice: "🗣️ TTS Voice Assistant", volAlarm: "🔊 Alarm Volume", volTTS: "🗣️ Voice Volume", volUI: "🖱️ Click Volume", sysCtrl: "SYSTEM CONTROL", backupCreate: "📦 CREATE BACKUP (.json)", backupRestore: "📂 RESTORE BACKUP (.json)", softReset: "🔄 Soft Reset (Timers & Logs)", hardReset: "⚠️ Hard Reset (Factory Reset)", btnStart: "START", btnStop: "STOP", btnCancel: "CANCEL", btnFinish: "FINISH LESSON", btnClear: "CLR", statusAssign: "✔ Assigned", statusPlaying: "▶️ Playing", statusTimeUp: "🔔 Time Up", statusFinish: "🏁 Finished", quickStart: "▶️ START", quickFinish: "🏁 FINISH", grpWait: "⏳ Waiting List", grpActive: "▶️ In Class", grpFinish: "🏁 FINISHED", langText: "🌐 Language / 언어", days: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], alertSoft: "This will reset timers and logs only.\nProceed?", alertHard: "⚠️ WARNING ⚠️\nAll settings will be reset.\nAre you sure?", alertResetDone: "Reset completed.", alertFactoryDone: "Factory reset complete.", alertBackupDone: "Restore completed!", alertBackupFail: "Invalid backup file.", dashTitle: "📋 Dashboard", dashTotal: "Total", dashWait: "Wait", dashActive: "Active", dashFinish: "Done" }
+    ko: { nav1: "투데이 플로우", nav2: "타이머", nav3: "학생 기록", nav4: "설정", nav5: "미니 게임", rosterMgt: "학생 명단 관리", waitSortLabel: "정렬", waitSortCustom: "기본", waitSortName: "이름", waitSortGrade: "학년", waitSortLevel: "레벨", dsWaiting: "⏳ 등원 대기 학생들", dsAttended: "✔️ 출석 학생들", dsOffAbsent: "🚫 휴원 또는 결석 학생들", endClassDay: "수업종료", saveRoster: "💾 명단 저장하기", placeholder: "이름 입력", acadInfo: "학원 정보 및 디스플레이", acadName: "학원 이름", className: "반 이름", timerCount: "⏱️ 타이머 개수 설정", colorTheme: "색상 테마 (30종)", nameColor: "이름 색상 (10종)", audioSetup: "오디오 및 효과음 설정", alarmMelody: "알람 멜로디", uiSound: "UI 클릭음", ttsVoice: "🗣️ TTS 음성 안내", volAlarm: "🔊 알람 볼륨", volTTS: "🗣️ 음성 볼륨", volUI: "🖱️ 클릭 볼륨", sysCtrl: "시스템 백업 및 초기화", backupCreate: "📦 백업 파일 저장 (.json)", backupRestore: "📂 백업 파일 불러오기 (.json)", softReset: "🔄 타이머 및 로그 초기화", hardReset: "⚠️ 모든 설정 공장 초기화", btnStart: "시작", btnStop: "정지", btnCancel: "취소", btnFinish: "수업 완료", btnClear: "초기화", statusAssign: "✔ 자리배정", statusPlaying: "▶️ 수업 중", statusTimeUp: "🔔 시간 종료", statusFinish: "🏁 완료", quickStart: "▶️ 시작", quickFinish: "🏁 종료", grpWait: "⏳ 오늘 등원 대기 명단", grpActive: "▶️ 수업 중 (진행중)", grpFinish: "🏁 수업 완료 (종료됨)", langText: "🌐 Language / 언어", days: ['일', '월', '화', '수', '목', '금', '토'], alertSoft: "타이머 기록과 출결 로그만 초기화합니다.\n진행하시겠습니까?", alertHard: "⚠️ 경고 ⚠️\n모든 설정이 초기화됩니다.\n정말 공장 초기화하시겠습니까?", alertResetDone: "기록이 리셋되었습니다.", alertFactoryDone: "초기화 완료.", alertBackupDone: "복구 완료!", alertBackupFail: "백업 파일이 유효하지 않습니다.", dashTitle: "📋 현황판", dashTotal: "전체", dashWait: "대기", dashActive: "수업 중", dashFinish: "종료", dashAbsent: "휴원/결석" },
+    en: { nav1: "Today Flow", nav2: "TIMER", nav3: "HISTORY", nav4: "SETTING", nav5: "MINI GAME", rosterMgt: "ROSTER MANAGEMENT", waitSortLabel: "Sort", waitSortCustom: "Default", waitSortName: "Name", waitSortGrade: "Grade", waitSortLevel: "Level", dsWaiting: "⏳ Waiting List", dsAttended: "✔️ Attended", dsOffAbsent: "🚫 Off / Absent", endClassDay: "End Class", saveRoster: "💾 SAVE ROSTER DATA", placeholder: "Name", acadInfo: "ACADEMY INFO & DISPLAY", acadName: "Academy Name", className: "Class Name", timerCount: "⏱️ Timer Dashboard Count", colorTheme: "Color Theme (30 Colors)", nameColor: "Name Color", audioSetup: "AUDIO SETUP", alarmMelody: "Alarm Melody", uiSound: "UI Click Sound", ttsVoice: "🗣️ TTS Voice Assistant", volAlarm: "🔊 Alarm Volume", volTTS: "🗣️ Voice Volume", volUI: "🖱️ Click Volume", sysCtrl: "SYSTEM CONTROL", backupCreate: "📦 CREATE BACKUP (.json)", backupRestore: "📂 RESTORE BACKUP (.json)", softReset: "🔄 Soft Reset (Timers & Logs)", hardReset: "⚠️ Hard Reset (Factory Reset)", btnStart: "START", btnStop: "STOP", btnCancel: "CANCEL", btnFinish: "FINISH LESSON", btnClear: "CLR", statusAssign: "✔ Assigned", statusPlaying: "▶️ Playing", statusTimeUp: "🔔 Time Up", statusFinish: "🏁 Finished", quickStart: "▶️ START", quickFinish: "🏁 FINISH", grpWait: "⏳ Waiting List", grpActive: "▶️ In Class", grpFinish: "🏁 FINISHED", langText: "🌐 Language / 언어", days: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], alertSoft: "This will reset timers and logs only.\nProceed?", alertHard: "⚠️ WARNING ⚠️\nAll settings will be reset.\nAre you sure?", alertResetDone: "Reset completed.", alertFactoryDone: "Factory reset complete.", alertBackupDone: "Restore completed!", alertBackupFail: "Invalid backup file.", dashTitle: "📋 Dashboard", dashTotal: "Total", dashWait: "Wait", dashActive: "Active", dashFinish: "Done", dashAbsent: "Off/Absent" }
 };
 
 // ==========================================
@@ -91,7 +95,6 @@ const i18n = {
 // ==========================================
 const customStyle = document.createElement('style');
 customStyle.innerHTML = `
-    @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@600;900&family=Gowun+Dodum&family=Jua&family=Do+Hyeon&family=Noto+Serif+KR:wght@600;900&display=swap');
     @font-face { font-family: 'GmarketSans'; src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansBold.woff') format('woff'); font-weight: 700; font-style: normal; }
     @font-face { font-family: 'SUIT'; src: url('https://cdn.jsdelivr.net/gh/sunn-us/SUIT/fonts/static/woff2/SUIT-Bold.woff2') format('woff2'); font-weight: 700; font-style: normal; }
@@ -129,39 +132,52 @@ customStyle.innerHTML = `
     .level-color-PRE { background: var(--selena-yellow); color: #000; } .level-color-BASIC { background: var(--selena-pink); color: #fff; } .level-color-INTER { background: var(--selena-orange); color: #fff; } .level-color-ADV { background: var(--selena-cyan); color: #fff; } .level-color-PREP { background: var(--selena-brown); color: #fff; } .level-color-GUEST { background: #94a3b8; color: #fff; }
 
     #mainHeader { position: relative; }
-    .header-dashboard-box { position: absolute; left: 20px; top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 12px; background: rgba(255, 255, 255, 0.9); border: 2px solid var(--border, #e2e8f0); padding: 6px 16px; border-radius: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); backdrop-filter: blur(8px); z-index: 100; font-family: 'Pretendard', sans-serif; }
-    .hd-title { font-size: 15px; font-weight: 900; color: var(--accent); white-space: nowrap; padding-right: 10px; border-right: 2px solid var(--border); }
-    .hd-items-container { display: flex; gap: 8px; }
-    .hd-item { display: flex; align-items: baseline; gap: 6px; background: #ffffff; border-radius: 8px; padding: 4px 10px; min-width: 50px; justify-content: center; }
-    .hd-label { font-size: 12px; font-weight: 800; opacity: 0.7; color: var(--text-main, #334155); }
-    .hd-count { font-size: 18px; font-weight: 900; color: var(--text-main, #0f172a); letter-spacing: -0.5px; }
+    .header-dashboard-box { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; align-items: stretch; gap: 6px; background: rgba(255, 255, 255, 0.92); border: 2px solid var(--border, #e2e8f0); padding: 8px 12px; border-radius: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); backdrop-filter: blur(8px); z-index: 100; font-family: 'Pretendard', sans-serif; max-width: 248px; min-width: 210px; box-sizing: border-box; }
+    .hd-date-display { font-size: 12px; font-weight: 800; color: var(--text-main, #334155); white-space: nowrap; text-align: center; padding-bottom: 6px; border-bottom: 1px solid var(--border); letter-spacing: -0.3px; line-height: 1.3; }
+    .hd-dashboard-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .hd-title { font-size: 13px; font-weight: 900; color: var(--accent); white-space: nowrap; padding-right: 8px; border-right: 2px solid var(--border); flex-shrink: 0; }
+    .hd-items-container { display: flex; gap: 4px; flex-wrap: wrap; flex: 1; min-width: 0; }
+    .hd-item { display: flex; align-items: baseline; gap: 4px; background: #ffffff; border-radius: 8px; padding: 3px 6px; min-width: 40px; justify-content: center; }
+    .hd-label { font-size: 11px; font-weight: 800; opacity: 0.7; color: var(--text-main, #334155); }
+    .hd-count { font-size: 17px; font-weight: 900; color: var(--text-main, #0f172a); letter-spacing: -0.5px; }
     .hd-item.hd-wait { background: #fffbeb; } .hd-item.hd-wait .hd-count { color: #d97706; }
     .hd-item.hd-active { background: #eff6ff; } .hd-item.hd-active .hd-count { color: #2563eb; }
     .hd-item.hd-finish { background: #f0fdf4; } .hd-item.hd-finish .hd-count { color: #16a34a; }
+    .hd-item.hd-absent { background: #f1f5f9; } .hd-item.hd-absent .hd-count { color: #64748b; }
+    #displayDate { display: none !important; }
 
     .start-time-badge { position: absolute; top: 6px; right: 6px; background: #2563eb; border: 2px solid #60a5fa; color: white; font-size: 14px; font-weight: 900; padding: 6px 10px; border-radius: 8px; cursor: pointer; z-index: 10; box-shadow: 0 4px 8px rgba(0,0,0,0.4); transition: background 0.2s, transform 0.1s; }
     .start-time-badge:hover { background: #1d4ed8; transform: scale(1.05); }
 
     /* ⭐ 명단창(Roster) 3단 레이아웃 */
-    .custom-roster-layout { display: grid !important; grid-template-columns: 420px 1fr !important; grid-template-rows: minmax(0, 1fr) minmax(240px, 34vh) !important; gap: 12px !important; align-items: stretch !important; max-width: 100% !important; min-height: calc(100vh - 100px) !important; max-height: calc(100vh - 56px) !important; padding-top: 8px; overflow: hidden; box-sizing: border-box; }
-    .custom-roster-layout .roster-column { min-height: 0 !important; padding: 12px 16px !important; box-sizing: border-box; }
-    .custom-col-wait { grid-column: 1 / 2 !important; grid-row: 1 / 3 !important; max-width: 420px !important; width: 100% !important; height: 100%; min-height: 0; max-height: none; display: flex; flex-direction: column; overflow: hidden; margin: 0 !important; flex: none !important; }
-    .custom-col-active { grid-column: 2 / 3 !important; grid-row: 1 / 2 !important; width: 100% !important; max-width: 100% !important; flex: none !important; margin: 0 !important; overflow: hidden; min-height: 0; }
-    .custom-col-finish { grid-column: 2 / 3 !important; grid-row: 2 / 3 !important; width: 100% !important; max-width: 100% !important; flex: none !important; margin: 0 !important; min-height: 240px !important; max-height: none !important; overflow: hidden; background: rgba(248, 250, 252, 0.92) !important; border-radius: 16px !important; box-shadow: inset 0 1px 0 rgba(255,255,255,0.8); display: flex !important; flex-direction: column !important; }
+    .custom-roster-layout { display: grid !important; grid-template-columns: 420px 1fr !important; grid-template-rows: minmax(0, 1fr) minmax(240px, 34vh) !important; gap: 12px !important; align-items: stretch !important; max-width: 100% !important; min-height: calc(100vh - 120px) !important; max-height: none !important; padding: 8px 4px 20px 4px; overflow: visible !important; box-sizing: border-box; }
+    .custom-roster-layout .roster-column { min-height: 0 !important; padding: 12px 16px 18px 16px !important; box-sizing: border-box; overflow: visible !important; }
+    .custom-col-wait { grid-column: 1 / 2 !important; grid-row: 1 / 3 !important; max-width: 420px !important; width: 100% !important; height: 100%; min-height: 0; max-height: none; display: flex; flex-direction: column; overflow: visible !important; margin: 0 !important; flex: none !important; }
+    .custom-col-active { grid-column: 2 / 3 !important; grid-row: 1 / 2 !important; width: 100% !important; max-width: 100% !important; flex: none !important; margin: 0 !important; overflow: visible !important; min-height: 0; }
+    .custom-col-finish { grid-column: 2 / 3 !important; grid-row: 2 / 3 !important; width: 100% !important; max-width: 100% !important; flex: none !important; margin: 0 !important; min-height: 240px !important; max-height: none !important; overflow: visible !important; background: rgba(248, 250, 252, 0.92) !important; border-radius: 16px !important; box-shadow: var(--shadow-pop), inset 0 1px 0 rgba(255,255,255,0.8); border: 2px solid rgba(255,255,255,0.5); display: flex !important; flex-direction: column !important; }
     .custom-col-finish #bottom-split-container { flex: 1; min-height: 0; }
     .custom-col-active .group-title, .custom-col-finish .group-title { margin-bottom: 8px !important; padding-bottom: 8px !important; font-size: 18px !important; }
 
     .custom-col-wait .guest-input-container { flex-shrink: 0; margin-bottom: 8px; }
     .custom-col-wait .group-title { flex-shrink: 0; }
-    #grid-unassigned { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 10px !important; flex: 1 1 auto; min-height: 0; overflow-y: auto; padding-right: 5px; align-content: flex-start; margin: 0 !important; }
+    .wait-sort-bar { display: flex; align-items: center; gap: 4px; flex-shrink: 0; margin-bottom: 8px; padding: 6px 8px; background: rgba(255,255,255,0.7); border-radius: 10px; border: 1px solid var(--border); }
+    .wait-sort-label { font-size: 12px; font-weight: 900; color: var(--text-muted); margin-right: 4px; white-space: nowrap; }
+    .wait-sort-th { cursor: pointer; font-size: 12px; font-weight: 900; color: var(--text-muted); transition: 0.2s; user-select: none; padding: 4px 8px; border-radius: 6px; flex: 1; text-align: center; }
+    .wait-sort-th:hover { color: var(--accent); background: rgba(59,130,246,0.08); }
+    .wait-sort-th.sort-asc::after { content: " ▲"; font-size: 10px; color: var(--accent); }
+    .wait-sort-th.sort-desc::after { content: " ▼"; font-size: 10px; color: var(--accent); }
+    .wait-sort-th.active-sort { color: var(--accent); background: rgba(59,130,246,0.1); }
+    #grid-unassigned { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 10px !important; flex: 1 1 0 !important; min-height: 0 !important; overflow-y: auto !important; overflow-x: hidden; padding-right: 5px; align-content: flex-start; margin: 0 !important; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
     #grid-unassigned::-webkit-scrollbar { width: 8px; }
     #grid-unassigned::-webkit-scrollbar-track { background: transparent; }
     #grid-unassigned::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+    #grid-absent::-webkit-scrollbar, #grid-finished::-webkit-scrollbar { width: 8px; }
+    #grid-absent::-webkit-scrollbar-thumb, #grid-finished::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
     
-    #grid-unassigned .student-btn { width: 100% !important; height: 62px !important; padding: 9px 14px !important; display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: flex-start !important; border-radius: 12px !important; flex-shrink: 0; margin: 0 !important; }
+    #grid-unassigned .student-btn { width: 100% !important; height: 66px !important; min-height: 66px !important; padding: 9px 14px !important; display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: flex-start !important; border-radius: 12px !important; flex-shrink: 0; margin: 0 !important; overflow: visible !important; }
     #grid-unassigned .student-btn .card-badge-group { position: relative !important; top: 0 !important; left: 0 !important; margin-right: 15px !important; display: flex !important; flex-direction: column !important; align-items: center !important; gap: 4px !important; }
     #grid-unassigned .student-btn .new-level-pill, #grid-unassigned .student-btn .card-grade-badge { padding: 4px 6px !important; font-size: 11px !important; margin-right: 0 !important; width: 100%; box-sizing: border-box; text-align: center; }
-    #grid-unassigned .student-btn .name-text { margin-top: 0 !important; font-size: 20px !important; flex: 1; text-align: left; padding-left: 8px; justify-content: flex-start; }
+    #grid-unassigned .student-btn .name-text { margin-top: 0 !important; font-size: 20px !important; flex: 1; text-align: left; padding-left: 8px; justify-content: flex-start; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
     #grid-unassigned .student-btn .card-mod-container { position: relative !important; bottom: 0 !important; left: 0 !important; flex-direction: row !important; margin-right: 6px; gap:4px; }
     #grid-unassigned .student-btn .mod-badge { padding: 2px 4px !important; font-size: 10px !important; }
     #grid-unassigned .student-btn .quick-controls { position: absolute !important; right: 5px !important; top: 50% !important; transform: translateY(-50%) !important; width: auto !important; height: auto !important; background: rgba(255,255,255,0.95) !important; flex-direction: row !important; gap: 4px !important; padding: 4px !important; border-radius: 10px !important; opacity: 0; transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.15); z-index: 20; }
@@ -209,7 +225,7 @@ customStyle.innerHTML = `
     .custom-time-modal .modal-btns { display: flex; gap: 10px; } .custom-time-modal .modal-btns button { flex: 1; padding: 14px; border: none; border-radius: 10px; font-weight: bold; font-size: 16px; cursor: pointer; transition: filter 0.2s; } .btn-modal-cancel { background: var(--border, #ddd); color: var(--text-main, #333); } .btn-modal-save { background: var(--accent, #2563eb); color: #fff; } .btn-modal-cancel:hover, .btn-modal-save:hover { filter: brightness(1.1); }
 
     /* 리스트 뷰 */
-    #view-roster { position: relative; padding-top: 55px; height: calc(100vh - 56px); max-height: calc(100vh - 56px); overflow: hidden; box-sizing: border-box; }
+    #view-roster { position: relative; padding: 55px 8px 28px 8px; min-height: calc(100vh - 56px); max-height: none; overflow: visible; box-sizing: border-box; }
     #view-roster.view-roster-list-mode { height: auto; max-height: none; min-height: calc(100vh - 56px); overflow: visible; padding-bottom: 48px; }
     #view-roster.view-roster-list-mode #roster-list-wrapper { width: 100%; height: auto; max-height: none; overflow-x: auto; overflow-y: visible; padding: 10px 0 60px 0; animation: fadeIn 0.3s ease; }
     .view-toggle-btn { position: absolute; right: 20px; top: 10px; z-index: 50; background: var(--bg-card); color: var(--accent); font-weight: 900; font-family: 'Pretendard'; padding: 10px 16px; border-radius: 10px; border: 2px solid var(--accent); box-shadow: var(--shadow-btn); cursor: pointer; transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1); font-size: 14px; }
@@ -284,21 +300,34 @@ customStyle.innerHTML = `
     .bday-card::after { content: '🎉'; position: absolute; top: -16px; left: -16px; font-size: 36px; z-index: 50; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); animation: bday-bounce 0.8s infinite alternate ease-in-out; }
     @keyframes bday-bounce { from { transform: translateY(0) rotate(-10deg) scale(1); } to { transform: translateY(-8px) rotate(15deg) scale(1.1); } }
 
+    /* ⭐ 생일 축하 연출 */
+    #birthday-celebration-root { position: fixed; inset: 0; pointer-events: none; z-index: 9998; opacity: 0; visibility: hidden; transition: opacity 0.45s ease, visibility 0.45s; }
+    #birthday-celebration-root.active { opacity: 1; visibility: visible; }
+    #birthday-fireworks-canvas { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 9997; pointer-events: none; }
+    .birthday-celebration-msg { position: fixed; top: 10%; left: 50%; transform: translateX(-50%); font-size: clamp(28px, 5.5vw, 64px); font-weight: 900; font-family: 'Montserrat', 'Pretendard', sans-serif; color: #ff007f; text-align: center; white-space: nowrap; text-shadow: 0 4px 24px rgba(255,0,127,0.45), 0 0 40px rgba(255,215,0,0.35); z-index: 9999; animation: birthday-text-pop 0.7s cubic-bezier(0.34, 1.56, 0.64, 1); letter-spacing: 0.5px; }
+    @keyframes birthday-text-pop { 0% { transform: translateX(-50%) scale(0.4); opacity: 0; } 100% { transform: translateX(-50%) scale(1); opacity: 1; } }
+    @keyframes birthday-banner-pulse { 0%, 100% { transform: translateX(-50%) scale(1); } 50% { transform: translateX(-50%) scale(1.04); } }
+    .birthday-desk-banner { position: absolute; top: -52px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #ff007f, #ffd700); color: #fff; font-size: clamp(14px, 1.6vw, 22px); font-weight: 900; padding: 8px 18px; border-radius: 999px; white-space: nowrap; box-shadow: 0 8px 24px rgba(255,0,127,0.35); z-index: 20; animation: birthday-banner-pulse 1.2s infinite ease-in-out; pointer-events: none; }
+    .timer-box.birthday-celebrating { z-index: 15; }
+    .roster-desk-slot.birthday-celebrating .birthday-desk-banner { top: -46px; font-size: 13px; padding: 6px 14px; }
+
     /* ⭐ 학생 기록: 탭 전환 및 캘린더/사이드바 뷰 CSS */
     .history-sidebar { width: 320px; background: var(--bg-card); border-radius: 16px; border: 2px solid var(--border); padding: 15px; display: flex; flex-direction: column; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
     .history-sidebar h3 { margin-top: 0; padding-bottom: 10px; border-bottom: 2px solid var(--border); color: var(--text-main); font-weight: 900; }
     
-    .sidebar-th { cursor: pointer; font-size: 13px; font-weight: 900; color: var(--text-muted); transition: 0.2s; user-select: none; }
+    .sidebar-th { cursor: pointer; font-size: 13px; font-weight: 900; color: var(--text-muted); transition: 0.2s; user-select: none; text-align: center; }
     .sidebar-th:hover { color: var(--accent); }
     .sidebar-th.sort-asc::after { content: " ▲"; font-size: 10px; color: var(--accent); }
     .sidebar-th.sort-desc::after { content: " ▼"; font-size: 10px; color: var(--accent); }
+    .history-sidebar-header-row { display: grid; grid-template-columns: 1fr 52px 58px; align-items: center; column-gap: 6px; border-bottom: 2px solid var(--border); padding-bottom: 8px; margin-bottom: 6px; }
     
-    .history-student-item { padding: 12px 10px; border-bottom: 1px solid var(--border); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; border-radius: 8px; }
-    .history-student-item:hover { background: rgba(37,99,235,0.05); color: var(--accent); transform: translateX(5px); }
-    .history-student-item.active { background: var(--accent); color: white; border-color: var(--accent); box-shadow: 0 4px 10px rgba(37,99,235,0.3); transform: translateX(5px); }
-    .history-student-item .s-name { flex: 1; font-weight: 900; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .history-student-item .s-grade { width: 50px; text-align: center; font-size: 12px; font-weight: 800; opacity: 0.8; }
-    .history-student-item .s-level { width: 55px; text-align: center; font-size: 11px; font-weight: 900; padding: 2px 4px; background: rgba(0,0,0,0.05); border-radius: 4px; }
+    .history-student-item { padding: 11px 8px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.2s, color 0.2s, box-shadow 0.2s; display: grid; grid-template-columns: 1fr 52px 58px; align-items: center; column-gap: 6px; border-radius: 8px; text-align: center; }
+    .history-student-item:hover { background: rgba(37,99,235,0.05); color: var(--accent); }
+    .history-student-item.active { background: var(--accent); color: white; border-color: var(--accent); box-shadow: 0 4px 10px rgba(37,99,235,0.3); }
+    .history-student-item .s-name { font-weight: 900; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; min-width: 0; }
+    .history-student-item .s-grade { text-align: center; font-size: 12px; font-weight: 800; opacity: 0.85; }
+    .history-student-item .s-level { text-align: center; font-size: 11px; font-weight: 900; padding: 3px 4px; background: rgba(0,0,0,0.05); border-radius: 4px; box-sizing: border-box; }
+    .history-student-item.active .s-level { background: rgba(255,255,255,0.2); }
     
     .history-content { flex: 1; background: var(--bg-card); border-radius: 16px; border: 2px solid var(--border); padding: 25px; display: flex; flex-direction: column; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow: hidden; }
     .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
@@ -326,8 +355,19 @@ customStyle.innerHTML = `
     .history-tab-btn { padding: 12px 25px; font-size: 16px; font-weight: 900; border-radius: 12px; border: 2px solid var(--border); background: var(--bg-main); color: var(--text-muted); cursor: pointer; transition: 0.2s; font-family: var(--app-font); }
     .history-tab-btn.active { background: var(--accent); color: white; border-color: var(--accent); box-shadow: 0 4px 12px rgba(37,99,235,0.2); transform: scale(1.05); }
     
-    .monthly-history-container, #weekly-history-container, #daily-history-container { display: none; height: calc(100vh - 180px); min-height: 600px; position: relative; width: 100%; }
+    .monthly-history-container, #weekly-history-container, #daily-history-container, #roster-history-container { display: none; height: calc(100vh - 180px); min-height: 600px; position: relative; width: 100%; }
     .monthly-history-container.active { display: flex; gap: 20px; }
+    #roster-history-container.active { display: flex; flex-direction: column; background: var(--bg-card); border-radius: 16px; border: 2px solid var(--border); padding: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); box-sizing: border-box; overflow: hidden; min-height: calc(100vh - 150px); height: calc(100vh - 150px); }
+    #roster-history-container .roster-table-scroll { overflow-x: auto; flex: 1 1 auto; min-height: 560px; max-height: calc(100vh - 280px); overflow-y: auto; border: 2px solid var(--border); border-radius: 12px; background: var(--bg-card); }
+    #roster-history-container .settings-roster-table td { padding: 4px 6px; }
+    #roster-history-container .settings-roster-table th { font-size: 16px; padding: 12px 8px; }
+    #roster-history-container .settings-roster-input { padding: 10px 8px; font-size: 18px; }
+    #roster-history-container .settings-roster-select { font-size: 17px; padding: 10px 8px; }
+    #roster-history-container .settings-roster-table td:nth-child(1) .settings-roster-input,
+    #roster-history-container .settings-roster-table td:nth-child(2) .settings-roster-input { font-size: 20px; font-weight: 900; }
+    .btn-end-class-day { background: linear-gradient(135deg, #7c3aed, #5b21b6) !important; color: #fff !important; border: none !important; padding: 12px 24px !important; font-size: 17px !important; font-weight: 900 !important; border-radius: 12px !important; cursor: pointer; box-shadow: 0 6px 16px rgba(124,58,237,0.35); white-space: nowrap; font-family: var(--app-font, 'Pretendard', sans-serif); transition: 0.2s; }
+    .btn-end-class-day:hover { transform: translateY(-2px); filter: brightness(1.08); }
+    .ds-card.ds-waiting .ds-header span:first-child { color: #d97706; }
     #weekly-history-container.active { display: flex; background: var(--bg-card); border-radius: 16px; border: 2px solid var(--border); padding: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); flex-direction: column; box-sizing: border-box; }
     #daily-history-container.active { display: flex; background: var(--bg-card); border-radius: 16px; border: 2px solid var(--border); padding: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); flex-direction: column; box-sizing: border-box; }
     
@@ -377,9 +417,9 @@ customStyle.innerHTML = `
 
     /* ⭐ 결석/휴원 및 분할 레이아웃 추가 CSS */
     .bottom-split-container { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; height: 100%; align-items: stretch; flex: 1; min-height: 0; }
-    .split-box { background: rgba(255,255,255,0.85); border-radius: 12px; padding: 10px 12px; border: 1px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,0.04); height: 100%; min-height: 180px; max-height: none; display: flex; flex-direction: column; overflow: hidden; box-sizing: border-box; }
+    .split-box { background: rgba(255,255,255,0.85); border-radius: 12px; padding: 10px 12px; border: 1px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,0.04); height: 100%; min-height: 0; max-height: none; display: flex; flex-direction: column; overflow: hidden; box-sizing: border-box; }
     .split-title { font-size: 14px; font-weight: 900; margin-bottom: 8px; display: flex; align-items: center; padding-bottom: 6px; border-bottom: 2px dashed var(--border); flex-shrink: 0; }
-    #grid-absent, #grid-finished { flex: 1 1 auto; min-height: 130px; max-height: none; overflow-y: auto; align-content: flex-start; }
+    #grid-absent, #grid-finished { flex: 1 1 0 !important; min-height: 0 !important; max-height: none; overflow-y: auto !important; overflow-x: hidden; align-content: flex-start; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
     
     #grid-absent { display: flex !important; flex-direction: row !important; flex-wrap: wrap !important; gap: 10px !important; margin: 0 !important; align-content: flex-start; flex: 1; }
     #grid-absent .student-btn { width: auto !important; height: 55px !important; padding: 8px 20px !important; flex-direction: row !important; border-radius: 12px !important; display: inline-flex !important; align-items: center; justify-content: center; position: relative !important; margin: 0 !important; }
@@ -447,15 +487,21 @@ window.addEventListener('DOMContentLoaded', () => {
 window.onload = () => { 
     injectHistoryUI(); 
     injectGameUI(); 
-    injectSettingsRosterUI(); 
     injectHeaderDashboard(); 
+    injectBirthdayCelebrationUI();
     injectListViewUI(); 
     injectFontSettingUI(); 
     injectRemoteSettingUI(); 
     loadData(); 
     updateDateUI(); 
     setTimeout(applyCustomRosterLayout, 500);
-}; 
+    registerServiceWorker();
+};
+
+function registerServiceWorker() {
+    if (!('serviceWorker' in navigator)) return;
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+}
 
 setInterval(() => {
     updateDateUI();
@@ -467,6 +513,7 @@ function updateDateUI() {
     const now = new Date(); const t = i18n[currentLang] || i18n.ko;
     const str = `${now.getFullYear()}. ${String(now.getMonth()+1).padStart(2,'0')}. ${String(now.getDate()).padStart(2,'0')} (${t.days[now.getDay()]})`;
     const el = document.getElementById('displayDate'); if(el) el.innerText = str;
+    const hdDate = document.getElementById('hd-date'); if(hdDate) hdDate.innerText = str;
 }
 
 function isTodayBirthday(birthdayStr) {
@@ -479,6 +526,184 @@ function isTodayBirthday(birthdayStr) {
     return false;
 }
 
+let birthdayFireworksRAF = null;
+const HAPPY_BIRTHDAY_MELODY = [
+    [392, 0.4], [392, 0.4], [440, 0.8], [392, 0.8], [523, 0.8], [494, 1.6],
+    [392, 0.4], [392, 0.4], [440, 0.8], [392, 0.8], [587, 0.8], [523, 1.6],
+    [392, 0.4], [392, 0.4], [784, 0.8], [659, 0.8], [523, 0.8], [494, 0.8], [440, 1.6],
+    [698, 0.4], [698, 0.4], [659, 0.8], [523, 0.8], [587, 0.8], [523, 1.6]
+];
+
+function injectBirthdayCelebrationUI() {
+    if (document.getElementById('birthday-celebration-root')) return;
+    const root = document.createElement('div');
+    root.id = 'birthday-celebration-root';
+    root.innerHTML = `<canvas id="birthday-fireworks-canvas"></canvas><div class="birthday-celebration-msg" id="birthday-celebration-msg"></div>`;
+    document.body.appendChild(root);
+}
+
+function stopBirthdayFireworks() {
+    if (birthdayFireworksRAF) { cancelAnimationFrame(birthdayFireworksRAF); birthdayFireworksRAF = null; }
+    const canvas = document.getElementById('birthday-fireworks-canvas');
+    if (canvas) { const ctx = canvas.getContext('2d'); if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height); }
+}
+
+function startBirthdayFireworks() {
+    const canvas = document.getElementById('birthday-fireworks-canvas');
+    if (!canvas) return;
+    stopBirthdayFireworks();
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const particles = [];
+    let frame = 0;
+    const maxFrames = 720;
+    const colors = ['#ff007f', '#ffd700', '#00ff7f', '#007fff', '#ff4500', '#da70d6', '#ff69b4'];
+
+    const spawnBurst = (x, y) => {
+        for (let i = 0; i < 36; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = 2 + Math.random() * 7;
+            particles.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, life: 55 + Math.random() * 35, color: colors[Math.floor(Math.random() * colors.length)], size: 2 + Math.random() * 3.5, gravity: 0.04 + Math.random() * 0.03 });
+        }
+    };
+
+    const loop = () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if (frame % 22 === 0) spawnBurst(Math.random() * canvas.width, 40 + Math.random() * canvas.height * 0.45);
+        for (let i = particles.length - 1; i >= 0; i--) {
+            const p = particles[i];
+            p.x += p.vx; p.y += p.vy; p.vy += p.gravity; p.life -= 1;
+            if (p.life <= 0) { particles.splice(i, 1); continue; }
+            ctx.globalAlpha = Math.min(1, p.life / 35);
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+        frame++;
+        if (frame < maxFrames) birthdayFireworksRAF = requestAnimationFrame(loop);
+        else stopBirthdayFireworks();
+    };
+    loop();
+}
+
+function playHappyBirthdayMelody() {
+    initAudio();
+    if (!audioCtx) return;
+    const peakVol = Math.min(1, alarmVolume * 0.5);
+    let startTime = audioCtx.currentTime;
+    HAPPY_BIRTHDAY_MELODY.forEach(([freq, duration]) => {
+        const osc = audioCtx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        const gainNode = audioCtx.createGain();
+        gainNode.gain.setValueAtTime(0, startTime);
+        gainNode.gain.linearRampToValueAtTime(peakVol, startTime + 0.05);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+        osc.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        osc.start(startTime);
+        osc.stop(startTime + duration);
+        startTime += duration;
+    });
+}
+
+function showDeskBirthdayBanner(deskId, studentName) {
+    if (deskId === null || deskId === undefined || deskId < 0) return;
+    const bannerText = `🎂 ${studentName} Happy Birthday! 🎂`;
+    const box = document.getElementById(`box-${deskId}`);
+    if (box) {
+        box.classList.add('birthday-celebrating');
+        let banner = box.querySelector('.birthday-desk-banner');
+        if (!banner) { banner = document.createElement('div'); banner.className = 'birthday-desk-banner'; box.appendChild(banner); }
+        banner.textContent = bannerText;
+    }
+    const slot = document.getElementById(`roster-desk-${deskId}`);
+    if (slot) {
+        slot.classList.add('birthday-celebrating');
+        let slotBanner = slot.querySelector('.birthday-desk-banner');
+        if (!slotBanner) { slotBanner = document.createElement('div'); slotBanner.className = 'birthday-desk-banner'; slot.appendChild(slotBanner); }
+        slotBanner.textContent = bannerText;
+    }
+}
+
+function clearDeskBirthdayBanner(deskId) {
+    if (deskId === null || deskId === undefined || deskId < 0) return;
+    const box = document.getElementById(`box-${deskId}`);
+    if (box) { box.classList.remove('birthday-celebrating'); box.querySelector('.birthday-desk-banner')?.remove(); }
+    const slot = document.getElementById(`roster-desk-${deskId}`);
+    if (slot) { slot.classList.remove('birthday-celebrating'); slot.querySelector('.birthday-desk-banner')?.remove(); }
+}
+
+function showBirthdayCelebration(studentName, deskId) {
+    injectBirthdayCelebrationUI();
+    const root = document.getElementById('birthday-celebration-root');
+    const msgEl = document.getElementById('birthday-celebration-msg');
+    if (!root || !msgEl) return;
+    msgEl.textContent = `🎂 ${studentName} Happy Birthday! 🎂`;
+    root.classList.add('active');
+    startBirthdayFireworks();
+    playHappyBirthdayMelody();
+    showDeskBirthdayBanner(deskId, studentName);
+    setTimeout(() => {
+        root.classList.remove('active');
+        clearDeskBirthdayBanner(deskId);
+    }, 12000);
+}
+
+function maybeTriggerBirthdayCelebration(studentName, deskId) {
+    if (!studentName || studentName === '(empty)') return;
+    const info = studentMasterList.find(s => s.name === studentName);
+    if (!info || !isTodayBirthday(info.birthday)) return;
+    showBirthdayCelebration(studentName, deskId);
+}
+
+function updateHeaderTitle() {
+    const el = document.getElementById('displayClassName');
+    if (el) el.innerText = className || 'Maple Classroom';
+}
+
+function updateWaitSortUI() {
+    ['custom', 'name', 'grade', 'level'].forEach(c => {
+        const th = document.getElementById(`ws-${c}`);
+        if (!th) return;
+        th.classList.remove('sort-asc', 'sort-desc', 'active-sort');
+        if (c === waitSortConfig.col) {
+            th.classList.add('active-sort');
+            if (c !== 'custom') th.classList.add(waitSortConfig.asc ? 'sort-asc' : 'sort-desc');
+        }
+    });
+}
+
+window.sortWaitList = function(col) {
+    playUISound('click');
+    if (waitSortConfig.col === col) {
+        if (col !== 'custom') waitSortConfig.asc = !waitSortConfig.asc;
+    } else {
+        waitSortConfig.col = col;
+        waitSortConfig.asc = true;
+    }
+    updateWaitSortUI();
+    saveToStorage();
+    if (rosterViewMode !== 'list') generateStudents();
+};
+
+function getSortedWaitNames(names) {
+    if (waitSortConfig.col === 'custom') return [...names];
+    const sorted = [...names];
+    sorted.sort((a, b) => {
+        let res = 0;
+        if (waitSortConfig.col === 'name') res = a.localeCompare(b, 'ko-KR');
+        else if (waitSortConfig.col === 'grade') res = getGradeWeight(studentGrades[a] || '') - getGradeWeight(studentGrades[b] || '');
+        else if (waitSortConfig.col === 'level') res = getLevelWeight(studentLevels[a] || 'GUEST') - getLevelWeight(studentLevels[b] || 'GUEST');
+        if (res === 0) res = a.localeCompare(b, 'ko-KR');
+        return waitSortConfig.asc ? res : -res;
+    });
+    return sorted;
+}
+
 // =========================================================================
 // ⭐ 명단창 3단 레이아웃 개편 및 로직
 // =========================================================================
@@ -487,9 +712,7 @@ function applyCustomRosterLayout() {
     const gridA = document.getElementById("grid-active");
     const gridF = document.getElementById("grid-finished");
     
-    // ⭐ 대기창 제목 변경
-    const waitTitle = document.querySelector('[data-i18n="grpWait"]');
-    if (waitTitle) waitTitle.innerHTML = "⏳ 오늘 등원 대기 명단";
+    updateHeaderTitle();
 
     if(gridU && gridA && gridF) {
         const colU = gridU.parentElement;
@@ -501,6 +724,25 @@ function applyCustomRosterLayout() {
             colU.classList.add('custom-col-wait');
             colA.classList.add('custom-col-active');
             colF.classList.add('custom-col-finish');
+
+            if (!document.getElementById('wait-sort-bar')) {
+                const sortBar = document.createElement('div');
+                sortBar.id = 'wait-sort-bar';
+                sortBar.className = 'wait-sort-bar';
+                sortBar.innerHTML = `
+                    <span class="wait-sort-label" data-i18n="waitSortLabel">정렬</span>
+                    <div class="wait-sort-th" onclick="sortWaitList('custom')" id="ws-custom" data-i18n="waitSortCustom">기본</div>
+                    <div class="wait-sort-th" onclick="sortWaitList('name')" id="ws-name" data-i18n="waitSortName">이름</div>
+                    <div class="wait-sort-th" onclick="sortWaitList('grade')" id="ws-grade" data-i18n="waitSortGrade">학년</div>
+                    <div class="wait-sort-th" onclick="sortWaitList('level')" id="ws-level" data-i18n="waitSortLevel">레벨</div>
+                `;
+                const guestInput = colU.querySelector('.guest-input-container');
+                if (guestInput) colU.insertBefore(sortBar, guestInput.nextSibling);
+                else colU.insertBefore(sortBar, gridU);
+                updateWaitSortUI();
+                const t = i18n[currentLang] || i18n.ko;
+                sortBar.querySelectorAll('[data-i18n]').forEach(el => { if (t[el.getAttribute('data-i18n')]) el.innerHTML = t[el.getAttribute('data-i18n')]; });
+            }
             
             // ⭐ 하단 창 분할 (결석/휴원 vs 수업 완료)
             if (!document.getElementById('bottom-split-container')) {
@@ -891,33 +1133,34 @@ window.updateSelectColor = function(selectEl) {
 };
 
 function injectSettingsRosterUI() {
-    const settingsCards = document.querySelectorAll('.settings-card'); let rosterCard = null;
-    settingsCards.forEach(card => { if(card.innerHTML.includes('학생 명단 관리') || card.innerHTML.includes('ROSTER MANAGEMENT')) rosterCard = card; });
-    if(rosterCard) {
-        rosterCard.style.maxWidth = "100%";
-        rosterCard.innerHTML = `
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px;">
-                <h3 data-i18n="rosterMgt">📋 학생 명단 관리 (통합 목록)</h3>
-                <button class="admin-btn btn-3d" onclick="addSettingsStudentRow()" style="margin:0; width:auto; padding:12px 20px; font-size:16px; font-weight:900; background:var(--brand-success); color:#fff;">➕ 새로운 학생 추가</button>
-            </div>
-            <div style="overflow-x: auto; max-height: 450px; overflow-y: auto; border: 2px solid var(--border); border-radius: 12px; background:var(--bg-card);">
-                <table class="settings-roster-table" id="settingsRosterTable">
-                    <thead style="position: sticky; top: 0; z-index: 2; background: var(--bg-main); box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                        <tr>
-                            <th onclick="sortSettingsRoster('name')" class="sortable" id="th-set-name" style="width: 15%;">이름</th>
-                            <th onclick="sortSettingsRoster('grade')" class="sortable" id="th-set-grade" style="width: 15%;">학년</th>
-                            <th onclick="sortSettingsRoster('level')" class="sortable" id="th-set-level" style="width: 25%;">레벨</th>
-                            <th style="width: 15%;">수업시간(분)</th>
-                            <th style="width: 15%;">생일(MM-DD)</th>
-                            <th style="width: 15%;">관리</th>
-                        </tr>
-                    </thead>
-                    <tbody id="settingsRosterBody"></tbody>
-                </table>
-            </div>
-            <button class="admin-btn btn-3d primary" onclick="saveSettingsRoster()" style="margin-top: 20px; width: 100%; font-size: 20px; font-weight: 900; padding: 18px;" data-i18n="saveRoster">💾 작성한 명단 전체 저장 및 적용하기</button>
-        `;
-    }
+    const container = document.getElementById('roster-history-container');
+    if(!container || container.dataset.rosterInjected) return;
+    container.dataset.rosterInjected = '1';
+    container.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px; flex-shrink: 0;">
+            <h3 style="margin:0;" data-i18n="rosterMgt">📋 학생 명단 관리 (통합 목록)</h3>
+            <button class="admin-btn btn-3d" onclick="addSettingsStudentRow()" style="margin:0; width:auto; padding:12px 20px; font-size:16px; font-weight:900; background:var(--brand-success); color:#fff;">➕ 새로운 학생 추가</button>
+        </div>
+        <div class="roster-table-scroll">
+            <table class="settings-roster-table" id="settingsRosterTable">
+                <thead style="position: sticky; top: 0; z-index: 2; background: var(--bg-main); box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                    <tr>
+                        <th onclick="sortSettingsRoster('name')" class="sortable" id="th-set-name" style="width: 15%;">이름</th>
+                        <th onclick="sortSettingsRoster('grade')" class="sortable" id="th-set-grade" style="width: 15%;">학년</th>
+                        <th onclick="sortSettingsRoster('level')" class="sortable" id="th-set-level" style="width: 25%;">레벨</th>
+                        <th style="width: 15%;">수업시간(분)</th>
+                        <th style="width: 15%;">생일(MM-DD)</th>
+                        <th style="width: 15%;">관리</th>
+                    </tr>
+                </thead>
+                <tbody id="settingsRosterBody"></tbody>
+            </table>
+        </div>
+        <div style="display: flex; justify-content: center; gap: 15px; margin-top: 20px; flex-shrink: 0;">
+            <button class="admin-btn btn-3d primary" onclick="saveSettingsRoster()" style="width: auto; padding: 16px 40px; font-size: 18px; font-weight: 900;" data-i18n="saveRoster">💾 작성한 명단 전체 저장 및 적용하기</button>
+            <button class="admin-btn btn-3d" onclick="switchView('roster');" style="width: auto; padding: 16px 40px; background: var(--bg-card); color: var(--text-main); border: 2px solid var(--border); font-size: 16px; font-weight: 900;">📋 투데이 플로우 창으로 가기</button>
+        </div>
+    `;
 }
 
 function renderSettingsRoster() {
@@ -962,21 +1205,23 @@ window.saveSettingsRoster = function() {
 // ⭐ 히스토리 기록 (HISTORY) 시스템 UI 
 // =========================================================================
 function injectHistoryUI() {
-    const logTabBtn = document.querySelector('.nav-tab[onclick*="log"]');
-    if (logTabBtn) {
-        logTabBtn.setAttribute('onclick', "switchView('history')");
-        logTabBtn.innerHTML = `<span class="nav-icon">📅</span><span class="nav-text" data-i18n="nav3">학생 기록</span>`; 
-        logTabBtn.style.fontFamily = "var(--app-font, 'Pretendard', sans-serif)";
+    const historyTabBtn = document.querySelector('.nav-tab[onclick*="history"]') || document.querySelector('.nav-tab[onclick*="log"]');
+    if (historyTabBtn) {
+        historyTabBtn.setAttribute('onclick', "switchView('history')");
+        historyTabBtn.innerHTML = `<span class="nav-icon">📅</span><span class="nav-text" data-i18n="nav3">학생 기록</span>`;
+        historyTabBtn.style.fontFamily = "var(--app-font, 'Pretendard', sans-serif)";
     }
 
-    const oldLogView = document.getElementById('view-log');
-    if (oldLogView) {
-        oldLogView.id = 'view-history'; oldLogView.className = 'view-section';
-        oldLogView.innerHTML = `
+    const historyView = document.getElementById('view-history') || document.getElementById('view-log');
+    if (historyView) {
+        historyView.id = 'view-history';
+        historyView.className = 'view-section';
+        historyView.innerHTML = `
             <div class="history-top-bar">
                 <button id="tab-history-monthly" class="history-tab-btn active" onclick="switchHistoryMode('monthly')">👤 월간 개인 기록</button>
                 <button id="tab-history-weekly" class="history-tab-btn" onclick="switchHistoryMode('weekly')">🗓️ 주간 전체 출결</button>
                 <button id="tab-history-daily" class="history-tab-btn" onclick="switchHistoryMode('daily')" style="background: linear-gradient(135deg, #10b981, #059669); color: white; border-color: #059669;">📊 일일 마감 보고서</button>
+                <button id="tab-history-roster" class="history-tab-btn" onclick="switchHistoryMode('roster')" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border-color: #d97706;">📋 학생 명단 관리</button>
             </div>
 
             <div id="monthly-history-container" class="monthly-history-container active">
@@ -984,10 +1229,10 @@ function injectHistoryUI() {
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                         <h3>👥 원생 목록</h3>
                     </div>
-                    <div style="display:flex; border-bottom: 2px solid var(--border); padding-bottom: 5px; margin-bottom: 5px;">
-                        <div class="sidebar-th" style="flex:1;" onclick="sortHistorySidebar('name')" id="sb-th-name">이름</div>
-                        <div class="sidebar-th" style="width:50px; text-align:center;" onclick="sortHistorySidebar('grade')" id="sb-th-grade">학년</div>
-                        <div class="sidebar-th" style="width:55px; text-align:center;" onclick="sortHistorySidebar('level')" id="sb-th-level">레벨</div>
+                    <div class="history-sidebar-header-row">
+                        <div class="sidebar-th" onclick="sortHistorySidebar('name')" id="sb-th-name">이름</div>
+                        <div class="sidebar-th" onclick="sortHistorySidebar('grade')" id="sb-th-grade">학년</div>
+                        <div class="sidebar-th" onclick="sortHistorySidebar('level')" id="sb-th-level">레벨</div>
                     </div>
                     <div id="historyStudentList" style="overflow-y:auto; flex:1;"></div>
                 </div>
@@ -1051,31 +1296,35 @@ function injectHistoryUI() {
             </div>
             
             <div id="daily-history-container">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                    <div style="display:flex; align-items:center; gap:15px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 12px;">
+                    <div style="display:flex; align-items:center; gap:15px; flex-wrap: wrap;">
                         <h2 style="margin: 0; font-size: 24px; font-weight: 900; color: var(--accent);">📊 일일 마감 보고서</h2>
                         <input type="date" id="dailySummaryDate" class="settings-input" style="width:160px; font-size:16px; padding:6px 12px; font-family:'Pretendard';" onchange="renderDailySummary()">
-                        <button class="cal-nav-btn" onclick="document.getElementById('dailySummaryDate').value = new Date().toISOString().split('T')[0]; renderDailySummary();" style="background:var(--accent); color:white; border-color:var(--accent);">오늘 보기</button>
-                        <button class="export-btn" onclick="exportDailySummaryToTxt()" style="position:static; margin-left:8px;">📝 메모장 저장 (.txt)</button>
+                        <button class="cal-nav-btn" onclick="ensureDailySummaryDate(true); renderDailySummary();" style="background:var(--accent); color:white; border-color:var(--accent);">오늘 보기</button>
+                        <button class="export-btn" onclick="exportDailySummaryToTxt()" style="position:static; margin-left:0;">📝 메모장 저장 (.txt)</button>
                     </div>
+                    <button id="btnEndClassDay" class="btn-end-class-day btn-3d" onclick="endClassDay()">🏁 수업종료</button>
                 </div>
                 <div class="daily-summary-grid">
+                    <div class="ds-card ds-waiting">
+                        <div class="ds-header"><span data-i18n="dsWaiting">⏳ 등원 대기 학생들</span> <span id="ds-waiting-count" style="font-size:28px;">0</span></div>
+                        <div class="ds-list" id="ds-waiting-list"></div>
+                    </div>
                     <div class="ds-card ds-attended">
-                        <div class="ds-header"><span style="color:#059669;">✔️ 출석 학생들</span> <span id="ds-attended-count" style="font-size:28px;">0</span></div>
+                        <div class="ds-header"><span data-i18n="dsAttended" style="color:#059669;">✔️ 출석 학생들</span> <span id="ds-attended-count" style="font-size:28px;">0</span></div>
                         <div class="ds-list" id="ds-attended-list"></div>
                     </div>
-                    <div class="ds-card ds-absent">
-                        <div class="ds-header"><span style="color:#dc2626;">🚨 결석</span> <span id="ds-absent-count" style="font-size:28px;">0</span></div>
-                        <div class="ds-list" id="ds-absent-list"></div>
-                    </div>
                     <div class="ds-card ds-off">
-                        <div class="ds-header"><span style="color:#64748b;">🚫 휴무 / 쉬는 날</span> <span id="ds-off-count" style="font-size:28px;">0</span></div>
-                        <div class="ds-list" id="ds-off-list"></div>
+                        <div class="ds-header"><span data-i18n="dsOffAbsent" style="color:#64748b;">🚫 휴원 또는 결석 학생들</span> <span id="ds-offabsent-count" style="font-size:28px;">0</span></div>
+                        <div class="ds-list" id="ds-offabsent-list"></div>
                     </div>
                 </div>
             </div>
+
+            <div id="roster-history-container"></div>
         `;
     }
+    injectSettingsRosterUI();
 }
 
 // ⭐ 사이드바 명단 정렬 기능
@@ -1357,27 +1606,44 @@ function injectHeaderDashboard() {
     if(mainHeader && !document.getElementById('header-dashboard')) {
         const dashboard = document.createElement('div'); dashboard.id = 'header-dashboard'; dashboard.className = 'header-dashboard-box'; let t = i18n[currentLang] || i18n.ko;
         dashboard.innerHTML = `
-            <div class="hd-title" data-i18n="dashTitle">${t.dashTitle}</div>
-            <div class="hd-items-container">
-                <div class="hd-item hd-total"><span class="hd-label" data-i18n="dashTotal">${t.dashTotal}</span><span class="hd-count" id="hd-total">0</span></div>
-                <div class="hd-item hd-wait"><span class="hd-label" data-i18n="dashWait">${t.dashWait}</span><span class="hd-count" id="hd-wait">0</span></div>
-                <div class="hd-item hd-active"><span class="hd-label" data-i18n="dashActive">${t.dashActive}</span><span class="hd-count" id="hd-active">0</span></div>
-                <div class="hd-item hd-finish"><span class="hd-label" data-i18n="dashFinish">${t.dashFinish}</span><span class="hd-count" id="hd-finish">0</span></div>
+            <div class="hd-date-display" id="hd-date"></div>
+            <div class="hd-dashboard-row">
+                <div class="hd-title" data-i18n="dashTitle">${t.dashTitle}</div>
+                <div class="hd-items-container">
+                    <div class="hd-item hd-total"><span class="hd-label" data-i18n="dashTotal">${t.dashTotal}</span><span class="hd-count" id="hd-total">0</span></div>
+                    <div class="hd-item hd-wait"><span class="hd-label" data-i18n="dashWait">${t.dashWait}</span><span class="hd-count" id="hd-wait">0</span></div>
+                    <div class="hd-item hd-active"><span class="hd-label" data-i18n="dashActive">${t.dashActive}</span><span class="hd-count" id="hd-active">0</span></div>
+                    <div class="hd-item hd-finish"><span class="hd-label" data-i18n="dashFinish">${t.dashFinish}</span><span class="hd-count" id="hd-finish">0</span></div>
+                    <div class="hd-item hd-absent"><span class="hd-label" data-i18n="dashAbsent">${t.dashAbsent}</span><span class="hd-count" id="hd-absent">0</span></div>
+                </div>
             </div>
         `;
         mainHeader.insertBefore(dashboard, mainHeader.firstChild);
+        updateDateUI();
     }
 }
 
-function updateRosterCounts() {
-    const total = allNames.length; const finished = finishedSet.size; const absent = absentSet.size; let active = 0; timers.forEach(t => { if(t.student !== "(empty)") active++; }); 
-    const waiting = total - finished - active - absent; // 결석 인원도 대기에서 제외
-    if(document.getElementById('hd-total')) document.getElementById('hd-total').innerText = total; if(document.getElementById('hd-wait')) document.getElementById('hd-wait').innerText = waiting;
-    if(document.getElementById('hd-active')) document.getElementById('hd-active').innerText = active; if(document.getElementById('hd-finish')) document.getElementById('hd-finish').innerText = finished;
+function getAllStudentNames() {
+    if (allNames.length) return allNames;
+    const raw = [];
+    studentMasterList.forEach(st => raw.push(st.name));
+    guestList.forEach(n => raw.push(n));
+    return raw;
 }
 
-function changeLanguage() { currentLang = document.getElementById("langSelect").value; saveToStorage(); applyLanguage(); const dashBox = document.getElementById('header-dashboard'); if(dashBox) { dashBox.remove(); injectHeaderDashboard(); updateRosterCounts(); } }
-function applyLanguage() { const t = i18n[currentLang] || i18n.ko; document.querySelectorAll("[data-i18n]").forEach(el => { el.innerHTML = t[el.getAttribute("data-i18n")]; }); updateDateUI(); generateStudents(); for (let i = 0; i < DESK_COUNT; i++) updateBoxUI(i); }
+function updateRosterCounts() {
+    const names = getAllStudentNames();
+    const total = names.length; const finished = finishedSet.size; const absent = absentSet.size; let active = 0; timers.forEach(t => { if(t.student !== "(empty)") active++; }); 
+    const waiting = Math.max(0, total - finished - active - absent);
+    if(document.getElementById('hd-total')) document.getElementById('hd-total').innerText = total;
+    if(document.getElementById('hd-wait')) document.getElementById('hd-wait').innerText = waiting;
+    if(document.getElementById('hd-active')) document.getElementById('hd-active').innerText = active;
+    if(document.getElementById('hd-finish')) document.getElementById('hd-finish').innerText = finished;
+    if(document.getElementById('hd-absent')) document.getElementById('hd-absent').innerText = absent;
+}
+
+function changeLanguage() { currentLang = document.getElementById("langSelect").value; saveToStorage(); applyLanguage(); const dashBox = document.getElementById('header-dashboard'); if(dashBox) { dashBox.remove(); injectHeaderDashboard(); updateRosterCounts(); } updateWaitSortUI(); }
+function applyLanguage() { const t = i18n[currentLang] || i18n.ko; document.querySelectorAll("[data-i18n]").forEach(el => { el.innerHTML = t[el.getAttribute("data-i18n")]; }); updateDateUI(); updateHeaderTitle(); updateEndClassDayButton(); generateStudents(); for (let i = 0; i < DESK_COUNT; i++) updateBoxUI(i); }
 
 window.switchView = function(view) {
     if (view === 'log') view = 'history';
@@ -1387,12 +1653,14 @@ window.switchView = function(view) {
     if (viewEl) viewEl.classList.add('active');
     const tabBtn = document.querySelector(`.nav-tab[onclick*='${view}']`) || document.querySelector(`.nav-tab[onclick*='log']`);
     if (tabBtn) tabBtn.classList.add('active');
+    updateHeaderTitle();
     
-    if(view === 'settings') renderSettingsRoster(); 
     if(view === 'history') { 
         closeHistoryDetail(); 
-        if(historyViewMode === 'daily') {
-            document.getElementById('dailySummaryDate').value = new Date().toISOString().split('T')[0];
+        if(historyViewMode === 'roster') {
+            renderSettingsRoster();
+        } else if(historyViewMode === 'daily') {
+            ensureDailySummaryDate(true);
             renderDailySummary();
         } else if(historyViewMode === 'weekly') {
             renderWeeklyTable();
@@ -1548,7 +1816,7 @@ function updateListViewTime(name, remainingTime, isOver, overTime) { if(rosterVi
 
 window.goToTimer = function(name) { let tIdx = timers.findIndex(t => t.student === name); if (tIdx !== -1) { playUISound('click'); switchView('timer'); setTimeout(() => { const box = document.getElementById(`box-${tIdx}`); if(box) { box.scrollIntoView({behavior: 'smooth', block: 'center'}); box.style.transform = 'scale(1.08)'; box.style.boxShadow = '0 0 0 4px var(--accent)'; setTimeout(() => { box.style.transform = ''; box.style.boxShadow = ''; }, 1500); } }, 300); } };
 
-function updateCustomNames() { academyName = document.getElementById('inputAcademyName').value || "향촌삼성영어학원"; className = document.getElementById('inputClassName').value || "Maple Classroom"; document.getElementById('displayAcademyName').innerText = academyName; document.getElementById('displayClassName').innerText = className; saveToStorage(); }
+function updateCustomNames() { academyName = document.getElementById('inputAcademyName').value || "향촌삼성영어학원"; className = document.getElementById('inputClassName').value || "Maple Classroom"; document.getElementById('displayAcademyName').innerText = academyName; updateHeaderTitle(); updateEndClassDayButton(); saveToStorage(); }
 function changeNameColor() { const val = document.getElementById("nameColorSelect").value; const root = document.documentElement; if (val === 'black') { root.style.setProperty('--custom-name-color', '#000000'); } else if (val === 'white') { root.style.setProperty('--custom-name-color', '#ffffff'); } else { root.style.setProperty('--custom-name-color', '#0f172a'); } saveToStorage(); }
 function changeTheme() { currentTheme = document.getElementById("themeSelect").value; document.body.className = "theme-" + currentTheme; saveToStorage(); }
 
@@ -1566,7 +1834,8 @@ function saveToStorage() {
             timerStates: timers.map(t => ({ student: t.student, remainingTime: t.remainingTime, totalTime: t.totalTime, overTime: t.overTime, isOver: t.isOver, startTimeStr: t.startTimeStr, isRunning: t.interval !== null, isPaused: t.isPaused || false, lastTick: t.lastTick })), 
             vols: { a: alarmVolume, t: ttsVolume, u: uiVolume, ttsVoice: document.getElementById("ttsVoiceSelect")?.value || "1", melody: document.getElementById("melodyType")?.value || "0", uiType: document.getElementById("uiSoundType")?.value || "0" }, 
             theme: currentTheme, nameColor: document.getElementById("nameColorSelect")?.value || "default", language: currentLang, fontFamily: currentFontFamily, 
-            customStudentOrder: customStudentOrder, guestList: guestList, rosterViewMode: rosterViewMode,
+            customStudentOrder: customStudentOrder, guestList: guestList, rosterViewMode: rosterViewMode, waitSortConfig: waitSortConfig,
+            dayClosedDate: dayClosedDate, operationalDate: operationalDate,
             deskRemoteCodes: deskRemoteCodes, finishedTimerSnapshot: finishedTimerSnapshot
         };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); updateRosterCounts(); 
@@ -1584,13 +1853,23 @@ function loadData() {
             if(data.language) { currentLang = data.language; document.getElementById("langSelect").value = currentLang; }
             if(data.deskCount) { DESK_COUNT = data.deskCount; document.getElementById("deskCountSelect").value = DESK_COUNT; }
             if(data.rosterViewMode) { rosterViewMode = data.rosterViewMode; }
+            if(data.waitSortConfig) { waitSortConfig = data.waitSortConfig; }
+            let dayTransitionReset = false;
+            const todayKey = getTodayDateKey();
+            operationalDate = data.operationalDate || todayKey;
+            dayClosedDate = data.dayClosedDate || null;
+            if (operationalDate !== todayKey) {
+                dayTransitionReset = true;
+                operationalDate = todayKey;
+                dayClosedDate = null;
+            }
             if(data.studentModifiers) { studentModifiers = data.studentModifiers; } else { studentModifiers = {}; }
             if(data.fontFamily) { currentFontFamily = data.fontFamily; document.documentElement.style.setProperty('--app-font', currentFontFamily); document.body.style.fontFamily = currentFontFamily; const fontSelectEl = document.getElementById("fontSelect"); if (fontSelectEl) fontSelectEl.value = currentFontFamily; }
 
             customStudentOrder = data.customStudentOrder || []; guestList = data.guestList || [];
             academyName = data.academyName || "향촌삼성영어학원"; className = data.className || "Maple Classroom";
             document.getElementById('inputAcademyName').value = academyName; document.getElementById('inputClassName').value = className;
-            document.getElementById('displayAcademyName').innerText = academyName; document.getElementById('displayClassName').innerText = className; 
+            document.getElementById('displayAcademyName').innerText = academyName; updateHeaderTitle(); 
             
             if(data.deskRemoteCodes && Array.isArray(data.deskRemoteCodes)) { deskRemoteCodes = data.deskRemoteCodes; }
             for(let i=0; i<10; i++) { 
@@ -1616,7 +1895,8 @@ function loadData() {
             if(data.theme) { currentTheme = data.theme; document.getElementById("themeSelect").value = currentTheme; document.body.className = "theme-" + currentTheme; }
             
             syncFinishedTimerDeskState();
-            applyLanguage(); createInitialGrid(); applyViewMode(); syncTodayAbsentFromHistory(); updateRosterCounts();
+            if (dayTransitionReset) resetOperationalState(false);
+            applyLanguage(); createInitialGrid(); applyViewMode(); syncTodayAbsentFromHistory(); updateRosterCounts(); updateWaitSortUI(); syncDailySummaryReport();
             if (data.timerStates) { data.timerStates.forEach((ts, idx) => { if (ts.isRunning) { resumeTimer(idx); } }); }
         } else {
             studentMasterList = []; studentModifiers = {}; renderSettingsRoster(); timers = Array.from({length: DESK_COUNT}, () => ({ student: "(empty)", remainingTime: 0, totalTime: 0, overTime: 0, interval: null, isOver: false, isPaused: false, lastTick: 0 })); applyLanguage(); createInitialGrid(); applyViewMode(); updateRosterCounts();
@@ -1725,6 +2005,61 @@ function getTodayDateKey() {
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 }
 
+function ensureDailySummaryDate(forceToday) {
+    const el = document.getElementById('dailySummaryDate');
+    if (!el) return getTodayDateKey();
+    if (forceToday || !el.value) el.value = getTodayDateKey();
+    return el.value;
+}
+
+function syncDailySummaryReport() {
+    if (!document.getElementById('dailySummaryDate')) return;
+    ensureDailySummaryDate(false);
+    renderDailySummary();
+}
+
+function resetOperationalState(updateUI) {
+    if (updateUI !== false) playUISound('finish');
+    timers.forEach((t, i) => { if (t.interval) { clearInterval(t.interval); t.interval = null; } });
+    attendanceMap.clear();
+    finishedSet.clear();
+    absentSet.clear();
+    finishedTimerSnapshot = {};
+    assignOrderCounter = 0;
+    guestList = [];
+    studentModifiers = {};
+    timers = Array.from({length: DESK_COUNT}, () => ({ student: "(empty)", remainingTime: 0, totalTime: 0, overTime: 0, interval: null, isOver: false, isPaused: false, lastTick: 0, startTimeStr: '' }));
+    for (let i = 0; i < DESK_COUNT; i++) updateBoxUI(i);
+    if (updateUI !== false) {
+        generateStudents();
+        updateRosterCounts();
+    }
+}
+
+window.endClassDay = function() {
+    const today = getTodayDateKey();
+    const label = className || 'Maple Classroom';
+    const msg = `"${label}" 오늘 수업을 마감하시겠습니까?\n\n✔ 오늘 출석·휴원 기록은 그대로 유지됩니다.\n✔ 등원 대기 명단이 복귀됩니다.\n✔ 늦게 온 학생 수업 후 다시 마감할 수 있습니다.`;
+    if (!confirm(msg)) return;
+    resetOperationalState(false);
+    dayClosedDate = today;
+    operationalDate = today;
+    generateStudents();
+    updateRosterCounts();
+    saveToStorage();
+    renderDailySummary();
+    playUISound('finish');
+    alert(`"${label}" 수업 마감이 완료되었습니다.\n내일(또는 다음 등원)을 위한 대기 명단이 준비되었습니다.`);
+};
+
+function updateEndClassDayButton() {
+    const btn = document.getElementById('btnEndClassDay');
+    if (!btn) return;
+    const t = i18n[currentLang] || i18n.ko;
+    const label = className || 'Maple Classroom';
+    btn.innerHTML = `🏁 ${label} ${t.endClassDay || '수업종료'}`;
+}
+
 function ensureHistoryRecord(name, dateKey) {
     if (!studentHistory[name]) studentHistory[name] = {};
     if (!studentHistory[name][dateKey]) {
@@ -1780,17 +2115,21 @@ function syncTodayAbsentFromHistory() {
     absentSet.forEach(name => {
         if (!isStudentAbsentOnDate(name, today)) setStudentNoClassDay(name, today, true);
     });
-    const names = allNames.length ? allNames : [...studentMasterList.map(s => s.name), ...guestList];
-    names.forEach(name => {
-        if (!isStudentAbsentOnDate(name, today)) return;
-        let tIdx = timers.findIndex(t => t.student === name);
-        if (tIdx !== -1) cancelSession(tIdx);
-        if (finishedSet.has(name)) finishedSet.delete(name);
-        absentSet.add(name);
-    });
-    if (rosterViewMode !== 'list') {
-        names.forEach(name => { if (absentSet.has(name)) updateStudentStatus(name); });
+    if (dayClosedDate !== today) {
+        getAllStudentNames().forEach(name => {
+            if (!isStudentAbsentOnDate(name, today)) return;
+            let tIdx = timers.findIndex(t => t.student === name);
+            if (tIdx !== -1) cancelSession(tIdx);
+            if (finishedSet.has(name)) finishedSet.delete(name);
+            absentSet.add(name);
+        });
     }
+    applyRosterStatuses();
+}
+
+function applyRosterStatuses() {
+    if (rosterViewMode === 'list') return;
+    getAllStudentNames().forEach(name => updateStudentStatus(name));
 }
 
 function refreshHistoryViewsIfOpen() {
@@ -1815,6 +2154,7 @@ window.markAbsent = function(name) {
     updateRosterCounts();
     if (rosterViewMode === 'list') renderListView();
     refreshHistoryViewsIfOpen();
+    syncDailySummaryReport();
     saveToStorage();
 };
 
@@ -1827,6 +2167,7 @@ window.restoreFromAbsent = function(name) {
     updateRosterCounts();
     if (rosterViewMode === 'list') renderListView();
     refreshHistoryViewsIfOpen();
+    syncDailySummaryReport();
     saveToStorage();
 };
 
@@ -1909,7 +2250,7 @@ function generateStudents() {
         const gridAbsent = document.getElementById("grid-absent");
         if(gridAbsent) gridAbsent.innerHTML = "";
 
-        allNames.forEach((n, index) => {
+        getSortedWaitNames(allNames).forEach((n, index) => {
             const lvl = studentLevels[n]; const grade = studentGrades[n];
             const btn = document.createElement("button"); btn.id = "btn-" + n; 
             let levelLabel = (lvl === 'PREP') ? 'PREP31' : (lvl === 'ADV' ? 'ADV' : lvl); if(lvl === 'GUEST') levelLabel = 'GUEST';
@@ -1923,7 +2264,7 @@ function generateStudents() {
                 e.preventDefault(); btn.classList.remove("drag-over");
                 if (draggedFromAbsent && draggedName) { restoreFromAbsent(draggedName); clearDragState(); return; }
                 if (draggedFromIndex !== null) return;
-                if (draggedNameForList && draggedNameForList !== n) { let i1 = customStudentOrder.indexOf(draggedNameForList); let i2 = customStudentOrder.indexOf(n); if (i1 > -1 && i2 > -1) { let temp = customStudentOrder[i1]; customStudentOrder[i1] = customStudentOrder[i2]; customStudentOrder[i2] = temp; playUISound('click'); generateStudents(); } }
+                if (waitSortConfig.col === 'custom' && draggedNameForList && draggedNameForList !== n) { let i1 = customStudentOrder.indexOf(draggedNameForList); let i2 = customStudentOrder.indexOf(n); if (i1 > -1 && i2 > -1) { let temp = customStudentOrder[i1]; customStudentOrder[i1] = customStudentOrder[i2]; customStudentOrder[i2] = temp; playUISound('click'); generateStudents(); } }
                 clearDragState();
             };
             
@@ -2072,11 +2413,6 @@ window.simulateHardwareButton = function(id) {
             target.totalTime = customTime;
             target.overTime = 0;
             target.isOver = false;
-        } else {
-            const addTime = getStudentLessonDuration(name);
-            target.remainingTime += addTime;
-            target.totalTime += addTime;
-            if (target.remainingTime > 0) target.isOver = false;
         }
         if (!attendanceMap.has(name)) { assignOrderCounter++; attendanceMap.set(name, assignOrderCounter); }
         playStudentClassStartTTS(name);
@@ -2132,6 +2468,7 @@ function handleDropOnTimer(name, targetIdx, fromIdx) {
             if (!attendanceMap.has(name)) { assignOrderCounter++; attendanceMap.set(name, assignOrderCounter); if(finishedSet.has(name)) finishedSet.delete(name); }
             playUISound('assign'); 
             updateBoxUI(targetIdx); updateStudentStatus(name); updateGauge(name, target.remainingTime, target.totalTime);
+            maybeTriggerBirthdayCelebration(name, targetIdx);
         } else {
             target.student = name; target.remainingTime = customTime; target.totalTime = customTime; target.overTime = 0; target.isOver = false;
             if (!attendanceMap.has(name)) { assignOrderCounter++; attendanceMap.set(name, assignOrderCounter); if(finishedSet.has(name)) finishedSet.delete(name); }
@@ -2159,6 +2496,7 @@ function startTimer(id, isResume = false) {
         }
     }, 250);
     if (target.student !== "(empty)") updateStudentStatus(target.student); if (rosterViewMode === 'list') renderListView(); updateBoxUI(id);
+    if (!isResume && target.student !== "(empty)") maybeTriggerBirthdayCelebration(target.student, id);
 }
 
 function resumeTimer(id) { startTimer(id, true); }
@@ -2212,6 +2550,8 @@ function finishSession(id) {
     
     resetTimerData(id, true);
     refreshHistoryViewsIfOpen();
+    updateRosterCounts();
+    syncDailySummaryReport();
 }
 
 function resetTimerData(id, resetUI) { if(timers[id].interval) { clearInterval(timers[id].interval); timers[id].interval = null; } const sn = timers[id].student; if (sn !== "(empty)" && !finishedSet.has(sn)) delete finishedTimerSnapshot[sn]; timers[id] = { student: "(empty)", remainingTime: 0, totalTime: 0, overTime: 0, interval: null, isOver: false, isPaused: false, lastTick: 0 }; updateBoxUI(id); if (resetUI && sn !== "(empty)") updateStudentStatus(sn); if (rosterViewMode === 'list') renderListView(); saveToStorage(); }
@@ -2420,27 +2760,28 @@ window.switchHistoryMode = function(mode) {
     document.getElementById('tab-history-monthly').classList.remove('active');
     document.getElementById('tab-history-weekly').classList.remove('active');
     document.getElementById('tab-history-daily').classList.remove('active');
+    document.getElementById('tab-history-roster').classList.remove('active');
     document.getElementById(`tab-history-${mode}`).classList.add('active');
 
+    document.getElementById('monthly-history-container').classList.remove('active');
+    document.getElementById('weekly-history-container').classList.remove('active');
+    document.getElementById('daily-history-container').classList.remove('active');
+    document.getElementById('roster-history-container').classList.remove('active');
+
     if (mode === 'monthly') {
-        document.getElementById('weekly-history-container').classList.remove('active');
-        document.getElementById('daily-history-container').classList.remove('active');
         document.getElementById('monthly-history-container').classList.add('active');
         renderHistorySidebar();
         renderHistoryCalendar();
     } else if (mode === 'weekly') {
-        document.getElementById('monthly-history-container').classList.remove('active');
-        document.getElementById('daily-history-container').classList.remove('active');
         document.getElementById('weekly-history-container').classList.add('active');
         renderWeeklyTable();
     } else if (mode === 'daily') {
-        document.getElementById('monthly-history-container').classList.remove('active');
-        document.getElementById('weekly-history-container').classList.remove('active');
         document.getElementById('daily-history-container').classList.add('active');
-        if(!document.getElementById('dailySummaryDate').value) {
-            document.getElementById('dailySummaryDate').value = new Date().toISOString().split('T')[0];
-        }
+        ensureDailySummaryDate(true);
         renderDailySummary();
+    } else if (mode === 'roster') {
+        document.getElementById('roster-history-container').classList.add('active');
+        renderSettingsRoster();
     }
 }
 
@@ -2449,50 +2790,79 @@ function buildDailySummaryData(targetDate) {
     const dayOfWeek = new Date(targetDate + 'T12:00:00').getDay();
     const isAcadHoliday = academyHolidays.includes(targetDate);
     const todayKey = getTodayDateKey();
-    const attended = [], absent = [], off = [];
+    const isToday = targetDate === todayKey;
+    const waiting = [], attended = [], offAbsent = [];
 
-    allNames.forEach(name => {
+    const nameSet = new Set(getAllStudentNames());
+    if (isToday) {
+        finishedSet.forEach(n => nameSet.add(n));
+        absentSet.forEach(n => nameSet.add(n));
+    }
+    Object.keys(studentHistory).forEach(name => {
+        if (studentHistory[name] && studentHistory[name][targetDate]) nameSet.add(name);
+    });
+
+    const sortedNames = [...nameSet].sort((a, b) => a.localeCompare(b, 'ko-KR'));
+
+    sortedNames.forEach(name => {
         const record = studentHistory[name]?.[targetDate];
-        const isTempOff = record?.isNoClassDay || (targetDate === todayKey && absentSet.has(name));
+        const hasClassRecord = !!(record && (
+            record.totalMinutes > 0 ||
+            record.sessionFinished ||
+            (record.timeLogs && record.timeLogs.length > 0)
+        ));
+        const isOffFromHistory = !!(record && record.isNoClassDay);
+        const isOffLive = isToday && absentSet.has(name);
+        const isAttendedLive = isToday && finishedSet.has(name);
         const isRegOff = studentRegularOffs[name]?.includes(dayOfWeek);
-        const isFinishedToday = (targetDate === todayKey && finishedSet.has(name));
-        const hasClassRecord = record && (record.totalMinutes > 0 || record.sessionFinished || (record.timeLogs && record.timeLogs.length > 0));
 
-        if (hasClassRecord || isFinishedToday) {
+        if (hasClassRecord || isAttendedLive) {
             attended.push(name);
-        } else if (isTempOff) {
-            off.push({ name, label: '휴원' });
+        } else if (isOffFromHistory || isOffLive) {
+            offAbsent.push({ name, label: '휴원' });
         } else if (isAcadHoliday || isRegOff) {
-            off.push({ name, label: isRegOff ? '정규휴무' : '휴무' });
+            offAbsent.push({ name, label: isRegOff ? '정규휴무' : '휴무' });
         } else {
-            absent.push(name);
+            waiting.push(name);
         }
     });
 
-    return { attended, absent, off, dayOfWeek };
+    return { waiting, attended, offAbsent, dayOfWeek };
 }
 
 // ⭐ 일일 마감 보고서 렌더링 함수
 window.renderDailySummary = function() {
-    const targetDate = document.getElementById('dailySummaryDate')?.value;
+    const targetDate = ensureDailySummaryDate(false);
     if (!targetDate) return;
     const data = buildDailySummaryData(targetDate);
     if (!data) return;
 
-    document.getElementById('ds-attended-count').innerText = data.attended.length + '명';
-    document.getElementById('ds-absent-count').innerText = data.absent.length + '명';
-    document.getElementById('ds-off-count').innerText = data.off.length + '명';
+    updateEndClassDayButton();
 
-    document.getElementById('ds-attended-list').innerHTML = data.attended.map(name =>
-        `<div class="ds-item" style="border: 2px solid #10b981; color:#065f46; background:#d1fae5;">${name}</div>`
-    ).join('');
-    document.getElementById('ds-absent-list').innerHTML = data.absent.map(name =>
-        `<div class="ds-item" style="border: 2px solid #ef4444; color:#991b1b; background:#fee2e2;">${name}</div>`
-    ).join('');
-    document.getElementById('ds-off-list').innerHTML = data.off.map(item => {
-        const label = item.label ? `<span style="font-size:12px; opacity:0.85; margin-left:6px;">${item.label}</span>` : '';
-        return `<div class="ds-item" style="border: 2px solid #94a3b8; color:#334155; background:#f1f5f9;">${item.name}${label}</div>`;
-    }).join('');
+    const waitCountEl = document.getElementById('ds-waiting-count');
+    const attendCountEl = document.getElementById('ds-attended-count');
+    const offCountEl = document.getElementById('ds-offabsent-count');
+    const waitListEl = document.getElementById('ds-waiting-list');
+    const attendListEl = document.getElementById('ds-attended-list');
+    const offListEl = document.getElementById('ds-offabsent-list');
+    if (!waitCountEl || !attendCountEl || !offCountEl || !waitListEl || !attendListEl || !offListEl) return;
+
+    waitCountEl.innerText = data.waiting.length + '명';
+    attendCountEl.innerText = data.attended.length + '명';
+    offCountEl.innerText = data.offAbsent.length + '명';
+
+    waitListEl.innerHTML = data.waiting.length
+        ? data.waiting.map(name => `<div class="ds-item" style="border: 2px solid #f59e0b; color:#92400e; background:#fef3c7;">${name}</div>`).join('')
+        : '<div style="color:#94a3b8; font-weight:700; padding:8px;">(없음)</div>';
+    attendListEl.innerHTML = data.attended.length
+        ? data.attended.map(name => `<div class="ds-item" style="border: 2px solid #10b981; color:#065f46; background:#d1fae5;">${name}</div>`).join('')
+        : '<div style="color:#94a3b8; font-weight:700; padding:8px;">(없음)</div>';
+    offListEl.innerHTML = data.offAbsent.length
+        ? data.offAbsent.map(item => {
+            const label = item.label ? `<span style="font-size:12px; opacity:0.85; margin-left:6px;">${item.label}</span>` : '';
+            return `<div class="ds-item" style="border: 2px solid #94a3b8; color:#334155; background:#f1f5f9;">${item.name}${label}</div>`;
+        }).join('')
+        : '<div style="color:#94a3b8; font-weight:700; padding:8px;">(없음)</div>';
 }
 
 function htmlAttrEsc(str) {
@@ -2595,7 +2965,7 @@ window.saveWeeklyTimeEdit = function(inputEl) {
 };
 
 window.exportDailySummaryToTxt = function() {
-    const targetDate = document.getElementById('dailySummaryDate')?.value;
+    const targetDate = ensureDailySummaryDate(false);
     if (!targetDate) { alert('날짜를 선택해 주세요.'); return; }
     playUISound('click');
     const data = buildDailySummaryData(targetDate);
@@ -2603,10 +2973,10 @@ window.exportDailySummaryToTxt = function() {
 
     const daysKr = ['일', '월', '화', '수', '목', '금', '토'];
     const dayLabel = daysKr[data.dayOfWeek];
+    const waitingLine = data.waiting.length ? data.waiting.join(', ') : '(없음)';
     const attendedLine = data.attended.length ? data.attended.join(', ') : '(없음)';
-    const absentLine = data.absent.length ? data.absent.join(', ') : '(없음)';
-    const offLines = data.off.length
-        ? data.off.map(item => item.label ? `${item.name} (${item.label})` : item.name).join(', ')
+    const offLines = data.offAbsent.length
+        ? data.offAbsent.map(item => item.label ? `${item.name} (${item.label})` : item.name).join(', ')
         : '(없음)';
 
     const lines = [
@@ -2614,13 +2984,13 @@ window.exportDailySummaryToTxt = function() {
         `날짜: ${targetDate} (${dayLabel})`,
         `반: ${className || '-'}`,
         '',
+        `[등원 대기 학생] ${data.waiting.length}명`,
+        waitingLine,
+        '',
         `[출석 학생] ${data.attended.length}명`,
         attendedLine,
         '',
-        `[결석] ${data.absent.length}명`,
-        absentLine,
-        '',
-        `[휴무 / 휴원] ${data.off.length}명`,
+        `[휴원 또는 결석] ${data.offAbsent.length}명`,
         offLines,
         '',
         `— ${academyName || ''} —`
