@@ -308,5 +308,4 @@ select { cursor: pointer; text-align: left; }
 
 /* 게임 뷰 전용 스타일 */
 .ladder-canvas-container { position:relative; width: 100%; max-width: 900px; height: 500px; background: var(--bg-card); border: 2px solid var(--border); border-radius: 20px; overflow:hidden; box-shadow: var(--shadow-inner); margin: 0 auto; }
-#gameResult { margin-top: 25px; font-size: 28px; font-weight: 900; color: var(--accent); min-height: 40px; text-align: center; font-family: 'Pretendard', sans-serif; animation: fadeIn 0.5s ease;}
 .active-game-tab { background: var(--accent) !important; color: #fff !important; box-shadow: var(--shadow-inner) !important; border-color: transparent !important; }

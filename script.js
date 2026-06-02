@@ -29,6 +29,26 @@ let studentRegularOffs = {}; // ⭐ 매주 정규 휴무 요일 저장 { "학생
 
 let customStudentOrder = []; 
 let guestList = [];
+let guestGrades = {}; // 게스트 학년 (명단과 별도 저장)
+
+const NAME_COLOR_MAP = {
+    dark: { color: '#0f172a', shadow: 'none' },
+    white: { color: '#ffffff', shadow: '0 1px 4px rgba(0,0,0,0.45)' },
+    black: { color: '#000000', shadow: '1px 1px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff' },
+    yellow: { color: '#facc15', shadow: '0 0 10px rgba(250,204,21,0.55)' },
+    pink: { color: '#f9a8d4', shadow: '0 0 8px rgba(249,168,212,0.45)' },
+    cyan: { color: '#67e8f9', shadow: '0 0 8px rgba(103,232,249,0.45)' },
+    green: { color: '#6ee7b7', shadow: '0 0 8px rgba(110,231,183,0.45)' },
+    orange: { color: '#fb923c', shadow: '0 0 8px rgba(251,146,60,0.45)' },
+    purple: { color: '#c4b5fd', shadow: '0 0 8px rgba(196,181,253,0.45)' },
+    gold: { color: '#fbbf24', shadow: '0 0 10px rgba(251,191,36,0.55)' }
+};
+
+const REMOTE_CODE_DEFAULTS = ["7893409", "8965601", "5141409", "7498145", "7441889", "7144865", "10551201", "8559585", "8189857", "2677665"];
+const REMOTE_BUFFER_MS = 1200;
+const STORAGE_SAVE_DEBOUNCE_MS = 2000;
+let saveToStorageTimer = null;
+let storageSaveFailedShown = false;
 
 let dayClosedDate = null;
 let operationalDate = null; 
@@ -45,10 +65,14 @@ let currentFontFamily = "'Pretendard', sans-serif";
 
 let rosterViewMode = 'card'; 
 let listSortConfig = { col: 'level', asc: true };
-let waitSortConfig = { col: 'custom', asc: true }; 
+let waitSortConfig = { col: 'custom', asc: true };
 
-// ⭐ 리모컨 번호를 저장할 배열
-let deskRemoteCodes = ["7893409", "8965601", "5141409", "7498145", "7441889", "7144865", "10551201", "8559585", "8189857", "2677665"];
+/** 조작 방식: auto = 터치 기기는 탭, PC는 드래그 | drag | tap */
+let interactionMode = 'auto';
+let tapSelectedName = null; 
+
+// ⭐ 리모컨 번호를 저장할 배열 (책상 수에 맞춰 ensureDeskRemoteCodesLength로 확장)
+let deskRemoteCodes = [...REMOTE_CODE_DEFAULTS];
 
 // ⭐ 미니게임 상태 변수 
 let isRouletteMode = true;
@@ -86,8 +110,8 @@ const krHolidays = {
 };
 
 const i18n = {
-    ko: { nav1: "투데이 플로우", nav2: "타이머", nav3: "학생 기록", nav4: "설정", nav5: "미니 게임", rosterMgt: "학생 명단 관리", waitSortLabel: "정렬", waitSortCustom: "기본", waitSortName: "이름", waitSortGrade: "학년", waitSortLevel: "레벨", dsWaiting: "⏳ 등원 대기 학생들", dsAttended: "✔️ 출석 학생들", dsOffAbsent: "🚫 휴원 또는 결석 학생들", endClassDay: "수업종료", saveRoster: "💾 명단 저장하기", placeholder: "이름 입력", acadInfo: "학원 정보 및 디스플레이", acadName: "학원 이름", className: "반 이름", timerCount: "⏱️ 타이머 개수 설정", colorTheme: "색상 테마 (30종)", nameColor: "이름 색상 (10종)", audioSetup: "오디오 및 효과음 설정", alarmMelody: "알람 멜로디", uiSound: "UI 클릭음", ttsVoice: "🗣️ TTS 음성 안내", volAlarm: "🔊 알람 볼륨", volTTS: "🗣️ 음성 볼륨", volUI: "🖱️ 클릭 볼륨", sysCtrl: "시스템 백업 및 초기화", backupCreate: "📦 백업 파일 저장 (.json)", backupRestore: "📂 백업 파일 불러오기 (.json)", softReset: "🔄 타이머 및 로그 초기화", hardReset: "⚠️ 모든 설정 공장 초기화", btnStart: "시작", btnStop: "정지", btnCancel: "취소", btnFinish: "수업 완료", btnClear: "초기화", statusAssign: "✔ 자리배정", statusPlaying: "▶️ 수업 중", statusTimeUp: "🔔 시간 종료", statusFinish: "🏁 완료", quickStart: "▶️ 시작", quickFinish: "🏁 종료", grpWait: "⏳ 오늘 등원 대기 명단", grpActive: "▶️ 수업 중 (진행중)", grpFinish: "🏁 수업 완료 (종료됨)", langText: "🌐 Language / 언어", days: ['일', '월', '화', '수', '목', '금', '토'], alertSoft: "타이머 기록과 출결 로그만 초기화합니다.\n진행하시겠습니까?", alertHard: "⚠️ 경고 ⚠️\n모든 설정이 초기화됩니다.\n정말 공장 초기화하시겠습니까?", alertResetDone: "기록이 리셋되었습니다.", alertFactoryDone: "초기화 완료.", alertBackupDone: "복구 완료!", alertBackupFail: "백업 파일이 유효하지 않습니다.", dashTitle: "📋 현황판", dashTotal: "전체", dashWait: "대기", dashActive: "수업 중", dashFinish: "종료", dashAbsent: "휴원/결석" },
-    en: { nav1: "Today Flow", nav2: "TIMER", nav3: "HISTORY", nav4: "SETTING", nav5: "MINI GAME", rosterMgt: "ROSTER MANAGEMENT", waitSortLabel: "Sort", waitSortCustom: "Default", waitSortName: "Name", waitSortGrade: "Grade", waitSortLevel: "Level", dsWaiting: "⏳ Waiting List", dsAttended: "✔️ Attended", dsOffAbsent: "🚫 Off / Absent", endClassDay: "End Class", saveRoster: "💾 SAVE ROSTER DATA", placeholder: "Name", acadInfo: "ACADEMY INFO & DISPLAY", acadName: "Academy Name", className: "Class Name", timerCount: "⏱️ Timer Dashboard Count", colorTheme: "Color Theme (30 Colors)", nameColor: "Name Color", audioSetup: "AUDIO SETUP", alarmMelody: "Alarm Melody", uiSound: "UI Click Sound", ttsVoice: "🗣️ TTS Voice Assistant", volAlarm: "🔊 Alarm Volume", volTTS: "🗣️ Voice Volume", volUI: "🖱️ Click Volume", sysCtrl: "SYSTEM CONTROL", backupCreate: "📦 CREATE BACKUP (.json)", backupRestore: "📂 RESTORE BACKUP (.json)", softReset: "🔄 Soft Reset (Timers & Logs)", hardReset: "⚠️ Hard Reset (Factory Reset)", btnStart: "START", btnStop: "STOP", btnCancel: "CANCEL", btnFinish: "FINISH LESSON", btnClear: "CLR", statusAssign: "✔ Assigned", statusPlaying: "▶️ Playing", statusTimeUp: "🔔 Time Up", statusFinish: "🏁 Finished", quickStart: "▶️ START", quickFinish: "🏁 FINISH", grpWait: "⏳ Waiting List", grpActive: "▶️ In Class", grpFinish: "🏁 FINISHED", langText: "🌐 Language / 언어", days: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], alertSoft: "This will reset timers and logs only.\nProceed?", alertHard: "⚠️ WARNING ⚠️\nAll settings will be reset.\nAre you sure?", alertResetDone: "Reset completed.", alertFactoryDone: "Factory reset complete.", alertBackupDone: "Restore completed!", alertBackupFail: "Invalid backup file.", dashTitle: "📋 Dashboard", dashTotal: "Total", dashWait: "Wait", dashActive: "Active", dashFinish: "Done", dashAbsent: "Off/Absent" }
+    ko: { interactionMode: "👆 명단 조작 방식", interactionAuto: "자동 (태블릿=탭 배정, PC=드래그)", interactionDrag: "드래그 (PC 방식)", interactionTap: "탭 배정 (태블릿·터치)", tapHintIdle: "학생 카드를 탭해 선택한 뒤, 자리·영역을 탭하세요", tapHintSelected: "선택됨 — 자리·대기·휴원 영역을 탭하세요 (다시 탭하면 해제)", nav1: "투데이 플로우", nav2: "타이머", nav3: "학생 기록", nav4: "설정", nav5: "미니 게임", rosterMgt: "학생 명단 관리", waitSortLabel: "정렬", waitSortCustom: "기본", waitSortName: "이름", waitSortGrade: "학년", waitSortLevel: "레벨", dsWaiting: "⏳ 등원 대기 학생들", dsAttended: "✔️ 출석 학생들", dsOffAbsent: "🚫 휴원 또는 결석 학생들", endClassDay: "수업종료", saveRoster: "💾 명단 저장하기", placeholder: "이름 입력", acadInfo: "학원 정보 및 디스플레이", acadName: "학원 이름", className: "반 이름", timerCount: "⏱️ 타이머 개수 설정", colorTheme: "색상 테마 (30종)", nameColor: "이름 색상 (10종)", audioSetup: "오디오 및 효과음 설정", alarmMelody: "알람 멜로디", uiSound: "UI 클릭음", ttsVoice: "🗣️ TTS 음성 안내", volAlarm: "🔊 알람 볼륨", volTTS: "🗣️ 음성 볼륨", volUI: "🖱️ 클릭 볼륨", sysCtrl: "시스템 백업 및 초기화", backupCreate: "📦 백업 파일 저장 (.json)", backupRestore: "📂 백업 파일 불러오기 (.json)", softReset: "🔄 타이머 및 로그 초기화", hardReset: "⚠️ 모든 설정 공장 초기화", btnStart: "시작", btnStop: "정지", btnCancel: "취소", btnFinish: "수업 완료", btnClear: "초기화", statusAssign: "✔ 자리배정", statusPlaying: "▶️ 수업 중", statusTimeUp: "🔔 시간 종료", statusFinish: "🏁 완료", quickStart: "▶️ 시작", quickFinish: "🏁 종료", grpWait: "⏳ 오늘 등원 대기 명단", grpActive: "▶️ 수업 중 (진행중)", grpFinish: "🏁 수업 완료 (종료됨)", langText: "🌐 Language / 언어", days: ['일', '월', '화', '수', '목', '금', '토'], alertSoft: "타이머 기록과 출결 로그만 초기화합니다.\n진행하시겠습니까?", alertHard: "⚠️ 경고 ⚠️\n모든 설정이 초기화됩니다.\n정말 공장 초기화하시겠습니까?", alertResetDone: "기록이 리셋되었습니다.", alertFactoryDone: "초기화 완료.", alertBackupDone: "복구 완료!", alertBackupFail: "백업 파일이 유효하지 않습니다.", dashTitle: "📋 현황판", dashTotal: "전체", dashWait: "대기", dashActive: "수업 중", dashFinish: "종료", dashAbsent: "휴원/결석" },
+    en: { interactionMode: "👆 Roster control", interactionAuto: "Auto (tablet=tap, PC=drag)", interactionDrag: "Drag (desktop)", interactionTap: "Tap to assign (touch)", tapHintIdle: "Tap a student, then tap a seat or zone", tapHintSelected: "Selected — tap seat/wait/absent zone (tap again to cancel)", nav1: "Today Flow", nav2: "TIMER", nav3: "HISTORY", nav4: "SETTING", nav5: "MINI GAME", rosterMgt: "ROSTER MANAGEMENT", waitSortLabel: "Sort", waitSortCustom: "Default", waitSortName: "Name", waitSortGrade: "Grade", waitSortLevel: "Level", dsWaiting: "⏳ Waiting List", dsAttended: "✔️ Attended", dsOffAbsent: "🚫 Off / Absent", endClassDay: "End Class", saveRoster: "💾 SAVE ROSTER DATA", placeholder: "Name", acadInfo: "ACADEMY INFO & DISPLAY", acadName: "Academy Name", className: "Class Name", timerCount: "⏱️ Timer Dashboard Count", colorTheme: "Color Theme (30 Colors)", nameColor: "Name Color", audioSetup: "AUDIO SETUP", alarmMelody: "Alarm Melody", uiSound: "UI Click Sound", ttsVoice: "🗣️ TTS Voice Assistant", volAlarm: "🔊 Alarm Volume", volTTS: "🗣️ Voice Volume", volUI: "🖱️ Click Volume", sysCtrl: "SYSTEM CONTROL", backupCreate: "📦 CREATE BACKUP (.json)", backupRestore: "📂 RESTORE BACKUP (.json)", softReset: "🔄 Soft Reset (Timers & Logs)", hardReset: "⚠️ Hard Reset (Factory Reset)", btnStart: "START", btnStop: "STOP", btnCancel: "CANCEL", btnFinish: "FINISH LESSON", btnClear: "CLR", statusAssign: "✔ Assigned", statusPlaying: "▶️ Playing", statusTimeUp: "🔔 Time Up", statusFinish: "🏁 Finished", quickStart: "▶️ START", quickFinish: "🏁 FINISH", grpWait: "⏳ Waiting List", grpActive: "▶️ In Class", grpFinish: "🏁 FINISHED", langText: "🌐 Language / 언어", days: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], alertSoft: "This will reset timers and logs only.\nProceed?", alertHard: "⚠️ WARNING ⚠️\nAll settings will be reset.\nAre you sure?", alertResetDone: "Reset completed.", alertFactoryDone: "Factory reset complete.", alertBackupDone: "Restore completed!", alertBackupFail: "Invalid backup file.", dashTitle: "📋 Dashboard", dashTotal: "Total", dashWait: "Wait", dashActive: "Active", dashFinish: "Done", dashAbsent: "Off/Absent" }
 };
 
 // ==========================================
@@ -290,9 +314,28 @@ customStyle.innerHTML = `
     .no-class-label { font-size: 11px; color: #64748b; background: #e2e8f0; padding: 2px 5px; border-radius: 4px; margin-left: 6px; white-space:nowrap; }
     .reg-off-label { font-size: 11px; color: #0284c7; background: #e0f2fe; padding: 2px 5px; border-radius: 4px; margin-left: 6px; white-space:nowrap; }
 
-    /* ⭐ 게임 전용 버튼 */
-    .game-start-btn { margin-top: 25px; padding: 18px 40px; font-size: 26px; font-weight: 900; background: var(--accent); color: white; border: none; border-radius: 50px; cursor: pointer; box-shadow: 0 8px 20px rgba(37,99,235,0.4); transition: 0.2s; font-family: var(--app-font); }
-    .game-start-btn:hover { transform: translateY(-5px) scale(1.05); box-shadow: 0 12px 25px rgba(37,99,235,0.6); }
+    /* ⭐ 미니게임 UI */
+    .game-container { text-align: center; padding: 18px 22px 26px; background: var(--bg-card); border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); min-height: 680px; display: flex; flex-direction: row; align-items: stretch; gap: 0; }
+    .game-sidebar { flex-shrink: 0; width: 108px; display: flex; flex-direction: column; gap: 6px; padding: 4px 14px 4px 4px; border-right: 2px solid var(--border); margin-right: 18px; }
+    .game-sidebar .admin-btn { padding: 9px 8px; font-size: 12px; border-radius: 8px; font-weight: 800; line-height: 1.35; width: 100%; box-sizing: border-box; }
+    .game-sidebar .active-game-tab { transform: none; }
+    .game-sidebar #btnBgmToggle { margin-top: auto; font-size: 11px !important; padding: 8px 6px !important; }
+    .game-main { flex: 1; display: flex; flex-direction: column; align-items: center; min-width: 0; }
+    .game-stage { position: relative; width: 100%; max-width: 980px; margin: 0 auto; flex-shrink: 0; }
+    #roulette-game-area .game-canvas-wrap { display: flex; justify-content: center; align-items: center; padding: 8px 0; }
+    #rouletteCanvas { background: #fff; border-radius: 50%; box-shadow: 0 12px 40px rgba(0,0,0,0.12), inset 0 0 0 6px rgba(255,255,255,0.9); display: block; max-width: min(620px, 88vw); height: auto; }
+    #ladder-game-area .game-canvas-wrap { width: 100%; height: min(720px, calc(100vh - 240px)); min-height: 600px; background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%); border-radius: 20px; border: 2px solid var(--border); box-shadow: 0 8px 32px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.8); overflow: hidden; }
+    #ladderCanvas { display: block; width: 100%; height: 100%; }
+    .game-result-banner { width: 100%; max-width: 720px; min-height: 72px; margin: 20px auto 0; padding: 16px 24px; font-size: clamp(22px, 3.5vw, 34px); font-weight: 900; color: var(--text-main); text-align: center; font-family: var(--app-font); border-radius: 16px; transition: all 0.35s ease; box-sizing: border-box; display: flex; align-items: center; justify-content: center; line-height: 1.35; }
+    .game-result-banner.is-waiting { color: var(--text-muted); font-size: clamp(16px, 2.5vw, 22px); font-weight: 700; background: var(--bg-main); border: 2px dashed var(--border); }
+    .game-result-banner.is-winner { background: linear-gradient(135deg, rgba(239,68,68,0.08), rgba(245,158,11,0.12)); border: 2px solid rgba(239,68,68,0.25); color: var(--text-main); animation: gameResultPop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1); box-shadow: 0 8px 24px rgba(239,68,68,0.12); }
+    .game-result-banner.is-winner .winner-name { color: var(--brand-danger); font-size: 1.15em; letter-spacing: -0.02em; }
+    @keyframes gameResultPop { 0% { transform: scale(0.92); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+    .game-controls { width: 100%; max-width: 720px; min-height: 64px; margin-top: 16px; display: flex; justify-content: center; align-items: center; gap: 12px; flex-shrink: 0; }
+    .game-start-btn { padding: 16px 36px; font-size: clamp(18px, 2.5vw, 22px); font-weight: 900; background: linear-gradient(135deg, var(--accent), #1d4ed8); color: white; border: none; border-radius: 50px; cursor: pointer; box-shadow: 0 8px 20px rgba(37,99,235,0.35); transition: 0.2s; font-family: var(--app-font); white-space: nowrap; }
+    .game-start-btn:hover { transform: translateY(-3px); box-shadow: 0 12px 28px rgba(37,99,235,0.45); }
+    .game-start-btn.is-replay { background: var(--bg-main); color: var(--text-main); border: 2px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.06); font-size: clamp(15px, 2vw, 18px); padding: 12px 28px; }
+    .game-start-btn.is-replay:hover { border-color: var(--accent); color: var(--accent); box-shadow: 0 6px 16px rgba(37,99,235,0.15); transform: translateY(-2px); }
     .active-game-tab { background: var(--accent) !important; color: white !important; transform: scale(1.05); }
 
     @keyframes bday-glow { 0% { box-shadow: 0 0 15px #ff007f, inset 0 0 10px #ff007f; border-color: #ff007f; } 33% { box-shadow: 0 0 15px #007fff, inset 0 0 10px #007fff; border-color: #007fff; } 66% { box-shadow: 0 0 15px #00ff7f, inset 0 0 10px #00ff7f; border-color: #00ff7f; } 100% { box-shadow: 0 0 15px #ff007f, inset 0 0 10px #ff007f; border-color: #ff007f; } }
@@ -433,6 +476,38 @@ customStyle.innerHTML = `
     /* =========================================================
        ⭐ 태블릿 최적화 (반응형)
        ========================================================= */
+    /* ⭐ 탭 배정 모드 (태블릿) */
+    body.mode-tap-assign .student-btn { cursor: pointer; touch-action: manipulation; }
+    body.mode-tap-assign #grid-unassigned,
+    body.mode-tap-assign #grid-absent,
+    body.mode-tap-assign #grid-finished { touch-action: pan-y; }
+    body.mode-tap-assign .student-btn.tap-selected {
+        outline: 4px solid var(--accent) !important;
+        outline-offset: 3px;
+        box-shadow: 0 0 0 6px rgba(59, 130, 246, 0.25), var(--shadow-pop) !important;
+        transform: scale(1.03);
+        z-index: 30;
+    }
+    body.mode-tap-assign .roster-desk-slot.tap-drop-ready {
+        outline: 3px dashed var(--accent);
+        outline-offset: 2px;
+        background: rgba(59, 130, 246, 0.06);
+        animation: tap-desk-pulse 1.2s ease-in-out infinite;
+    }
+    @keyframes tap-desk-pulse { 0%, 100% { box-shadow: inset 0 0 0 0 rgba(59,130,246,0.15); } 50% { box-shadow: inset 0 0 0 4px rgba(59,130,246,0.2); } }
+    body.mode-tap-assign .tap-zone-ready { outline: 3px dashed var(--accent); outline-offset: 4px; }
+    #tap-assign-hint {
+        position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%);
+        z-index: 9000; max-width: min(520px, 92vw); padding: 12px 20px;
+        background: linear-gradient(135deg, #1d4ed8, #2563eb); color: #fff;
+        font-weight: 900; font-size: 15px; text-align: center; border-radius: 999px;
+        box-shadow: 0 8px 28px rgba(37, 99, 235, 0.45);
+        pointer-events: none; opacity: 0; visibility: hidden; transition: opacity 0.25s, visibility 0.25s;
+        font-family: var(--app-font, 'Pretendard', sans-serif);
+    }
+    #tap-assign-hint.visible { opacity: 1; visibility: visible; }
+    #tap-assign-hint.has-selection { background: linear-gradient(135deg, #059669, #10b981); box-shadow: 0 8px 28px rgba(16, 185, 129, 0.4); }
+
     @media screen and (max-width: 1366px) {
         .custom-roster-layout { grid-template-columns: 320px 1fr !important; gap: 12px !important; }
         .custom-col-wait { max-width: 320px !important; max-height: none !important; }
@@ -474,14 +549,7 @@ document.head.appendChild(customStyle);
 // ⭐ 태블릿 터치 드래그 앤 드롭 (Polyfill) 활성화
 // =========================================================================
 window.addEventListener('DOMContentLoaded', () => {
-    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-    if(isTouchDevice && window.MobileDragDrop) {
-        MobileDragDrop.polyfill({
-            dragImageTranslateOverride: MobileDragDrop.scrollBehaviourDragImageTranslateOverride,
-            holdToDrag: 300 
-        });
-        window.addEventListener('touchmove', function() {}, {passive: false});
-    }
+    injectTapAssignHint();
 });
 
 window.onload = () => { 
@@ -491,12 +559,17 @@ window.onload = () => {
     injectBirthdayCelebrationUI();
     injectListViewUI(); 
     injectFontSettingUI(); 
+    injectInteractionModeUI();
     injectRemoteSettingUI(); 
     loadData(); 
     updateDateUI(); 
     setTimeout(applyCustomRosterLayout, 500);
     registerServiceWorker();
 };
+
+window.addEventListener('beforeunload', () => {
+    if (saveToStorageTimer) saveToStorage();
+});
 
 function registerServiceWorker() {
     if (!('serviceWorker' in navigator)) return;
@@ -779,6 +852,217 @@ function clearDragState() {
     draggedNameForList = null;
 }
 
+function isCoarsePointerDevice() {
+    try {
+        if (window.matchMedia('(pointer: coarse)').matches) return true;
+        if (window.matchMedia('(hover: none)').matches) return true;
+    } catch (e) {}
+    return ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+}
+
+function isTapAssignMode() {
+    if (interactionMode === 'tap') return true;
+    if (interactionMode === 'drag') return false;
+    return isCoarsePointerDevice();
+}
+
+function initTouchDragPolyfill() {
+    const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    if (!isTouch || isTapAssignMode() || !window.MobileDragDrop || window.__stflowDragPolyfilled) return;
+    MobileDragDrop.polyfill({
+        dragImageTranslateOverride: MobileDragDrop.scrollBehaviourDragImageTranslateOverride,
+        holdToDrag: 500
+    });
+    window.__stflowDragPolyfilled = true;
+    window.addEventListener('touchmove', function() {}, { passive: false });
+}
+
+function injectTapAssignHint() {
+    if (document.getElementById('tap-assign-hint')) return;
+    const el = document.createElement('div');
+    el.id = 'tap-assign-hint';
+    el.setAttribute('aria-live', 'polite');
+    document.body.appendChild(el);
+}
+
+function updateTapAssignHint() {
+    const el = document.getElementById('tap-assign-hint');
+    if (!el) return;
+    const t = i18n[currentLang] || i18n.ko;
+    if (!isTapAssignMode() || rosterViewMode === 'list') {
+        el.classList.remove('visible', 'has-selection');
+        return;
+    }
+    el.classList.add('visible');
+    if (tapSelectedName) {
+        el.classList.add('has-selection');
+        el.textContent = `「${tapSelectedName}」 ${t.tapHintSelected}`;
+    } else {
+        el.classList.remove('has-selection');
+        el.textContent = t.tapHintIdle;
+    }
+}
+
+function clearTapSelection() {
+    if (tapSelectedName) {
+        const btn = document.getElementById('btn-' + tapSelectedName);
+        if (btn) btn.classList.remove('tap-selected');
+    }
+    tapSelectedName = null;
+    document.querySelectorAll('.roster-desk-slot.tap-drop-ready').forEach(el => el.classList.remove('tap-drop-ready'));
+    document.querySelectorAll('.tap-zone-ready').forEach(el => el.classList.remove('tap-zone-ready'));
+    updateTapAssignHint();
+}
+
+function selectStudentForTap(name) {
+    clearTapSelection();
+    tapSelectedName = name;
+    const btn = document.getElementById('btn-' + name);
+    if (btn) btn.classList.add('tap-selected');
+    document.querySelectorAll('.roster-desk-slot').forEach(el => el.classList.add('tap-drop-ready'));
+    ['grid-unassigned', 'grid-absent', 'grid-finished'].forEach(id => {
+        const z = document.getElementById(id);
+        if (z) z.classList.add('tap-zone-ready');
+    });
+    const waitCol = document.querySelector('.custom-col-wait');
+    if (waitCol) waitCol.classList.add('tap-zone-ready');
+    playUISound('click');
+    updateTapAssignHint();
+}
+
+function applyInteractionModeBodyClass() {
+    document.body.classList.toggle('mode-tap-assign', isTapAssignMode());
+    initTouchDragPolyfill();
+    updateTapAssignHint();
+}
+
+function injectInteractionModeUI() {
+    const settingsCards = document.querySelectorAll('.settings-card');
+    let acadCard = null;
+    settingsCards.forEach(card => {
+        if (card.innerHTML.includes('학원 정보 및 디스플레이') || card.innerHTML.includes('ACADEMY INFO')) acadCard = card;
+    });
+    if (acadCard && !document.getElementById('interactionModeRow')) {
+        const row = document.createElement('div');
+        row.id = 'interactionModeRow';
+        row.className = 'settings-row';
+        row.style.cssText = 'background:var(--bg-main); padding:15px; border-radius:16px; border:1px solid var(--border); margin-bottom:25px;';
+        row.innerHTML = `
+            <span class="settings-label" data-i18n="interactionMode">👆 명단 조작 방식</span>
+            <select id="interactionModeSelect" class="settings-input" onchange="changeInteractionMode(); playUISound('click');">
+                <option value="auto" data-i18n-opt="interactionAuto">자동 (태블릿=탭 배정, PC=드래그)</option>
+                <option value="drag" data-i18n-opt="interactionDrag">드래그 (PC 방식)</option>
+                <option value="tap" data-i18n-opt="interactionTap">탭 배정 (태블릿·터치)</option>
+            </select>
+            <p id="interactionModeDesc" style="margin:10px 0 0; font-size:13px; font-weight:700; color:var(--text-muted); line-height:1.45;"></p>`;
+        const deskRow = document.getElementById('deskCountSelect')?.closest('.settings-row');
+        if (deskRow && deskRow.parentElement === acadCard) acadCard.insertBefore(row, deskRow);
+        else if (acadCard.children.length > 2) acadCard.insertBefore(row, acadCard.children[2]);
+        else acadCard.appendChild(row);
+    }
+    const sel = document.getElementById('interactionModeSelect');
+    if (sel) sel.value = interactionMode;
+    updateInteractionModeDesc();
+}
+
+function updateInteractionModeDesc() {
+    const desc = document.getElementById('interactionModeDesc');
+    if (!desc) return;
+    const t = i18n[currentLang] || i18n.ko;
+    if (interactionMode === 'tap') {
+        desc.textContent = currentLang === 'en'
+            ? 'Tap a student, then tap a desk or zone. List view uses buttons.'
+            : '학생 카드를 탭해 선택한 뒤, 원하는 자리·대기·휴원 영역을 탭합니다. 리스트 뷰는 버튼으로 배정합니다.';
+    } else if (interactionMode === 'drag') {
+        desc.textContent = currentLang === 'en'
+            ? 'Drag cards to desks (desktop style).'
+            : '카드를 끌어다 자리에 놓는 PC 방식입니다.';
+    } else {
+        desc.textContent = isTapAssignMode()
+            ? (currentLang === 'en' ? 'Auto: tap mode is ON on this device.' : '자동: 이 기기에서는 탭 배정 모드가 적용됩니다.')
+            : (currentLang === 'en' ? 'Auto: drag mode is ON on this device.' : '자동: 이 기기에서는 드래그 모드가 적용됩니다.');
+    }
+}
+
+window.changeInteractionMode = function() {
+    const sel = document.getElementById('interactionModeSelect');
+    if (!sel) return;
+    interactionMode = sel.value;
+    clearTapSelection();
+    applyInteractionModeBodyClass();
+    updateInteractionModeDesc();
+    saveToStorage();
+    if (rosterViewMode === 'list') renderListView();
+    else generateStudents();
+    for (let i = 0; i < DESK_COUNT; i++) updateBoxUI(i);
+};
+
+window.handleStudentCardTap = function(name, e) {
+    if (e && e.target.closest('.card-cancel-btn, .guest-delete-btn, .quick-btn, .mod-badge')) return;
+
+    if (finishedSet.has(name)) {
+        restoreFinishedToClass(name);
+        return;
+    }
+    if (absentSet.has(name)) {
+        restoreFromAbsent(name);
+        return;
+    }
+
+    if (!isTapAssignMode()) {
+        const btn = document.getElementById('btn-' + name);
+        if (btn) { btn.classList.add('clicked'); setTimeout(() => btn.classList.remove('clicked'), 150); }
+        if (attendanceMap.has(name)) goToTimer(name);
+        else {
+            const emptyIdx = timers.findIndex(t => t.student === "(empty)");
+            if (emptyIdx !== -1) handleDropOnTimer(name, emptyIdx, null);
+        }
+        return;
+    }
+
+    if (tapSelectedName === name) {
+        clearTapSelection();
+        return;
+    }
+    selectStudentForTap(name);
+};
+
+window.handleTapOnDesk = function(deskIdx) {
+    if (!isTapAssignMode() || !tapSelectedName) return;
+    const fromIdx = timers.findIndex(t => t.student === tapSelectedName);
+    handleDropOnTimer(tapSelectedName, deskIdx, fromIdx !== -1 ? fromIdx : null);
+    clearTapSelection();
+};
+
+window.handleTapOnWaitZone = function() {
+    if (!isTapAssignMode() || !tapSelectedName) return;
+    const name = tapSelectedName;
+    if (absentSet.has(name)) {
+        restoreFromAbsent(name);
+        clearTapSelection();
+        return;
+    }
+    const fromIdx = timers.findIndex(t => t.student === name);
+    if (fromIdx !== -1) cancelSession(fromIdx);
+    clearTapSelection();
+};
+
+window.handleTapOnAbsentZone = function() {
+    if (!isTapAssignMode() || !tapSelectedName) return;
+    if (!absentSet.has(tapSelectedName)) markAbsent(tapSelectedName);
+    clearTapSelection();
+};
+
+function bindTapZoneClick(el, handler) {
+    if (!el || el.dataset.tapZoneBound) return;
+    el.dataset.tapZoneBound = '1';
+    el.addEventListener('click', (e) => {
+        if (!isTapAssignMode()) return;
+        if (e.target.closest('button, .quick-btn, .card-cancel-btn, select, input, .mod-badge')) return;
+        handler();
+    });
+}
+
 function setupRosterDropZones() {
     const gridAbsent = document.getElementById('grid-absent');
     const absentBox = gridAbsent ? gridAbsent.closest('.split-box') : null;
@@ -836,30 +1120,191 @@ function setupRosterDropZones() {
             }
         });
     }
+
+    bindTapZoneClick(gridUnassigned, handleTapOnWaitZone);
+    bindTapZoneClick(waitCol, handleTapOnWaitZone);
+    bindTapZoneClick(gridAbsent, handleTapOnAbsentZone);
+    bindTapZoneClick(absentBox, handleTapOnAbsentZone);
 }
 
 // =========================================================================
 // ⭐ 3. 미니게임 화면 및 로직
 // =========================================================================
+function setGameResult(html, state) {
+    const el = document.getElementById('gameResult');
+    if (!el) return;
+    el.className = 'game-result-banner' + (state ? ' ' + state : '');
+    el.innerHTML = html;
+}
+
+function showGameButton(btnId, text, isReplay) {
+    const btnLadder = document.getElementById('btnStartLadder');
+    const btnRoulette = document.getElementById('btnStartRoulette');
+    if (btnLadder) { btnLadder.style.display = 'none'; btnLadder.classList.remove('is-replay'); }
+    if (btnRoulette) { btnRoulette.style.display = 'none'; btnRoulette.classList.remove('is-replay'); }
+    const btn = document.getElementById(btnId);
+    if (!btn) return;
+    btn.innerText = text;
+    btn.style.display = 'inline-flex';
+    btn.classList.toggle('is-replay', !!isReplay);
+}
+
+function hideAllGameButtons() {
+    ['btnStartLadder', 'btnStartRoulette'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) btn.style.display = 'none';
+    });
+}
+
+function fitCanvasFont(ctx, text, maxWidth, maxSize, minSize, weight) {
+    let size = maxSize;
+    while (size >= minSize) {
+        ctx.font = `${weight} ${size}px Pretendard, sans-serif`;
+        if (ctx.measureText(text).width <= maxWidth) return size;
+        size -= 1;
+    }
+    return minSize;
+}
+
+function truncateName(name, maxLen) {
+    if (name.length <= maxLen) return name;
+    return name.substring(0, maxLen - 1) + '…';
+}
+
+function getLadderLayout(cols, w, h) {
+    const topPad = 64, bottomPad = 58;
+    const spacing = w / cols;
+    const maxBoxW = Math.min(110, spacing * 0.85);
+    const boxW = Math.max(58, maxBoxW);
+    const boxH = Math.max(36, Math.min(50, boxW * 0.48));
+    const nameFont = Math.max(14, Math.min(22, Math.floor(spacing * 0.24)));
+    return { topPad, bottomPad, spacing, boxW, boxH, nameFont, ladderTop: topPad + boxH / 2 + 10, ladderBottom: h - bottomPad };
+}
+
+function buildLadderPaths(cols, spacing, ladderTop, ladderBottom) {
+    let colEvents = Array.from({length: cols}, () => []);
+    ladderRungs.forEach(r => {
+        colEvents[r.col].push({ yMe: r.yLeft, yTarget: r.yRight, targetCol: r.col + 1 });
+        colEvents[r.col + 1].push({ yMe: r.yRight, yTarget: r.yLeft, targetCol: r.col });
+    });
+    colEvents.forEach(events => events.sort((a,b) => a.yMe - b.yMe));
+    let paths = [];
+    for (let p = 0; p < cols; p++) {
+        let curCol = p, curY = ladderTop;
+        let path = [{ x: (curCol + 0.5) * spacing, y: curY }];
+        while (true) {
+            let nextEvent = colEvents[curCol].find(e => e.yMe > curY + 0.5);
+            if (!nextEvent) {
+                path.push({ x: (curCol + 0.5) * spacing, y: ladderBottom });
+                break;
+            }
+            path.push({ x: (curCol + 0.5) * spacing, y: nextEvent.yMe });
+            curCol = nextEvent.targetCol;
+            curY = nextEvent.yTarget;
+            path.push({ x: (curCol + 0.5) * spacing, y: curY });
+        }
+        paths.push({ nodes: path, finalCol: curCol, color: ladderColors[p % ladderColors.length] });
+    }
+    paths.forEach(p => {
+        let totalLen = 0;
+        for (let i = 0; i < p.nodes.length - 1; i++) {
+            let dx = p.nodes[i+1].x - p.nodes[i].x, dy = p.nodes[i+1].y - p.nodes[i].y;
+            totalLen += Math.sqrt(dx * dx + dy * dy);
+        }
+        p.totalLen = totalLen;
+    });
+    return paths;
+}
+
+function getPointOnPath(nodes, dist) {
+    let drawn = 0;
+    for (let i = 0; i < nodes.length - 1; i++) {
+        let dx = nodes[i+1].x - nodes[i].x, dy = nodes[i+1].y - nodes[i].y;
+        let seg = Math.sqrt(dx * dx + dy * dy);
+        if (drawn + seg >= dist) {
+            let ratio = seg > 0 ? (dist - drawn) / seg : 0;
+            return { x: nodes[i].x + dx * ratio, y: nodes[i].y + dy * ratio };
+        }
+        drawn += seg;
+    }
+    return nodes[nodes.length - 1];
+}
+
+function strokePathToDist(ctx, nodes, dist) {
+    let drawnLen = 0;
+    ctx.beginPath();
+    ctx.moveTo(nodes[0].x, nodes[0].y);
+    for (let i = 0; i < nodes.length - 1; i++) {
+        let dx = nodes[i+1].x - nodes[i].x, dy = nodes[i+1].y - nodes[i].y;
+        let segLen = Math.sqrt(dx * dx + dy * dy);
+        if (drawnLen + segLen < dist) {
+            ctx.lineTo(nodes[i+1].x, nodes[i+1].y);
+            drawnLen += segLen;
+        } else {
+            let ratio = segLen > 0 ? (dist - drawnLen) / segLen : 0;
+            ctx.lineTo(nodes[i].x + dx * ratio, nodes[i].y + dy * ratio);
+            break;
+        }
+    }
+    ctx.stroke();
+}
+
+function drawLadderNameBadge(ctx, x, y, name, color, layout) {
+    const { boxW, boxH, nameFont } = layout;
+    const displayName = truncateName(name, boxW > 70 ? 6 : 5);
+    const fontSize = fitCanvasFont(ctx, displayName, boxW - 14, nameFont, 12, 900);
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,0,0,0.18)'; ctx.shadowBlur = 6; ctx.shadowOffsetY = 2;
+    const grad = ctx.createLinearGradient(x - boxW/2, y - boxH/2, x + boxW/2, y + boxH/2);
+    grad.addColorStop(0, color); grad.addColorStop(1, shadeColor(color, -18));
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(x - boxW/2, y - boxH/2, boxW, boxH, 10);
+    else ctx.rect(x - boxW/2, y - boxH/2, boxW, boxH);
+    ctx.fill();
+    ctx.shadowColor = 'transparent';
+    ctx.fillStyle = '#fff';
+    ctx.font = `900 ${fontSize}px Pretendard, sans-serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(displayName, x, y + 0.5);
+    ctx.restore();
+}
+
+function shadeColor(hex, percent) {
+    const num = parseInt(hex.replace('#', ''), 16);
+    const r = Math.min(255, Math.max(0, (num >> 16) + percent));
+    const g = Math.min(255, Math.max(0, ((num >> 8) & 0xff) + percent));
+    const b = Math.min(255, Math.max(0, (num & 0xff) + percent));
+    return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+}
+
 function injectGameUI() {
     const gameView = document.getElementById('view-game');
     if (gameView) {
         gameView.innerHTML = `
-            <div class="game-container" style="text-align: center; padding: 30px; background: var(--bg-card); border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); min-height: 600px;">
-                <div style="margin-bottom: 30px; display: flex; justify-content: center; align-items: center; gap: 15px;">
-                    <button id="tabRoulette" class="admin-btn active-game-tab" onclick="switchGameMode('roulette')" style="padding: 15px 30px; font-size: 20px; border-radius:12px;">🎯 복불복 룰렛</button>
-                    <button id="tabLadder" class="admin-btn" onclick="switchGameMode('ladder')" style="padding: 15px 30px; font-size: 20px; border-radius:12px;">🪜 운명의 사다리</button>
-                    <button id="btnBgmToggle" class="admin-btn" onclick="toggleBGM()" style="padding: 15px 20px; font-size: 16px; border-radius:12px; background: var(--bg-main); color: var(--text-main);">🔊 BGM ON</button>
+            <div class="game-container">
+                <div class="game-sidebar">
+                    <button id="tabRoulette" class="admin-btn active-game-tab" onclick="switchGameMode('roulette')">🎯<br>룰렛</button>
+                    <button id="tabLadder" class="admin-btn" onclick="switchGameMode('ladder')">🪜<br>사다리</button>
+                    <button id="btnBgmToggle" class="admin-btn" onclick="toggleBGM()" style="background: var(--bg-main); color: var(--text-main);">🔊 BGM</button>
                 </div>
-                <div id="roulette-game-area" style="position: relative; display: block;">
-                    <canvas id="rouletteCanvas" width="600" height="600" style="background:#fff; border-radius:50%; box-shadow:0 10px 40px rgba(0,0,0,0.15); margin:0 auto; display:block;"></canvas>
-                    <button id="btnStartRoulette" class="game-start-btn" onclick="startRouletteAnimation()" style="display:none; margin: 25px auto 0;">🎡 룰렛 돌리기 시작!</button>
+                <div class="game-main">
+                    <div id="roulette-game-area" class="game-stage">
+                        <div class="game-canvas-wrap">
+                            <canvas id="rouletteCanvas" width="620" height="620"></canvas>
+                        </div>
+                    </div>
+                    <div id="ladder-game-area" class="game-stage" style="display: none;">
+                        <div class="game-canvas-wrap">
+                            <canvas id="ladderCanvas" width="960" height="720"></canvas>
+                        </div>
+                    </div>
+                    <div id="gameResult" class="game-result-banner"></div>
+                    <div class="game-controls">
+                        <button id="btnStartRoulette" class="game-start-btn" onclick="startRouletteAnimation()" style="display:none;">🎡 룰렛 돌리기 시작!</button>
+                        <button id="btnStartLadder" class="game-start-btn" onclick="startLadderAnimation()" style="display:none;">🚀 사다리 타기 시작!</button>
+                    </div>
                 </div>
-                <div id="ladder-game-area" style="position: relative; display: none; width: 100%; height: 600px; max-width: 800px; margin: 0 auto;">
-                    <canvas id="ladderCanvas" width="800" height="600" style="background:#fff; border-radius:20px; border: 4px solid var(--border); box-shadow:0 10px 40px rgba(0,0,0,0.1); display:block; width: 100%; height: 100%;"></canvas>
-                    <button id="btnStartLadder" class="game-start-btn" onclick="startLadderAnimation()" style="display:none; margin: 25px auto 0;">🚀 사다리 타기 시작!</button>
-                </div>
-                <div id="gameResult" style="margin-top: 30px; font-size: 38px; font-weight: 900; min-height: 60px; color: var(--text-main);"></div>
             </div>
         `;
     }
@@ -868,14 +1313,14 @@ function injectGameUI() {
 window.toggleBGM = function() {
     isBgmOn = !isBgmOn;
     const btn = document.getElementById('btnBgmToggle');
-    if(isBgmOn) { btn.innerText = "🔊 BGM ON"; btn.style.color = "var(--text-main)"; } 
-    else { btn.innerText = "🔇 BGM OFF"; btn.style.color = "var(--text-muted)"; }
+    if(isBgmOn) { btn.innerText = "🔊 BGM"; btn.style.color = "var(--text-main)"; }
+    else { btn.innerText = "🔇 OFF"; btn.style.color = "var(--text-muted)"; }
     playUISound('click');
     if (isGameAnimating) { if (isBgmOn) startFunBGM(isRouletteMode ? 'roulette' : 'ladder'); else stopFunBGM(); }
 }
 
 window.switchGameMode = function(mode) {
-    playUISound('click'); document.getElementById('gameResult').innerHTML = "";
+    playUISound('click'); setGameResult('', '');
     if(mode === 'ladder') {
         isRouletteMode = false;
         document.getElementById('ladder-game-area').style.display = 'block'; document.getElementById('roulette-game-area').style.display = 'none';
@@ -892,7 +1337,7 @@ window.switchGameMode = function(mode) {
 window.startFunBGM = function(type) {
     if(!isBgmOn) return; initAudio(); let tick = 0;
     const notesRoulette = [392, 493, 587, 783]; const notesLadder = [523, 659, 783, 1046, 783, 659]; 
-    const notes = type === 'roulette' ? notesRoulette : notesLadder; const speed = type === 'roulette' ? 120 : 130;
+    const notes = type === 'roulette' ? notesRoulette : notesLadder; const speed = type === 'roulette' ? 185 : 130;
     ladderBgmTimer = setInterval(() => {
         if(!audioCtx) return; let osc = audioCtx.createOscillator(); let gain = audioCtx.createGain(); osc.type = 'square'; osc.frequency.value = notes[tick % notes.length];
         gain.gain.setValueAtTime(uiVolume * 0.08, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + (speed/1000) * 0.8);
@@ -919,122 +1364,200 @@ window.setupLadder = function() {
     stopFunBGM(); isGameAnimating = false;
     const canvas = document.getElementById('ladderCanvas'); const ctx = canvas.getContext('2d');
     ladderPlayers = timers.filter(t => t.student !== "(empty)").map(t => t.student);
-    document.getElementById('gameResult').innerHTML = "";
-    const btnStart = document.getElementById('btnStartLadder'); btnStart.innerText = "🚀 사다리 타기 시작!"; btnStart.style.display = 'none';
+    setGameResult('', ''); hideAllGameButtons();
 
     if(ladderPlayers.length < 2) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--text-muted'); ctx.font = "bold 20px Pretendard"; ctx.textAlign = "center"; ctx.fillText("최소 2명 이상의 수업 중인 학생이 필요합니다.", canvas.width/2, canvas.height/2); return;
+        const wrap = canvas.parentElement;
+        canvas.width = wrap.clientWidth; canvas.height = wrap.clientHeight;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--text-muted');
+        ctx.font = "bold 18px Pretendard, sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        ctx.fillText("최소 2명 이상의 수업 중인 학생이 필요합니다.", canvas.width/2, canvas.height/2);
+        return;
     }
     const container = canvas.parentElement; canvas.width = container.clientWidth; canvas.height = container.clientHeight;
-    generateLadderData(); isResultRevealed = false; drawStaticLadder();
-    
-    const w = canvas.width; const spacing = w / ladderPlayers.length; ctx.globalAlpha = 1.0;
-    for(let p=0; p<ladderPlayers.length; p++) {
-        let curX = (p + 0.5) * spacing; let curY = 40; ctx.fillStyle = ladderColors[p % ladderColors.length]; let boxW = 54, boxH = 28;
-        ctx.beginPath(); if(ctx.roundRect) ctx.roundRect(curX - boxW/2, curY - boxH/2, boxW, boxH, 8); else ctx.rect(curX - boxW/2, curY - boxH/2, boxW, boxH); ctx.fill();
-        ctx.fillStyle = "#fff"; ctx.font = "900 13px Pretendard"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-        let shortName = ladderPlayers[p].length > 4 ? ladderPlayers[p].substring(0,3)+".." : ladderPlayers[p]; ctx.fillText(shortName, curX, curY);
-    }
-    btnStart.style.display = 'block';
+    generateLadderData(); isResultRevealed = false; drawStaticLadder(true);
+    showGameButton('btnStartLadder', '🚀 사다리 타기 시작!', false);
 }
 
 function generateLadderData() {
-    ladderRungs = []; const cols = ladderPlayers.length; targetWinnerIndex = Math.floor(Math.random() * cols);
-    const h = document.getElementById('ladderCanvas').height; const ySteps = Math.floor(Math.random() * 10) + 25; const yGap = (h - 120) / ySteps;
-    for(let i=1; i<ySteps; i++) {
-        let baseY = 60 + (i * yGap); let usedCols = new Set(); let numRungs = Math.floor(Math.random() * cols) + 1;
-        for(let j=0; j<numRungs; j++) {
-            let c = Math.floor(Math.random() * (cols - 1));
-            if(!usedCols.has(c) && !usedCols.has(c+1)) { usedCols.add(c); usedCols.add(c+1); let yPos = baseY + (Math.random() * 14 - 7); ladderRungs.push({col: c, yLeft: yPos, yRight: yPos}); }
+    ladderRungs = [];
+    const cols = ladderPlayers.length;
+    targetWinnerIndex = Math.floor(Math.random() * cols);
+    const canvas = document.getElementById('ladderCanvas');
+    const layout = getLadderLayout(cols, canvas.width, canvas.height);
+    const rowCount = Math.max(36, Math.min(52, Math.floor((layout.ladderBottom - layout.ladderTop) / 13)));
+    const rowGap = (layout.ladderBottom - layout.ladderTop) / rowCount;
+    const colLastRow = new Array(cols).fill(-999);
+
+    for (let row = 1; row < rowCount; row++) {
+        const baseY = layout.ladderTop + row * rowGap;
+        const blocked = new Set();
+        const candidates = [];
+        for (let c = 0; c < cols - 1; c++) {
+            if (colLastRow[c] >= row - 1 || colLastRow[c + 1] >= row - 1) continue;
+            if (Math.random() < 0.58) candidates.push(c);
+        }
+        for (let i = candidates.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
+        }
+        for (const c of candidates) {
+            if (blocked.has(c) || blocked.has(c + 1)) continue;
+            blocked.add(c); blocked.add(c + 1);
+            const wave = (Math.random() - 0.5) * Math.min(10, rowGap * 0.4);
+            ladderRungs.push({ col: c, yLeft: baseY + wave, yRight: baseY - wave * 0.65 });
+            colLastRow[c] = row;
+            colLastRow[c + 1] = row;
+        }
+        if (row % 4 === 0 && !ladderRungs.some(r => Math.abs(r.yLeft - baseY) < rowGap * 0.55)) {
+            for (let attempt = 0; attempt < 20; attempt++) {
+                const c = Math.floor(Math.random() * (cols - 1));
+                if (colLastRow[c] < row - 1 && colLastRow[c + 1] < row - 1) {
+                    const wave = (Math.random() - 0.5) * 6;
+                    ladderRungs.push({ col: c, yLeft: baseY + wave, yRight: baseY - wave * 0.5 });
+                    colLastRow[c] = row; colLastRow[c + 1] = row;
+                    break;
+                }
+            }
         }
     }
-    ladderRungs.sort((a,b) => a.yLeft - b.yLeft);
+    ladderRungs.sort((a, b) => a.yLeft - b.yLeft);
 }
 
-function drawStaticLadder() {
+function drawStaticLadder(drawTopNames) {
     const canvas = document.getElementById('ladderCanvas'); const ctx = canvas.getContext('2d');
-    const w = canvas.width; const h = canvas.height; const cols = ladderPlayers.length; const spacing = w / cols;
-    ctx.clearRect(0, 0, w, h); const lineColor = getComputedStyle(document.body).getPropertyValue('--border').trim(); const accentColor = getComputedStyle(document.body).getPropertyValue('--accent').trim();
-    ctx.lineWidth = 4; ctx.lineCap = "round"; ctx.strokeStyle = lineColor;
-    for(let i=0; i<cols; i++) { let x = (i + 0.5) * spacing; ctx.beginPath(); ctx.moveTo(x, 40); ctx.lineTo(x, h - 40); ctx.stroke(); }
-    ctx.font = "bold 20px Pretendard"; ctx.textAlign = "center";
+    const w = canvas.width; const h = canvas.height; const cols = ladderPlayers.length; const layout = getLadderLayout(cols, w, h);
+    const { spacing, ladderTop, ladderBottom } = layout;
+    ctx.clearRect(0, 0, w, h);
+    const lineColor = getComputedStyle(document.body).getPropertyValue('--border').trim() || '#cbd5e1';
+    const accentColor = getComputedStyle(document.body).getPropertyValue('--accent').trim() || '#2563eb';
+    const mutedColor = getComputedStyle(document.body).getPropertyValue('--text-muted').trim() || '#64748b';
+
+    ctx.lineCap = "round";
+    ctx.lineWidth = 4; ctx.strokeStyle = lineColor;
     for(let i=0; i<cols; i++) {
         let x = (i + 0.5) * spacing;
-        if(i === targetWinnerIndex) { ctx.fillStyle = accentColor; ctx.fillText("🎁 당첨", x, h - 15); } 
-        else { ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--text-muted').trim(); ctx.fillText("꽝", x, h - 15); }
+        ctx.beginPath(); ctx.moveTo(x, ladderTop); ctx.lineTo(x, ladderBottom); ctx.stroke();
+    }
+    ctx.lineWidth = 6; ctx.strokeStyle = '#64748b';
+    ladderRungs.forEach(r => {
+        let x1 = (r.col + 0.5) * spacing, x2 = (r.col + 1.5) * spacing;
+        ctx.beginPath(); ctx.moveTo(x1, r.yLeft); ctx.lineTo(x2, r.yRight); ctx.stroke();
+    });
+
+    const bottomFont = Math.max(14, Math.min(18, Math.floor(spacing * 0.2)));
+    for(let i=0; i<cols; i++) {
+        let x = (i + 0.5) * spacing;
+        if(i === targetWinnerIndex) {
+            ctx.save();
+            ctx.font = `900 ${bottomFont}px Pretendard, sans-serif`;
+            ctx.textAlign = "center"; ctx.textBaseline = "middle";
+            const pillW = Math.min(spacing * 0.78, 72), pillH = 30;
+            ctx.beginPath();
+            if (ctx.roundRect) ctx.roundRect(x - pillW/2, ladderBottom + 10, pillW, pillH, 15);
+            else ctx.rect(x - pillW/2, ladderBottom + 10, pillW, pillH);
+            ctx.fillStyle = 'rgba(37,99,235,0.12)'; ctx.fill();
+            ctx.fillStyle = accentColor;
+            ctx.fillText('🎁 당첨', x, ladderBottom + 25);
+            ctx.restore();
+        } else {
+            ctx.fillStyle = mutedColor; ctx.font = `700 ${bottomFont - 1}px Pretendard, sans-serif`;
+            ctx.textAlign = "center"; ctx.textBaseline = "middle";
+            ctx.fillText('꽝', x, ladderBottom + 25);
+        }
+    }
+
+    if (drawTopNames) {
+        for(let p=0; p<cols; p++) {
+            drawLadderNameBadge(ctx, (p + 0.5) * spacing, layout.topPad + layout.boxH / 2, ladderPlayers[p], ladderColors[p % ladderColors.length], layout);
+        }
     }
 }
 
 window.startLadderAnimation = function() {
-    playUISound('click'); startFunBGM('ladder'); 
-    document.getElementById('btnStartLadder').style.display = 'none'; document.getElementById('gameResult').innerHTML = "<span style='color:var(--text-muted);'>결과를 향해 내려갑니다...👀</span>";
+    playUISound('click'); startFunBGM('ladder');
+    hideAllGameButtons(); setGameResult('결과를 향해 내려갑니다... 👀', 'is-waiting');
     isResultRevealed = false; isGameAnimating = true; if(animReq) cancelAnimationFrame(animReq);
-    
-    const canvas = document.getElementById('ladderCanvas'); const ctx = canvas.getContext('2d');
-    const w = canvas.width; const h = canvas.height; const cols = ladderPlayers.length; const spacing = w / cols; const brandDanger = getComputedStyle(document.body).getPropertyValue('--brand-danger').trim() || '#ef4444';
-    
-    let colEvents = Array.from({length: cols}, () => []);
-    ladderRungs.forEach(r => { colEvents[r.col].push({ yMe: r.yLeft, yTarget: r.yRight, targetCol: r.col + 1 }); colEvents[r.col + 1].push({ yMe: r.yRight, yTarget: r.yLeft, targetCol: r.col }); });
-    colEvents.forEach(events => events.sort((a,b) => a.yMe - b.yMe));
 
-    let paths = []; 
-    for(let p=0; p<cols; p++) {
-        let curCol = p; let curY = 40; let path = [{x: (curCol + 0.5) * spacing, y: curY}];
-        while(true) {
-            let nextEvent = colEvents[curCol].find(e => e.yMe > curY + 0.5);
-            if(!nextEvent) { path.push({x: (curCol + 0.5) * spacing, y: h - 40}); break; }
-            path.push({x: (curCol + 0.5) * spacing, y: nextEvent.yMe}); curCol = nextEvent.targetCol; curY = nextEvent.yTarget; path.push({x: (curCol + 0.5) * spacing, y: curY});
-        }
-        paths.push({ nodes: path, finalCol: curCol, color: ladderColors[p % ladderColors.length] });
-    }
-    
-    let progress = 0; const speed = 4.5; 
-    paths.forEach(p => { let totalLen = 0; for(let i=0; i<p.nodes.length-1; i++) { let dx = p.nodes[i+1].x - p.nodes[i].x; let dy = p.nodes[i+1].y - p.nodes[i].y; totalLen += Math.sqrt(dx*dx + dy*dy); } p.totalLen = totalLen; });
-    let maxLen = Math.max(...paths.map(p => p.totalLen));
-    
-    function drawPathsAndIcons(prog) {
-        ctx.lineWidth = 6; ctx.lineJoin = "round";
-        for(let p=0; p<cols; p++) {
-            let pathObj = paths[p]; let drawnLen = 0; ctx.strokeStyle = pathObj.color; ctx.globalAlpha = 0.5;
-            ctx.beginPath(); ctx.moveTo(pathObj.nodes[0].x, pathObj.nodes[0].y);
-            for(let i=0; i<pathObj.nodes.length-1; i++) {
-                let dx = pathObj.nodes[i+1].x - pathObj.nodes[i].x; let dy = pathObj.nodes[i+1].y - pathObj.nodes[i].y; let segLen = Math.sqrt(dx*dx + dy*dy);
-                if(drawnLen + segLen < prog) { ctx.lineTo(pathObj.nodes[i+1].x, pathObj.nodes[i+1].y); drawnLen += segLen; } 
-                else { let remain = prog - drawnLen; let ratio = remain / segLen; ctx.lineTo(pathObj.nodes[i].x + dx*ratio, pathObj.nodes[i].y + dy*ratio); break; }
-            }
-            ctx.stroke();
+    const canvas = document.getElementById('ladderCanvas'); const ctx = canvas.getContext('2d');
+    const cols = ladderPlayers.length;
+    const layout = getLadderLayout(cols, canvas.width, canvas.height);
+    const brandDanger = getComputedStyle(document.body).getPropertyValue('--brand-danger').trim() || '#ef4444';
+    const paths = buildLadderPaths(cols, layout.spacing, layout.ladderTop, layout.ladderBottom);
+    const maxLen = Math.max(...paths.map(p => p.totalLen));
+    const LADDER_SPEED = 1.5;
+    const LADDER_STAGGER = 24;
+    let frame = 0;
+
+    function drawPathsAndIcons() {
+        ctx.lineWidth = 8; ctx.lineJoin = "round"; ctx.lineCap = "round";
+        for (let p = 0; p < cols; p++) {
+            const pathProg = Math.max(0, (frame - p * LADDER_STAGGER)) * LADDER_SPEED;
+            if (pathProg <= 0) continue;
+            const pathObj = paths[p];
+            ctx.strokeStyle = pathObj.color; ctx.globalAlpha = 0.6;
+            strokePathToDist(ctx, pathObj.nodes, Math.min(pathProg, pathObj.totalLen));
         }
 
         ctx.globalAlpha = 1.0;
-        for(let p=0; p<cols; p++) {
-            let pathObj = paths[p]; let currentProg = Math.min(prog, pathObj.totalLen);
-            let curX = pathObj.nodes[0].x, curY = pathObj.nodes[0].y; let drawn = 0;
-            for(let i=0; i<pathObj.nodes.length-1; i++) {
-                let dx = pathObj.nodes[i+1].x - pathObj.nodes[i].x; let dy = pathObj.nodes[i+1].y - pathObj.nodes[i].y; let seg = Math.sqrt(dx*dx + dy*dy);
-                if(drawn + seg >= currentProg) { let ratio = (currentProg - drawn) / seg; curX = pathObj.nodes[i].x + dx*ratio; curY = pathObj.nodes[i].y + dy*ratio; break; }
-                drawn += seg; curX = pathObj.nodes[i+1].x; curY = pathObj.nodes[i+1].y;
+        for (let p = 0; p < cols; p++) {
+            const pathProg = Math.max(0, (frame - p * LADDER_STAGGER)) * LADDER_SPEED;
+            if (pathProg <= 0) continue;
+            const pathObj = paths[p];
+            const currentProg = Math.min(pathProg, pathObj.totalLen);
+            const pt = getPointOnPath(pathObj.nodes, currentProg);
+            const isHidden = (!isResultRevealed) && (currentProg > pathObj.totalLen * 0.88);
+            if (isHidden) {
+                ctx.save();
+                ctx.fillStyle = pathObj.color; ctx.shadowColor = 'rgba(0,0,0,0.15)'; ctx.shadowBlur = 4;
+                ctx.beginPath(); ctx.arc(pt.x, pt.y, 18, 0, Math.PI * 2); ctx.fill();
+                ctx.shadowColor = 'transparent';
+                ctx.fillStyle = '#fff'; ctx.font = '900 20px Pretendard, sans-serif';
+                ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('?', pt.x, pt.y);
+                ctx.restore();
+            } else {
+                drawLadderNameBadge(ctx, pt.x, pt.y, ladderPlayers[p], pathObj.color, layout);
             }
-            let isHidden = (!isResultRevealed) && (currentProg > pathObj.totalLen * 0.9);
-            ctx.fillStyle = pathObj.color; let boxW = 54, boxH = 28; ctx.beginPath();
-            if(ctx.roundRect) ctx.roundRect(curX - boxW/2, curY - boxH/2, boxW, boxH, 8); else ctx.rect(curX - boxW/2, curY - boxH/2, boxW, boxH); ctx.fill();
-            if (isHidden) { ctx.fillStyle = "#fff"; ctx.font = "900 16px Pretendard"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("?", curX, curY); } 
-            else { ctx.fillStyle = "#fff"; ctx.font = "900 13px Pretendard"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; let shortName = ladderPlayers[p].length > 4 ? ladderPlayers[p].substring(0,3)+".." : ladderPlayers[p]; ctx.fillText(shortName, curX, curY); }
         }
     }
-    
+
     function drawFrame() {
-        drawStaticLadder(); progress += speed; drawPathsAndIcons(progress);
-        if(progress < maxLen) { animReq = requestAnimationFrame(drawFrame); } 
-        else {
-            isGameAnimating = false; stopFunBGM(); drawStaticLadder(); drawPathsAndIcons(maxLen);
-            document.getElementById('gameResult').innerHTML = "<span style='color:var(--text-muted);'>결과 발표... 두구두구두구! 🥁</span>";
-            playDrumroll(2500, () => {
-                isResultRevealed = true; drawStaticLadder(); drawPathsAndIcons(maxLen);
+        drawStaticLadder(true);
+        drawPathsAndIcons();
+        frame++;
+        const totalFrames = maxLen / LADDER_SPEED + LADDER_STAGGER * cols;
+        if (frame < totalFrames) {
+            animReq = requestAnimationFrame(drawFrame);
+        } else {
+            isGameAnimating = false; stopFunBGM();
+            drawStaticLadder(false); drawPathsAndIcons();
+            setGameResult('결과 발표... 두구두구두구! 🥁', 'is-waiting');
+            playDrumroll(2800, () => {
+                isResultRevealed = true;
+                drawStaticLadder(false);
+                for (let p = 0; p < cols; p++) {
+                    const pathObj = paths[p];
+                    const pt = getPointOnPath(pathObj.nodes, pathObj.totalLen);
+                    drawLadderNameBadge(ctx, pt.x, pt.y, ladderPlayers[p], pathObj.color, layout);
+                }
                 let winnerPathObj = paths.find(p => p.finalCol === targetWinnerIndex);
-                if(winnerPathObj) { ctx.strokeStyle = brandDanger; ctx.lineWidth = 12; ctx.beginPath(); ctx.moveTo(winnerPathObj.nodes[0].x, winnerPathObj.nodes[0].y); for(let i=0; i<winnerPathObj.nodes.length-1; i++) { ctx.lineTo(winnerPathObj.nodes[i+1].x, winnerPathObj.nodes[i+1].y); } ctx.stroke(); }
-                let realWinnerName = ""; for(let p=0; p<cols; p++) { if(paths[p].finalCol === targetWinnerIndex) { realWinnerName = ladderPlayers[p]; break; } }
-                playUISound('finish'); document.getElementById('gameResult').innerHTML = `🎉 축하합니다! <span style="color:var(--brand-danger)">${realWinnerName}</span> 학생이 당첨되었습니다! 🎉`;
-                const btnStart = document.getElementById('btnStartLadder'); btnStart.innerText = "🎬 다시 보기"; btnStart.style.display = 'block';
+                if (winnerPathObj) {
+                    ctx.save(); ctx.strokeStyle = brandDanger; ctx.lineWidth = 12; ctx.globalAlpha = 0.9;
+                    ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+                    ctx.beginPath(); ctx.moveTo(winnerPathObj.nodes[0].x, winnerPathObj.nodes[0].y);
+                    for (let i = 0; i < winnerPathObj.nodes.length - 1; i++) {
+                        ctx.lineTo(winnerPathObj.nodes[i+1].x, winnerPathObj.nodes[i+1].y);
+                    }
+                    ctx.stroke(); ctx.restore();
+                }
+                let realWinnerName = "";
+                for (let p = 0; p < cols; p++) {
+                    if (paths[p].finalCol === targetWinnerIndex) { realWinnerName = ladderPlayers[p]; break; }
+                }
+                playUISound('finish');
+                setGameResult(`🎉 축하합니다! <span class="winner-name">${realWinnerName}</span> 학생이 당첨! 🎉`, 'is-winner');
+                showGameButton('btnStartLadder', '🎬 다시 보기', true);
             });
         }
     }
@@ -1044,42 +1567,146 @@ window.startLadderAnimation = function() {
 window.setupRoulette = function() {
     playUISound('click'); if(animReq) { cancelAnimationFrame(animReq); animReq = null; }
     stopFunBGM(); rouletteSpinning = false; isGameAnimating = false;
-    roulettePlayers = timers.filter(t => t.student !== "(empty)").map(t => t.student); document.getElementById('gameResult').innerHTML = "";
-    const btnStart = document.getElementById('btnStartRoulette'); btnStart.innerText = "🎡 룰렛 돌리기 시작!"; btnStart.style.display = 'none';
+    roulettePlayers = timers.filter(t => t.student !== "(empty)").map(t => t.student);
+    setGameResult('', ''); hideAllGameButtons();
     const canvas = document.getElementById('rouletteCanvas'); const ctx = canvas.getContext('2d');
-    if(roulettePlayers.length < 2) { ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--text-muted'); ctx.font = "bold 20px Pretendard"; ctx.textAlign = "center"; ctx.fillText("최소 2명 이상의 수업 중인 학생이 필요합니다.", canvas.width/2, canvas.height/2); return; }
-    rouletteAngle = 0; drawRoulette(rouletteAngle); btnStart.style.display = 'block';
+    const wrap = canvas.parentElement;
+    const size = Math.min(620, wrap ? wrap.clientWidth - 16 : 620);
+    canvas.width = size; canvas.height = size;
+    if(roulettePlayers.length < 2) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--text-muted');
+        ctx.font = "bold 18px Pretendard, sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        ctx.fillText("최소 2명 이상의 수업 중인 학생이 필요합니다.", canvas.width/2, canvas.height/2);
+        return;
+    }
+    rouletteAngle = 0; drawRoulette(rouletteAngle, -1);
+    showGameButton('btnStartRoulette', '🎡 룰렛 돌리기 시작!', false);
 }
 
-function drawRoulette(angle) {
+function drawRoulette(angle, highlightIndex) {
     const canvas = document.getElementById('rouletteCanvas'); const ctx = canvas.getContext('2d');
-    const cw = canvas.width; const ch = canvas.height; const cx = cw / 2; const cy = ch / 2; const radius = Math.min(cw, ch) / 2 - 25;
-    ctx.clearRect(0, 0, cw, ch); const numSlices = roulettePlayers.length; const sliceAngle = (2 * Math.PI) / numSlices;
+    const cw = canvas.width; const ch = canvas.height; const cx = cw / 2; const cy = ch / 2;
+    const outerR = Math.min(cw, ch) / 2 - 8;
+    const radius = outerR - 14;
+    ctx.clearRect(0, 0, cw, ch);
+    const numSlices = roulettePlayers.length; const sliceAngle = (2 * Math.PI) / numSlices;
+
+    ctx.save();
+    ctx.beginPath(); ctx.arc(cx, cy, outerR, 0, 2 * Math.PI);
+    ctx.fillStyle = '#e2e8f0'; ctx.fill();
+    ctx.lineWidth = 3; ctx.strokeStyle = '#cbd5e1'; ctx.stroke();
+    ctx.restore();
+
     for(let i = 0; i < numSlices; i++) {
         const startAngle = angle + i * sliceAngle; const endAngle = startAngle + sliceAngle;
+        const isWinner = highlightIndex === i;
         ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, radius, startAngle, endAngle); ctx.closePath();
-        ctx.fillStyle = ladderColors[i % ladderColors.length]; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = "#ffffff"; ctx.stroke();
-        ctx.save(); ctx.translate(cx, cy); ctx.rotate(startAngle + sliceAngle / 2); ctx.textAlign = "right"; ctx.textBaseline = "middle"; ctx.fillStyle = "#ffffff"; ctx.font = "bold 24px Pretendard"; ctx.shadowColor = "rgba(0,0,0,0.4)"; ctx.shadowBlur = 4; ctx.fillText(roulettePlayers[i], radius - 20, 0); ctx.restore();
+        const baseColor = ladderColors[i % ladderColors.length];
+        ctx.fillStyle = isWinner ? shadeColor(baseColor, 12) : baseColor;
+        ctx.fill();
+        ctx.lineWidth = isWinner ? 3 : 2;
+        ctx.strokeStyle = isWinner ? '#fff' : 'rgba(255,255,255,0.85)';
+        ctx.stroke();
+
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(startAngle + sliceAngle / 2);
+        const name = roulettePlayers[i];
+        const maxTextW = radius - 36;
+        const fontSize = fitCanvasFont(ctx, name, maxTextW, Math.min(22, Math.max(14, Math.floor(radius / numSlices * 0.55))), 12, '900');
+        ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#ffffff';
+        ctx.font = `900 ${fontSize}px Pretendard, sans-serif`;
+        ctx.shadowColor = 'rgba(0,0,0,0.45)'; ctx.shadowBlur = 5; ctx.shadowOffsetY = 1;
+        ctx.fillText(truncateName(name, fontSize >= 18 ? 8 : 6), radius - 18, 0);
+        ctx.restore();
     }
-    ctx.beginPath(); ctx.arc(cx, cy, 35, 0, 2 * Math.PI); ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--bg-card') || '#fff'; ctx.fill(); ctx.lineWidth = 4; ctx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--accent') || '#2563eb'; ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(cx - 18, cy - radius - 15); ctx.lineTo(cx + 18, cy - radius - 15); ctx.lineTo(cx, cy - radius + 20); ctx.closePath(); ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--brand-danger') || '#ef4444'; ctx.fill(); ctx.strokeStyle = "#fff"; ctx.lineWidth = 3; ctx.stroke();
+
+    ctx.beginPath(); ctx.arc(cx, cy, Math.max(28, radius * 0.12), 0, 2 * Math.PI);
+    const hubGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(28, radius * 0.12));
+    hubGrad.addColorStop(0, '#ffffff'); hubGrad.addColorStop(1, '#f1f5f9');
+    ctx.fillStyle = hubGrad; ctx.fill();
+    ctx.lineWidth = 4; ctx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--accent') || '#2563eb'; ctx.stroke();
+
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,0,0,0.25)'; ctx.shadowBlur = 8; ctx.shadowOffsetY = 3;
+    ctx.beginPath();
+    ctx.moveTo(cx - 16, cy - outerR + 6);
+    ctx.lineTo(cx + 16, cy - outerR + 6);
+    ctx.lineTo(cx, cy - outerR + 34);
+    ctx.closePath();
+    ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--brand-danger') || '#ef4444';
+    ctx.fill();
+    ctx.lineWidth = 2.5; ctx.strokeStyle = '#fff'; ctx.stroke();
+    ctx.restore();
 }
 
 window.startRouletteAnimation = function() {
-    if(rouletteSpinning) return; playUISound('start'); startFunBGM('roulette'); 
-    document.getElementById('btnStartRoulette').style.display = 'none'; document.getElementById('gameResult').innerHTML = "결과 확인 중...👀";
+    if(rouletteSpinning) return;
+    playUISound('start'); startFunBGM('roulette');
+    hideAllGameButtons(); setGameResult('룰렛이 돌아가고 있어요... 🎡', 'is-waiting');
     rouletteSpinning = true; isGameAnimating = true; if(animReq) cancelAnimationFrame(animReq);
-    let speed = Math.random() * 0.2 + 0.4; const friction = 0.993; 
+
+    let speed = Math.random() * 0.05 + 0.08;
+    let totalRotation = 0;
+    let lastTickSlice = -1;
+    let msgPhase = 0;
+    const minRotation = Math.PI * 18;
+
+    function getFriction(spd) {
+        if (spd > 0.09) return 0.997;
+        if (spd > 0.045) return 0.994;
+        if (spd > 0.022) return 0.990;
+        if (spd > 0.010) return 0.985;
+        if (spd > 0.004) return 0.978;
+        if (spd > 0.0015) return 0.970;
+        return 0.948;
+    }
+
+    function finishRoulette() {
+        rouletteSpinning = false; isGameAnimating = false; stopFunBGM();
+        const numSlices = roulettePlayers.length;
+        const sliceAngle = (2 * Math.PI) / numSlices;
+        let offsetAngle = ((3 * Math.PI / 2) - rouletteAngle) % (2 * Math.PI);
+        if (offsetAngle < 0) offsetAngle += 2 * Math.PI;
+        const winningIndex = Math.floor(offsetAngle / sliceAngle);
+        const winnerName = roulettePlayers[winningIndex];
+        drawRoulette(rouletteAngle, winningIndex);
+        playUISound('finish');
+        setGameResult(`🎉 축하합니다! <span class="winner-name">${winnerName}</span> 학생이 당첨! 🎉`, 'is-winner');
+        showGameButton('btnStartRoulette', '🎬 다시 돌리기', true);
+    }
+
     function spin() {
-        rouletteAngle += speed; drawRoulette(rouletteAngle); speed *= friction;
-        if(speed > 0.002) { animReq = requestAnimationFrame(spin); } 
-        else {
-            rouletteSpinning = false; isGameAnimating = false; stopFunBGM(); 
-            const numSlices = roulettePlayers.length; const sliceAngle = (2 * Math.PI) / numSlices;
-            let offsetAngle = ((3 * Math.PI / 2) - rouletteAngle) % (2 * Math.PI); if(offsetAngle < 0) offsetAngle += 2 * Math.PI;
-            const winningIndex = Math.floor(offsetAngle / sliceAngle); const winnerName = roulettePlayers[winningIndex];
-            playUISound('finish'); document.getElementById('gameResult').innerHTML = `🎉 축하합니다! <span style="color:var(--brand-danger)">${winnerName}</span> 학생이 당첨되었습니다! 🎉`;
-            const btnStart = document.getElementById('btnStartRoulette'); btnStart.innerText = "🎬 다시 돌리기"; btnStart.style.display = 'block';
+        rouletteAngle += speed;
+        totalRotation += speed;
+        drawRoulette(rouletteAngle, -1);
+
+        const numSlices = roulettePlayers.length;
+        const sliceAngle = (2 * Math.PI) / numSlices;
+        let offsetAngle = ((3 * Math.PI / 2) - rouletteAngle) % (2 * Math.PI);
+        if (offsetAngle < 0) offsetAngle += 2 * Math.PI;
+        const curSlice = Math.floor(offsetAngle / sliceAngle);
+
+        if (speed < 0.07 && curSlice !== lastTickSlice) {
+            lastTickSlice = curSlice;
+            playUISound('click');
+        }
+
+        speed *= getFriction(speed);
+
+        if (speed < 0.04 && msgPhase < 1) { msgPhase = 1; setGameResult('점점 느려지고 있어요... 🎡', 'is-waiting'); }
+        if (speed < 0.015 && msgPhase < 2) { msgPhase = 2; setGameResult('두구두구... 과연 누구?! 😱', 'is-waiting'); }
+        if (speed < 0.005 && msgPhase < 3) { msgPhase = 3; setGameResult('🥁 거의 다 왔어요!!', 'is-waiting'); }
+        if (speed < 0.0018 && msgPhase < 4) { msgPhase = 4; setGameResult('🏁 마지막 한 칸...!!', 'is-waiting'); }
+
+        if (totalRotation < minRotation && speed < 0.0025) speed = 0.0025;
+
+        if (speed > 0.00035) {
+            animReq = requestAnimationFrame(spin);
+        } else {
+            finishRoulette();
         }
     }
     spin();
@@ -1581,24 +2208,50 @@ window.toggleAcademyHoliday = function() {
 // =========================================================================
 // 공통 UI/기능
 // =========================================================================
+function ensureDeskRemoteCodesLength(count) {
+    while (deskRemoteCodes.length < count) {
+        const idx = deskRemoteCodes.length;
+        deskRemoteCodes.push(REMOTE_CODE_DEFAULTS[idx] || '');
+    }
+}
+
+function saveRemoteCodesFromUI() {
+    ensureDeskRemoteCodesLength(DESK_COUNT);
+    for (let i = 0; i < DESK_COUNT; i++) {
+        const el = document.getElementById(`remoteCodeInput_${i}`);
+        if (el) deskRemoteCodes[i] = el.value.trim();
+    }
+}
+
+function renderRemoteCodeInputs() {
+    const grid = document.getElementById('remoteCodesGrid');
+    const label = document.getElementById('remoteSelectLabel');
+    if (!grid) return;
+    ensureDeskRemoteCodesLength(DESK_COUNT);
+    if (label) label.textContent = `📡 무선 리모컨 고유번호 설정 (1~${DESK_COUNT}번 책상)`;
+    grid.innerHTML = '';
+    for (let i = 0; i < DESK_COUNT; i++) {
+        const wrap = document.createElement('div');
+        wrap.innerHTML = `<label style="font-size:12px; font-weight:bold; color:var(--text-muted);">${i + 1}번 책상</label><input type="text" id="remoteCodeInput_${i}" class="settings-input" style="width:100%; padding:8px; text-align:center; font-size:14px; box-sizing:border-box;" placeholder="번호 입력" onchange="saveRemoteCodes()" value="${(deskRemoteCodes[i] || '').replace(/"/g, '&quot;')}">`;
+        grid.appendChild(wrap);
+    }
+}
+
 function injectRemoteSettingUI() {
     const settingsCards = document.querySelectorAll('.settings-card'); let targetCard = null;
     settingsCards.forEach(card => { if(card.innerHTML.includes('학원 정보 및 디스플레이') || card.innerHTML.includes('ACADEMY INFO')) targetCard = card; });
     if (targetCard && !document.getElementById('remoteSelectRow')) {
         const row = document.createElement('div'); row.id = 'remoteSelectRow'; row.className = 'settings-row'; row.style.background = 'var(--bg-main)'; row.style.padding = '15px'; row.style.borderRadius = '16px'; row.style.border = '1px solid var(--border)'; row.style.marginBottom = '25px';
-        let inputsHtml = `<span class="settings-label">📡 무선 리모컨 고유번호 설정 (1~10번 책상)</span><div style="display:grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-top: 10px;">`;
-        for(let i=0; i<10; i++) { inputsHtml += `<div><label style="font-size:12px; font-weight:bold; color:var(--text-muted);">${i+1}번 책상</label><input type="text" id="remoteCodeInput_${i}" class="settings-input" style="width:100%; padding:8px; text-align:center; font-size:14px; box-sizing:border-box;" placeholder="번호 입력" onchange="saveRemoteCodes()"></div>`; }
-        inputsHtml += `</div>`; row.innerHTML = inputsHtml; targetCard.appendChild(row);
+        row.innerHTML = `<span class="settings-label" id="remoteSelectLabel">📡 무선 리모컨 고유번호 설정</span><div id="remoteCodesGrid" style="display:grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-top: 10px;"></div>`;
+        targetCard.appendChild(row);
     }
+    renderRemoteCodeInputs();
 }
 
-window.saveRemoteCodes = function() { 
-    for(let i=0; i<10; i++) { 
-        let el = document.getElementById(`remoteCodeInput_${i}`); 
-        if(el) deskRemoteCodes[i] = el.value.trim(); 
-    } 
-    saveToStorage(); 
-    playUISound('click'); 
+window.saveRemoteCodes = function() {
+    saveRemoteCodesFromUI();
+    saveToStorage();
+    playUISound('click');
 }
 
 function injectHeaderDashboard() {
@@ -1642,8 +2295,8 @@ function updateRosterCounts() {
     if(document.getElementById('hd-absent')) document.getElementById('hd-absent').innerText = absent;
 }
 
-function changeLanguage() { currentLang = document.getElementById("langSelect").value; saveToStorage(); applyLanguage(); const dashBox = document.getElementById('header-dashboard'); if(dashBox) { dashBox.remove(); injectHeaderDashboard(); updateRosterCounts(); } updateWaitSortUI(); }
-function applyLanguage() { const t = i18n[currentLang] || i18n.ko; document.querySelectorAll("[data-i18n]").forEach(el => { el.innerHTML = t[el.getAttribute("data-i18n")]; }); updateDateUI(); updateHeaderTitle(); updateEndClassDayButton(); generateStudents(); for (let i = 0; i < DESK_COUNT; i++) updateBoxUI(i); }
+function changeLanguage() { currentLang = document.getElementById("langSelect").value; saveToStorage(); applyLanguage(); const dashBox = document.getElementById('header-dashboard'); if(dashBox) { dashBox.remove(); injectHeaderDashboard(); updateRosterCounts(); } updateWaitSortUI(); updateInteractionModeDesc(); updateTapAssignHint(); }
+function applyLanguage() { const t = i18n[currentLang] || i18n.ko; document.querySelectorAll("[data-i18n]").forEach(el => { el.innerHTML = t[el.getAttribute("data-i18n")]; }); document.querySelectorAll('[data-i18n-opt]').forEach(el => { const key = el.getAttribute('data-i18n-opt'); if (t[key]) el.textContent = t[key]; }); updateDateUI(); updateHeaderTitle(); updateEndClassDayButton(); generateStudents(); for (let i = 0; i < DESK_COUNT; i++) updateBoxUI(i); }
 
 window.switchView = function(view) {
     if (view === 'log') view = 'history';
@@ -1669,6 +2322,7 @@ window.switchView = function(view) {
         }
     } 
     if(view === 'game') { if(isRouletteMode) setupRoulette(); else setupLadder(); }
+    if (view === 'roster') updateTapAssignHint();
 }
 
 function injectFontSettingUI() {
@@ -1695,7 +2349,7 @@ function injectListViewUI() {
 
 function updateViewToggleButtonUI() { const btn = document.getElementById('btnToggleViewRoster'); if(btn) btn.innerHTML = rosterViewMode === 'card' ? '🗂️ 리스트 뷰' : '🎴 아이콘 뷰'; }
 
-window.toggleViewMode = function(mode) { playUISound('click'); rosterViewMode = mode; saveToStorage(); applyViewMode(); };
+window.toggleViewMode = function(mode) { playUISound('click'); rosterViewMode = mode; clearTapSelection(); saveToStorage(); applyViewMode(); };
 
 function applyViewMode() { 
     const cardWrapper = document.querySelector('.custom-roster-layout') || document.querySelector('.roster-columns-wrapper'); 
@@ -1817,29 +2471,101 @@ function updateListViewTime(name, remainingTime, isOver, overTime) { if(rosterVi
 window.goToTimer = function(name) { let tIdx = timers.findIndex(t => t.student === name); if (tIdx !== -1) { playUISound('click'); switchView('timer'); setTimeout(() => { const box = document.getElementById(`box-${tIdx}`); if(box) { box.scrollIntoView({behavior: 'smooth', block: 'center'}); box.style.transform = 'scale(1.08)'; box.style.boxShadow = '0 0 0 4px var(--accent)'; setTimeout(() => { box.style.transform = ''; box.style.boxShadow = ''; }, 1500); } }, 300); } };
 
 function updateCustomNames() { academyName = document.getElementById('inputAcademyName').value || "향촌삼성영어학원"; className = document.getElementById('inputClassName').value || "Maple Classroom"; document.getElementById('displayAcademyName').innerText = academyName; updateHeaderTitle(); updateEndClassDayButton(); saveToStorage(); }
-function changeNameColor() { const val = document.getElementById("nameColorSelect").value; const root = document.documentElement; if (val === 'black') { root.style.setProperty('--custom-name-color', '#000000'); } else if (val === 'white') { root.style.setProperty('--custom-name-color', '#ffffff'); } else { root.style.setProperty('--custom-name-color', '#0f172a'); } saveToStorage(); }
+
+function applyNameColor(val) {
+    const preset = NAME_COLOR_MAP[val] || NAME_COLOR_MAP.dark;
+    const root = document.documentElement;
+    root.style.setProperty('--custom-name-color', preset.color);
+    root.style.setProperty('--custom-name-shadow', preset.shadow);
+}
+
+function changeNameColor() {
+    applyNameColor(document.getElementById("nameColorSelect")?.value || 'dark');
+    saveToStorage();
+}
+
+function applyPersistedAudioSettings(vols) {
+    if (!vols) return;
+    if (vols.a !== undefined) { alarmVolume = vols.a; const el = document.getElementById("volAlarm"); if (el) el.value = vols.a * 100; }
+    if (vols.t !== undefined) { ttsVolume = vols.t; const el = document.getElementById("volTTS"); if (el) el.value = vols.t * 100; }
+    if (vols.u !== undefined) { uiVolume = vols.u; const el = document.getElementById("volUI"); if (el) el.value = vols.u * 100; }
+    const melodyEl = document.getElementById("melodyType");
+    if (melodyEl && vols.melody !== undefined) melodyEl.value = String(vols.melody);
+    const uiEl = document.getElementById("uiSoundType");
+    if (uiEl && vols.uiType !== undefined) uiEl.value = String(vols.uiType);
+    const ttsEl = document.getElementById("ttsVoiceSelect");
+    if (ttsEl && vols.ttsVoice !== undefined) ttsEl.value = String(vols.ttsVoice);
+}
+
 function changeTheme() { currentTheme = document.getElementById("themeSelect").value; document.body.className = "theme-" + currentTheme; saveToStorage(); }
 
 function updateVolumes() { alarmVolume = document.getElementById('volAlarm').value / 100; ttsVolume = document.getElementById('volTTS').value / 100; uiVolume = document.getElementById('volUI').value / 100; saveToStorage(); }
 
-function changeDeskCount() { const newCount = parseInt(document.getElementById("deskCountSelect").value); if(newCount < timers.length) { for(let i=newCount; i<timers.length; i++) { if(timers[i].student !== "(empty)") { if(!confirm(`타이머 ${newCount+1}번 이상에 배치된 학생이 있습니다. 강제 취소됩니다.`)) { document.getElementById("deskCountSelect").value = DESK_COUNT; return; } break; } } for(let i=newCount; i<timers.length; i++) { stopTimer(i); if(timers[i].student !== "(empty)") { attendanceMap.delete(timers[i].student); updateStudentStatus(timers[i].student); } } timers.length = newCount; } else if(newCount > timers.length) { for(let i=timers.length; i<newCount; i++) { timers.push({ student: "(empty)", remainingTime: 0, totalTime: 0, overTime: 0, interval: null, isOver: false, isPaused: false, lastTick: 0 }); } } DESK_COUNT = newCount; createInitialGrid(); generateStudents(); saveToStorage(); }
+function changeDeskCount() { const newCount = parseInt(document.getElementById("deskCountSelect").value); if(newCount < timers.length) { for(let i=newCount; i<timers.length; i++) { if(timers[i].student !== "(empty)") { if(!confirm(`타이머 ${newCount+1}번 이상에 배치된 학생이 있습니다. 강제 취소됩니다.`)) { document.getElementById("deskCountSelect").value = DESK_COUNT; return; } break; } } for(let i=newCount; i<timers.length; i++) { stopTimer(i); if(timers[i].student !== "(empty)") { attendanceMap.delete(timers[i].student); updateStudentStatus(timers[i].student); } } timers.length = newCount; } else if(newCount > timers.length) { for(let i=timers.length; i<newCount; i++) { timers.push({ student: "(empty)", remainingTime: 0, totalTime: 0, overTime: 0, interval: null, isOver: false, isPaused: false, lastTick: 0 }); } } DESK_COUNT = newCount; ensureDeskRemoteCodesLength(DESK_COUNT); createInitialGrid(); generateStudents(); renderRemoteCodeInputs(); saveToStorage(); }
 
-function saveToStorage() {
-    try {
-        const data = { 
-            deskCount: DESK_COUNT, academyName: academyName, className: className, 
-            studentMasterList: studentMasterList, studentModifiers: studentModifiers, 
-            studentHistory: studentHistory, academyHolidays: academyHolidays, studentRegularOffs: studentRegularOffs,
-            attendance: Array.from(attendanceMap.entries()), finishedSet: Array.from(finishedSet), absentSet: Array.from(absentSet), assignOrderCounter: assignOrderCounter, 
-            timerStates: timers.map(t => ({ student: t.student, remainingTime: t.remainingTime, totalTime: t.totalTime, overTime: t.overTime, isOver: t.isOver, startTimeStr: t.startTimeStr, isRunning: t.interval !== null, isPaused: t.isPaused || false, lastTick: t.lastTick })), 
-            vols: { a: alarmVolume, t: ttsVolume, u: uiVolume, ttsVoice: document.getElementById("ttsVoiceSelect")?.value || "1", melody: document.getElementById("melodyType")?.value || "0", uiType: document.getElementById("uiSoundType")?.value || "0" }, 
-            theme: currentTheme, nameColor: document.getElementById("nameColorSelect")?.value || "default", language: currentLang, fontFamily: currentFontFamily, 
-            customStudentOrder: customStudentOrder, guestList: guestList, rosterViewMode: rosterViewMode, waitSortConfig: waitSortConfig,
-            dayClosedDate: dayClosedDate, operationalDate: operationalDate,
-            deskRemoteCodes: deskRemoteCodes, finishedTimerSnapshot: finishedTimerSnapshot
-        };
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); updateRosterCounts(); 
-    } catch(e) {}
+function persistToStorage() {
+    saveRemoteCodesFromUI();
+    const data = {
+        deskCount: DESK_COUNT, academyName: academyName, className: className,
+        studentMasterList: studentMasterList, studentModifiers: studentModifiers,
+        studentHistory: studentHistory, academyHolidays: academyHolidays, studentRegularOffs: studentRegularOffs,
+        attendance: Array.from(attendanceMap.entries()), finishedSet: Array.from(finishedSet), absentSet: Array.from(absentSet), assignOrderCounter: assignOrderCounter,
+        timerStates: timers.map(t => ({ student: t.student, remainingTime: t.remainingTime, totalTime: t.totalTime, overTime: t.overTime, isOver: t.isOver, startTimeStr: t.startTimeStr, isRunning: t.interval !== null, isPaused: t.isPaused || false, lastTick: t.lastTick })),
+        vols: { a: alarmVolume, t: ttsVolume, u: uiVolume, ttsVoice: document.getElementById("ttsVoiceSelect")?.value || "1", melody: document.getElementById("melodyType")?.value || "0", uiType: document.getElementById("uiSoundType")?.value || "0" },
+        theme: currentTheme, nameColor: document.getElementById("nameColorSelect")?.value || "dark", language: currentLang, fontFamily: currentFontFamily,
+        customStudentOrder: customStudentOrder, guestList: guestList, guestGrades: guestGrades, rosterViewMode: rosterViewMode, waitSortConfig: waitSortConfig, interactionMode: interactionMode,
+        dayClosedDate: dayClosedDate, operationalDate: operationalDate,
+        deskRemoteCodes: deskRemoteCodes.slice(0, DESK_COUNT), finishedTimerSnapshot: finishedTimerSnapshot
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    updateRosterCounts();
+}
+
+function saveToStorage(immediate) {
+    if (immediate === false) {
+        if (saveToStorageTimer) clearTimeout(saveToStorageTimer);
+        saveToStorageTimer = setTimeout(() => {
+            saveToStorageTimer = null;
+            try { persistToStorage(); } catch (e) { handleStorageSaveError(e); }
+        }, STORAGE_SAVE_DEBOUNCE_MS);
+        return;
+    }
+    if (saveToStorageTimer) { clearTimeout(saveToStorageTimer); saveToStorageTimer = null; }
+    try { persistToStorage(); } catch (e) { handleStorageSaveError(e); }
+}
+
+function handleStorageSaveError(err) {
+    console.error('ST Flow: localStorage save failed', err);
+    if (storageSaveFailedShown) return;
+    storageSaveFailedShown = true;
+    const t = i18n[currentLang] || i18n.ko;
+    alert(currentLang === 'en'
+        ? 'Could not save data (storage may be full). Please export a backup.'
+        : '데이터를 저장하지 못했습니다(용량 부족 가능). 설정에서 백업을 권장합니다.');
+}
+
+function validateBackupData(json) {
+    if (!json || typeof json !== 'object' || Array.isArray(json)) return false;
+    if (!Array.isArray(json.studentMasterList)) return false;
+    if (json.timerStates !== undefined && !Array.isArray(json.timerStates)) return false;
+    if (json.studentHistory !== undefined && (typeof json.studentHistory !== 'object' || Array.isArray(json.studentHistory))) return false;
+    if (json.guestList !== undefined && !Array.isArray(json.guestList)) return false;
+    return true;
+}
+
+function applyElapsedTimeToTimerState(t, wasRunning) {
+    if (!wasRunning || !t.lastTick) return;
+    const now = Date.now();
+    const delta = Math.floor((now - t.lastTick) / 1000);
+    if (delta <= 0) return;
+    if (t.remainingTime >= delta) {
+        t.remainingTime -= delta;
+    } else {
+        t.overTime = (t.overTime || 0) + (delta - t.remainingTime);
+        t.remainingTime = 0;
+        t.isOver = true;
+    }
+    t.lastTick = now - ((now - t.lastTick) % 1000);
 }
 
 function loadData() {
@@ -1854,6 +2580,11 @@ function loadData() {
             if(data.deskCount) { DESK_COUNT = data.deskCount; document.getElementById("deskCountSelect").value = DESK_COUNT; }
             if(data.rosterViewMode) { rosterViewMode = data.rosterViewMode; }
             if(data.waitSortConfig) { waitSortConfig = data.waitSortConfig; }
+            if (data.interactionMode) interactionMode = data.interactionMode;
+            const interactionSel = document.getElementById('interactionModeSelect');
+            if (interactionSel) interactionSel.value = interactionMode;
+            applyInteractionModeBodyClass();
+            updateInteractionModeDesc();
             let dayTransitionReset = false;
             const todayKey = getTodayDateKey();
             operationalDate = data.operationalDate || todayKey;
@@ -1867,15 +2598,14 @@ function loadData() {
             if(data.fontFamily) { currentFontFamily = data.fontFamily; document.documentElement.style.setProperty('--app-font', currentFontFamily); document.body.style.fontFamily = currentFontFamily; const fontSelectEl = document.getElementById("fontSelect"); if (fontSelectEl) fontSelectEl.value = currentFontFamily; }
 
             customStudentOrder = data.customStudentOrder || []; guestList = data.guestList || [];
+            guestGrades = (data.guestGrades && typeof data.guestGrades === 'object') ? data.guestGrades : {};
             academyName = data.academyName || "향촌삼성영어학원"; className = data.className || "Maple Classroom";
             document.getElementById('inputAcademyName').value = academyName; document.getElementById('inputClassName').value = className;
             document.getElementById('displayAcademyName').innerText = academyName; updateHeaderTitle(); 
             
             if(data.deskRemoteCodes && Array.isArray(data.deskRemoteCodes)) { deskRemoteCodes = data.deskRemoteCodes; }
-            for(let i=0; i<10; i++) { 
-                let el = document.getElementById(`remoteCodeInput_${i}`); 
-                if(el && deskRemoteCodes[i] !== undefined) el.value = deskRemoteCodes[i]; 
-            }
+            ensureDeskRemoteCodesLength(DESK_COUNT);
+            renderRemoteCodeInputs();
 
             if (data.studentMasterList) { studentMasterList = data.studentMasterList; } 
             renderSettingsRoster(); 
@@ -1884,42 +2614,66 @@ function loadData() {
             if (data.finishedTimerSnapshot) finishedTimerSnapshot = data.finishedTimerSnapshot; else finishedTimerSnapshot = {}; 
             
             timers = data.timerStates ? data.timerStates.map(ts => {
-                let t = { ...ts, interval: null, isPaused: ts.isPaused || false, lastTick: ts.lastTick || 0 };
-                if (ts.isRunning && t.lastTick > 0) { const now = Date.now(); const delta = Math.floor((now - t.lastTick) / 1000); if (delta > 0) { if (t.remainingTime >= delta) { t.remainingTime -= delta; } else { t.overTime += (delta - t.remainingTime); t.remainingTime = 0; } } t.lastTick = now - ((now - t.lastTick) % 1000); } return t;
+                let t = { ...ts, interval: null, isPaused: ts.isPaused || false, lastTick: ts.lastTick || 0, overTime: ts.overTime || 0 };
+                applyElapsedTimeToTimerState(t, ts.isRunning);
+                if (t.remainingTime === 0 && (t.overTime > 0 || ts.isOver)) t.isOver = true;
+                return t;
             }) : Array.from({length: DESK_COUNT}, () => ({ student: "(empty)", remainingTime: 0, totalTime: 0, overTime: 0, interval: null, isOver: false, isPaused: false, lastTick: 0 }));
             
             while (timers.length < DESK_COUNT) { timers.push({ student: "(empty)", remainingTime: 0, totalTime: 0, overTime: 0, interval: null, isOver: false, isPaused: false, lastTick: 0 }); }
             if (timers.length > DESK_COUNT) { timers.length = DESK_COUNT; }
 
-            if(data.vols) { alarmVolume = data.vols.a; ttsVolume = data.vols.t; uiVolume = data.vols.u !== undefined ? data.vols.u : 0.5; document.getElementById("volAlarm").value = data.vols.a * 100; document.getElementById("volTTS").value = data.vols.t * 100; document.getElementById("volUI").value = uiVolume * 100; }
+            applyPersistedAudioSettings(data.vols);
             if(data.theme) { currentTheme = data.theme; document.getElementById("themeSelect").value = currentTheme; document.body.className = "theme-" + currentTheme; }
+            const nameColorVal = data.nameColor || 'dark';
+            const nameColorSelect = document.getElementById("nameColorSelect");
+            if (nameColorSelect) nameColorSelect.value = nameColorVal;
+            applyNameColor(nameColorVal);
             
             syncFinishedTimerDeskState();
             if (dayTransitionReset) resetOperationalState(false);
             applyLanguage(); createInitialGrid(); applyViewMode(); syncTodayAbsentFromHistory(); updateRosterCounts(); updateWaitSortUI(); syncDailySummaryReport();
-            if (data.timerStates) { data.timerStates.forEach((ts, idx) => { if (ts.isRunning) { resumeTimer(idx); } }); }
+            if (data.timerStates) { data.timerStates.forEach((ts, idx) => { if (ts.isRunning && !ts.isPaused) { resumeTimer(idx); } }); }
         } else {
-            studentMasterList = []; studentModifiers = {}; renderSettingsRoster(); timers = Array.from({length: DESK_COUNT}, () => ({ student: "(empty)", remainingTime: 0, totalTime: 0, overTime: 0, interval: null, isOver: false, isPaused: false, lastTick: 0 })); applyLanguage(); createInitialGrid(); applyViewMode(); updateRosterCounts();
+            studentMasterList = []; studentModifiers = {}; guestGrades = {}; renderSettingsRoster(); timers = Array.from({length: DESK_COUNT}, () => ({ student: "(empty)", remainingTime: 0, totalTime: 0, overTime: 0, interval: null, isOver: false, isPaused: false, lastTick: 0 })); applyNameColor('dark'); applyInteractionModeBodyClass(); applyLanguage(); createInitialGrid(); applyViewMode(); updateRosterCounts();
         }
-    } catch(e) {}
+    } catch(e) {
+        console.error('ST Flow: loadData failed', e);
+        alert(currentLang === 'en' ? 'Failed to load saved data.' : '저장된 데이터를 불러오지 못했습니다.');
+    }
 }
 
-function exportData() { 
-    for(let i=0; i<10; i++) { 
-        let el = document.getElementById(`remoteCodeInput_${i}`); 
-        if(el) deskRemoteCodes[i] = el.value.trim(); 
-    }
-    saveToStorage(); 
-    const data = localStorage.getItem(STORAGE_KEY); 
-    const blob = new Blob([data], {type: "application/json"}); 
-    const a = document.createElement("a"); 
-    a.href = URL.createObjectURL(blob); 
-    a.download = `Timer_Backup_PC_${new Date().toISOString().slice(0,10)}.json`; 
-    a.click(); 
+function exportData() {
+    saveToStorage();
+    const data = localStorage.getItem(STORAGE_KEY);
+    const blob = new Blob([data], {type: "application/json"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `Timer_Backup_PC_${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
 }
 
 function triggerImport() { document.getElementById("importFile").click(); }
-function importData(e) { const t = i18n[currentLang] || i18n.ko; const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = function(evt) { try { const json = JSON.parse(evt.target.result); localStorage.setItem(STORAGE_KEY, JSON.stringify(json)); alert("복구 완료!"); location.reload(); } catch(err) { alert("유효하지 않은 백업입니다."); } finally { e.target.value = ''; } }; reader.readAsText(file); }
+function importData(e) {
+    const t = i18n[currentLang] || i18n.ko;
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+        try {
+            const json = JSON.parse(evt.target.result);
+            if (!validateBackupData(json)) { alert(t.alertBackupFail); return; }
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(json));
+            alert(t.alertBackupDone);
+            location.reload();
+        } catch (err) {
+            alert(t.alertBackupFail);
+        } finally {
+            e.target.value = '';
+        }
+    };
+    reader.readAsText(file);
+}
 
 function getStudentLessonDuration(name) {
     let customTime = (studentTimes[name] || 50) * 60;
@@ -1952,12 +2706,38 @@ window.quickStart = function(name) {
 };
 window.quickFinish = function(name) { let tIdx = timers.findIndex(t => t.student === name); if (tIdx !== -1) finishSession(tIdx); };
 
-function addGuest() { 
-    const input = document.getElementById('guestNameInput'); const name = input.value.trim(); if (!name) return; 
-    if (studentLevels[name] || guestList.includes(name)) { alert("이미 명단에 있습니다."); return; } 
-    guestList.push(name); customStudentOrder.push(name); studentLevels[name] = 'GUEST'; studentTimes[name] = 50; input.value = ''; playUISound('click'); generateStudents(); 
+function addGuest() {
+    const input = document.getElementById('guestNameInput');
+    const gradeInput = document.getElementById('guestGradeInput');
+    const name = input.value.trim();
+    if (!name) return;
+    if (studentLevels[name] || guestList.includes(name) || studentMasterList.some(s => s.name === name)) {
+        alert(currentLang === 'en' ? 'Already on the roster.' : '이미 명단에 있습니다.');
+        return;
+    }
+    const grade = gradeInput ? gradeInput.value.trim() : '';
+    guestList.push(name);
+    customStudentOrder.push(name);
+    studentLevels[name] = 'GUEST';
+    studentTimes[name] = 50;
+    if (grade) guestGrades[name] = grade;
+    input.value = '';
+    if (gradeInput) gradeInput.value = '';
+    playUISound('click');
+    saveToStorage();
+    generateStudents();
 }
-window.removeGuest = function(name) { if(confirm(`게스트 삭제?`)) { guestList = guestList.filter(g => g !== name); customStudentOrder = customStudentOrder.filter(g => g !== name); if(finishedSet.has(name)) finishedSet.delete(name); playUISound('cancel'); generateStudents(); } };
+window.removeGuest = function(name) {
+    if(confirm(currentLang === 'en' ? `Remove guest "${name}"?` : `게스트 "${name}" 삭제?`)) {
+        guestList = guestList.filter(g => g !== name);
+        customStudentOrder = customStudentOrder.filter(g => g !== name);
+        delete guestGrades[name];
+        if(finishedSet.has(name)) finishedSet.delete(name);
+        playUISound('cancel');
+        saveToStorage();
+        generateStudents();
+    }
+};
 window.cancelFromCard = function(name) { let tIdx = timers.findIndex(t => t.student === name); if (tIdx !== -1) cancelSession(tIdx); };
 
 window.applyModifier = function(id, type) {
@@ -1976,7 +2756,26 @@ window.removeModifier = function(name, type, event) {
 
 function initRosterSlots() {
     const gridActive = document.getElementById("grid-active"); if(!gridActive) return; gridActive.innerHTML = "";
-    for(let i=0; i<DESK_COUNT; i++) { let slot = document.createElement("div"); slot.id = `roster-desk-${i}`; slot.className = "roster-desk-slot"; slot.ondragenter = (e) => { e.preventDefault(); slot.classList.add("drag-over"); }; slot.ondragover = (e) => { e.preventDefault(); slot.classList.add("drag-over"); }; slot.ondragleave = (e) => { slot.classList.remove("drag-over"); }; slot.ondrop = (e) => { e.preventDefault(); slot.classList.remove("drag-over"); handleDropOnTimer(draggedName, i, draggedFromIndex); }; gridActive.appendChild(slot); }
+    for (let i = 0; i < DESK_COUNT; i++) {
+        const slot = document.createElement("div");
+        slot.id = `roster-desk-${i}`;
+        slot.className = "roster-desk-slot";
+        slot.ondragenter = (e) => { e.preventDefault(); slot.classList.add("drag-over"); };
+        slot.ondragover = (e) => { e.preventDefault(); slot.classList.add("drag-over"); };
+        slot.ondragleave = () => { slot.classList.remove("drag-over"); };
+        slot.ondrop = (e) => {
+            e.preventDefault();
+            slot.classList.remove("drag-over");
+            if (isTapAssignMode()) return;
+            handleDropOnTimer(draggedName, i, draggedFromIndex);
+        };
+        slot.addEventListener('click', (e) => {
+            if (!isTapAssignMode()) return;
+            if (e.target.closest('button')) return;
+            handleTapOnDesk(i);
+        });
+        gridActive.appendChild(slot);
+    }
 }
 window.cancelEmptySlot = function(id, e) { if(e) e.stopPropagation(); playUISound('cancel'); resetTimerData(id, true); };
 function updateRosterSlotUI(id) {
@@ -1988,8 +2787,11 @@ function updateRosterSlotUI(id) {
         let placeholder = document.createElement('div'); placeholder.className = 'roster-placeholder';
         if (isPlaying) {
             slot.classList.add('slot-waiting-match');
-            placeholder.style.cursor = "grab"; placeholder.draggable = true;
-            placeholder.ondragstart = (e) => { draggedName = "(empty)"; draggedFromIndex = id; e.dataTransfer.effectAllowed = 'move'; playUISound('click'); };
+            placeholder.style.cursor = isTapAssignMode() ? "pointer" : "grab";
+            placeholder.draggable = !isTapAssignMode();
+            if (!isTapAssignMode()) {
+                placeholder.ondragstart = (e) => { draggedName = "(empty)"; draggedFromIndex = id; e.dataTransfer.effectAllowed = 'move'; playUISound('click'); };
+            }
             placeholder.innerHTML = `<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; width:100%; height:100%; gap:4px;"><div class="roster-waiting-text">✨ 매칭 대기중...</div><div class="css-desk" style="opacity: 0.8; flex-shrink:0;"><div class="desk-top" style="background:#dbeafe; border-color:#93c5fd;"><span class="desk-num" style="color:#2563eb;">${id+1}</span></div><div class="desk-chair" style="background:#bfdbfe; border-color:#60a5fa;"></div></div><button onclick="cancelEmptySlot(${id}, event)" style="margin-top:4px; padding:5px 12px; border-radius:10px; background:var(--brand-danger); color:#fff; border:none; font-weight:900; font-size:12px; cursor:pointer; flex-shrink:0;">✖ 대기 취소</button></div>`;
         } else {
             placeholder.innerHTML = `<div class="css-desk"><div class="desk-top"><span class="desk-num">${id+1}</span></div><div class="desk-chair"></div></div><div class="roster-empty-text">빈자리</div>`;
@@ -2239,7 +3041,11 @@ function generateStudents() {
     const tLang = i18n[currentLang] || i18n.ko; let rawNames = [];
 
     studentMasterList.forEach(st => { studentLevels[st.name] = st.level; studentGrades[st.name] = st.grade; studentTimes[st.name] = st.time; rawNames.push(st.name); });
-    guestList.forEach(n => { rawNames.push(n); studentTimes[n] = 50; });
+    guestList.forEach(n => {
+        rawNames.push(n);
+        studentTimes[n] = 50;
+        if (guestGrades[n]) studentGrades[n] = guestGrades[n];
+    });
     let newOrder = []; customStudentOrder.forEach(name => { if(rawNames.includes(name)) newOrder.push(name); }); rawNames.forEach(name => { if(!newOrder.includes(name)) newOrder.push(name); });
     customStudentOrder = newOrder; allNames = customStudentOrder;
 
@@ -2256,41 +3062,35 @@ function generateStudents() {
             let levelLabel = (lvl === 'PREP') ? 'PREP31' : (lvl === 'ADV' ? 'ADV' : lvl); if(lvl === 'GUEST') levelLabel = 'GUEST';
 
             btn.innerHTML = `<div class="gauge-bg"></div><button class="card-cancel-btn" onclick="event.stopPropagation(); cancelFromCard('${n}')">✖</button><button class="guest-delete-btn" onclick="event.stopPropagation(); removeGuest('${n}')">✖</button><div class="alarm-alert-text">${tLang.statusTimeUp}</div><div class="card-badge-group"><div class="new-level-pill level-color-${lvl}">${levelLabel}</div>${grade ? `<div class="card-grade-badge">${grade}</div>` : ''}</div><div class="name-text">${n}</div><div class="quick-controls"><button class="quick-btn q-start" onclick="event.stopPropagation(); quickStart('${n}')">${tLang.quickStart}</button><button class="quick-btn q-finish" onclick="event.stopPropagation(); quickFinish('${n}')">${tLang.quickFinish}</button></div>`;
-            btn.draggable = true; btn.style.order = index;
-            btn.ondragstart = (e) => { draggedName = n; draggedNameForList = n; draggedFromAbsent = absentSet.has(n); let tIdx = timers.findIndex(t => t.student === n); draggedFromIndex = tIdx !== -1 ? tIdx : null; e.dataTransfer.effectAllowed = 'move'; playUISound('click'); };
-            btn.ondragend = () => { clearDragState(); };
-            btn.ondragenter = (e) => { e.preventDefault(); btn.classList.add("drag-over"); }; btn.ondragover = (e) => { e.preventDefault(); btn.classList.add("drag-over"); }; btn.ondragleave = (e) => { btn.classList.remove("drag-over"); };
-            btn.ondrop = (e) => {
-                e.preventDefault(); btn.classList.remove("drag-over");
-                if (draggedFromAbsent && draggedName) { restoreFromAbsent(draggedName); clearDragState(); return; }
-                if (draggedFromIndex !== null) return;
-                if (waitSortConfig.col === 'custom' && draggedNameForList && draggedNameForList !== n) { let i1 = customStudentOrder.indexOf(draggedNameForList); let i2 = customStudentOrder.indexOf(n); if (i1 > -1 && i2 > -1) { let temp = customStudentOrder[i1]; customStudentOrder[i1] = customStudentOrder[i2]; customStudentOrder[i2] = temp; playUISound('click'); generateStudents(); } }
-                clearDragState();
-            };
-            
-            btn.onclick = (e) => { 
-                if (e.target.closest('.card-cancel-btn, .guest-delete-btn, .quick-btn')) return;
-                btn.classList.add("clicked"); setTimeout(() => btn.classList.remove("clicked"), 150); 
-                
-                if (finishedSet.has(n)) {
-                    restoreFinishedToClass(n);
-                    return;
-                }
-                if (absentSet.has(n)) {
-                    restoreFromAbsent(n);
-                    return;
-                }
-
-                if (attendanceMap.has(n)) { 
-                    goToTimer(n); 
-                } else { 
-                    const emptyIdx = timers.findIndex(t => t.student === "(empty)"); 
-                    if (emptyIdx !== -1) handleDropOnTimer(n, emptyIdx, null); 
-                } 
-            };
+            const useTap = isTapAssignMode();
+            btn.draggable = !useTap;
+            btn.style.order = index;
+            if (!useTap) {
+                btn.ondragstart = (e) => { draggedName = n; draggedNameForList = n; draggedFromAbsent = absentSet.has(n); let tIdx = timers.findIndex(t => t.student === n); draggedFromIndex = tIdx !== -1 ? tIdx : null; e.dataTransfer.effectAllowed = 'move'; playUISound('click'); };
+                btn.ondragend = () => { clearDragState(); };
+                btn.ondragenter = (e) => { e.preventDefault(); btn.classList.add("drag-over"); };
+                btn.ondragover = (e) => { e.preventDefault(); btn.classList.add("drag-over"); };
+                btn.ondragleave = () => { btn.classList.remove("drag-over"); };
+                btn.ondrop = (e) => {
+                    e.preventDefault(); btn.classList.remove("drag-over");
+                    if (draggedFromAbsent && draggedName) { restoreFromAbsent(draggedName); clearDragState(); return; }
+                    if (draggedFromIndex !== null) return;
+                    if (waitSortConfig.col === 'custom' && draggedNameForList && draggedNameForList !== n) { let i1 = customStudentOrder.indexOf(draggedNameForList); let i2 = customStudentOrder.indexOf(n); if (i1 > -1 && i2 > -1) { let temp = customStudentOrder[i1]; customStudentOrder[i1] = customStudentOrder[i2]; customStudentOrder[i2] = temp; playUISound('click'); generateStudents(); } }
+                    clearDragState();
+                };
+            } else {
+                btn.ondragstart = null;
+                btn.ondrop = null;
+            }
+            btn.onclick = (e) => handleStudentCardTap(n, e);
             document.getElementById("grid-unassigned").appendChild(btn); updateStudentStatus(n);
         });
         setupRosterDropZones();
+        if (tapSelectedName && document.getElementById('btn-' + tapSelectedName)) {
+            selectStudentForTap(tapSelectedName);
+        } else {
+            updateTapAssignHint();
+        }
     }
     timers.forEach((t, idx) => { if(t.student !== "(empty)") updateGauge(t.student, t.remainingTime, t.totalTime); updateBoxUI(idx); }); 
     updateRosterCounts(); saveToStorage();
@@ -2380,15 +3180,27 @@ function updateBoxUI(id) {
 
     let extraBtnRow = isAssigned ? `<div class="action-btn-row" style="margin-top:-5px; margin-bottom:8px; gap:8px;"><button class="action-btn" style="background:#f59e0b; color:white; padding:8px; border:none; font-size:13px;" onclick="applyModifier(${id}, 'coupon')">🎟️ 5분 일찍</button><button class="action-btn" style="background:#ef4444; color:white; padding:8px; border:none; font-size:13px;" onclick="applyModifier(${id}, 'penalty')">🚨 5분 추가</button></div>` : '';
 
-    box.innerHTML = `<div class="desk-id" style="opacity: ${(isAssigned || isRunningEmpty) ? '1' : '0.4'}">${numDisplay}</div><div class="${panelClass}" draggable="${isAssigned || isRunningEmpty}" style="${panelStyle}"><div class="student-name-display" ${isAssigned ? `style="cursor:pointer;" onclick="playUISound('tab'); switchView('roster');"` : ''}>${nameDisplay}</div>${boxModContainer}<div class="time-display" id="display-${id}" style="visibility: ${(isAssigned || isRunningEmpty) ? 'visible' : 'hidden'}">${t.isOver ? '+'+formatTime(t.overTime) : formatTime(t.remainingTime)}</div></div>${cancelWaitingBtn}${extraBtnRow}<div class="time-controls"><button class="time-btn btn-3d-sm" onclick="adjustTime(${id}, 3000)">+50</button><button class="time-btn btn-3d-sm" onclick="adjustTime(${id}, 600)">+10</button><button class="time-btn btn-3d-sm" onclick="adjustTime(${id}, 300)">+05</button><button class="time-btn btn-3d-sm" onclick="adjustTime(${id}, 60)">+01</button><button class="time-btn btn-3d-sm minus" onclick="adjustTime(${id}, -600)">-10</button><button class="time-btn btn-3d-sm minus" onclick="adjustTime(${id}, -300)">-05</button><button class="time-btn btn-3d-sm minus" onclick="adjustTime(${id}, -60)">-01</button><button class="time-btn btn-3d-sm clear" onclick="clearTime(${id})">${tLang.btnClear}</button></div><div class="action-btn-row"><button class="action-btn btn-start" onclick="startTimer(${id})">${t.isPaused ? '▶️ 재개' : tLang.btnStart}</button></div><div class="action-btn-row"><button class="action-btn btn-stop" onclick="stopTimer(${id})">${tLang.btnStop}</button><button class="action-btn btn-cancel" onclick="cancelSession(${id})">${tLang.btnCancel}</button></div><div class="action-btn-row"><button class="action-btn btn-finish" onclick="finishSession(${id})">${tLang.btnFinish}</button></div>`;
-    const infoPanel = box.querySelector('.info-panel'); infoPanel.ondragstart = (e) => { if(isAssigned || isRunningEmpty) { draggedName = isAssigned ? t.student : "(empty)"; draggedFromIndex = id; draggedFromAbsent = isAssigned && absentSet.has(t.student); e.dataTransfer.effectAllowed = 'move'; } else { e.preventDefault(); } };
+    const panelDraggable = (isAssigned || isRunningEmpty) && !isTapAssignMode();
+    box.innerHTML = `<div class="desk-id" style="opacity: ${(isAssigned || isRunningEmpty) ? '1' : '0.4'}">${numDisplay}</div><div class="${panelClass}" draggable="${panelDraggable}" style="${panelStyle}"><div class="student-name-display" ${isAssigned ? `style="cursor:pointer;" onclick="playUISound('tab'); switchView('roster');"` : ''}>${nameDisplay}</div>${boxModContainer}<div class="time-display" id="display-${id}" style="visibility: ${(isAssigned || isRunningEmpty) ? 'visible' : 'hidden'}">${t.isOver ? '+'+formatTime(t.overTime) : formatTime(t.remainingTime)}</div></div>${cancelWaitingBtn}${extraBtnRow}<div class="time-controls"><button class="time-btn btn-3d-sm" onclick="adjustTime(${id}, 3000)">+50</button><button class="time-btn btn-3d-sm" onclick="adjustTime(${id}, 600)">+10</button><button class="time-btn btn-3d-sm" onclick="adjustTime(${id}, 300)">+05</button><button class="time-btn btn-3d-sm" onclick="adjustTime(${id}, 60)">+01</button><button class="time-btn btn-3d-sm minus" onclick="adjustTime(${id}, -600)">-10</button><button class="time-btn btn-3d-sm minus" onclick="adjustTime(${id}, -300)">-05</button><button class="time-btn btn-3d-sm minus" onclick="adjustTime(${id}, -60)">-01</button><button class="time-btn btn-3d-sm clear" onclick="clearTime(${id})">${tLang.btnClear}</button></div><div class="action-btn-row"><button class="action-btn btn-start" onclick="startTimer(${id})">${t.isPaused ? '▶️ 재개' : tLang.btnStart}</button></div><div class="action-btn-row"><button class="action-btn btn-stop" onclick="stopTimer(${id})">${tLang.btnStop}</button><button class="action-btn btn-cancel" onclick="cancelSession(${id})">${tLang.btnCancel}</button></div><div class="action-btn-row"><button class="action-btn btn-finish" onclick="finishSession(${id})">${tLang.btnFinish}</button></div>`;
+    const infoPanel = box.querySelector('.info-panel');
+    if (panelDraggable) {
+        infoPanel.ondragstart = (e) => { if(isAssigned || isRunningEmpty) { draggedName = isAssigned ? t.student : "(empty)"; draggedFromIndex = id; draggedFromAbsent = isAssigned && absentSet.has(t.student); e.dataTransfer.effectAllowed = 'move'; } else { e.preventDefault(); } };
+    } else {
+        infoPanel.ondragstart = null;
+    }
     if(rosterViewMode === 'card') updateRosterSlotUI(id); 
 }
 
 window.simulateHardwareButton = function(id) {
     playUISound('click');
     const target = timers[id];
-    if (target.interval || target.isPaused) return;
+    if (target.interval) return;
+    if (target.isPaused) {
+        startTimer(id, true);
+        if (rosterViewMode === 'list') renderListView();
+        saveToStorage();
+        return;
+    }
 
     const isEmpty = target.student === "(empty)";
     const isWaitingMatch = isEmpty && (target.totalTime > 0 || target.remainingTime > 0);
@@ -2492,7 +3304,7 @@ function startTimer(id, isResume = false) {
             target.lastTick = nowTick - ((nowTick - target.lastTick) % 1000);
             if (target.remainingTime > 0) { target.remainingTime = Math.max(0, target.remainingTime - delta); if (target.student !== "(empty)") updateGauge(target.student, target.remainingTime, target.totalTime); document.getElementById(`display-${id}`).innerText = formatTime(target.remainingTime); updateListViewTime(target.student, target.remainingTime, false, 0); if (target.remainingTime === 0 && !target.isOver) triggerAlarm(id); } 
             else { if (!target.isOver) triggerAlarm(id); target.overTime += delta; document.getElementById(`display-${id}`).innerText = "+" + formatTime(target.overTime); updateListViewTime(target.student, 0, true, target.overTime); if (target.overTime >= 300) { finishSession(id); } }
-            saveToStorage(); 
+            saveToStorage(false); 
         }
     }, 250);
     if (target.student !== "(empty)") updateStudentStatus(target.student); if (rosterViewMode === 'list') renderListView(); updateBoxUI(id);
@@ -2500,7 +3312,7 @@ function startTimer(id, isResume = false) {
 }
 
 function resumeTimer(id) { startTimer(id, true); }
-function stopTimer(id) { if (timers[id].interval) { clearInterval(timers[id].interval); timers[id].interval = null; timers[id].isPaused = true; playUISound('stop'); if (timers[id].student !== "(empty)") updateStudentStatus(timers[id].student); if (rosterViewMode === 'list') renderListView(); updateBoxUI(id); saveToStorage(); } }
+function stopTimer(id) { if (timers[id].interval) { clearInterval(timers[id].interval); timers[id].interval = null; timers[id].isPaused = true; playUISound('stop'); if (timers[id].student !== "(empty)") updateStudentStatus(timers[id].student); if (rosterViewMode === 'list') renderListView(); updateBoxUI(id); saveToStorage(); } else if (saveToStorageTimer) { saveToStorage(); } }
 function clearTime(id) { playUISound('cancel'); timers[id].remainingTime = 0; timers[id].totalTime = 0; timers[id].overTime = 0; timers[id].isOver = false; timers[id].isPaused = false; stopTimer(id); updateBoxUI(id); if(timers[id].student !== "(empty)") updateGauge(timers[id].student, 0, 1); if (rosterViewMode === 'list') renderListView(); saveToStorage(); }
 function cancelSession(id) { playUISound('cancel'); const sn = timers[id].student; if(sn !== "(empty)") attendanceMap.delete(sn); resetTimerData(id, true); }
 
@@ -2627,7 +3439,7 @@ function playStudentClassStartTTS(studentName) {
     processTTSQueue();
 }
 
-function playAlarmTTS(studentName) { return new Promise(resolve => { const voiceType = document.getElementById("ttsVoiceSelect")?.value || "1"; if (voiceType === "0" || !window.speechSynthesis) return resolve(); window.__tts_queue.push(() => new Promise(taskResolve => { let voices = window.speechSynthesis.getVoices(); if (voices.length === 0) { setTimeout(() => { resolve(); taskResolve(); }, 100); return; } window.speechSynthesis.cancel(); const getKoVoice = () => voices.find(v => v.name.includes('Google') && v.lang.includes('ko')) || voices.find(v => v.name.includes('Natural') && v.lang.includes('ko')) || voices.find(v => v.lang.includes('ko')); const getEnVoice = () => voices.find(v => v.name === 'Google US English') || voices.find(v => v.lang.includes('en-US')) || voices.find(v => v.lang.includes('en')); let u1, u2; let isFinished = false; let fallbackTimer = setTimeout(() => { finalize(); }, 5000); const finalize = () => { if(!isFinished) { isFinished = true; clearTimeout(fallbackTimer); resolve(); taskResolve(); } }; if (voiceType === "1") { u1 = new SpeechSynthesisUtterance(`${studentName}! ${studentName}!`); u1.volume = ttsVolume; u1.rate = 1.05; u1.pitch = 1.1; u1.lang = 'ko-KR'; let koVoice = getKoVoice(); if (koVoice) u1.voice = koVoice; u1.onend = finalize; u1.onerror = finalize; window.speechSynthesis.speak(u1); } else if (voiceType === "2" || voiceType === "3") { u1 = new SpeechSynthesisUtterance(`${studentName}!`); u1.volume = ttsVolume; u1.rate = 1.05; u1.pitch = 1.1; u1.lang = 'ko-KR'; let koVoice = getKoVoice(); if (koVoice) u1.voice = koVoice; let phrase = voiceType === "2" ? "Let's go home!" : "Time's up! It's time to go home!"; u2 = new SpeechSynthesisUtterance(phrase); u2.volume = ttsVolume; u2.rate = 1.05; u2.pitch = 1.1; u2.lang = 'en-US'; let enVoice = getEnVoice(); if (enVoice) u2.voice = enVoice; u2.onend = finalize; u2.onerror = finalize; window.speechSynthesis.speak(u1); window.speechSynthesis.speak(u2); } else { finalize(); } })); processTTSQueue(); }); }
+function playAlarmTTS(studentName) { return new Promise(resolve => { const voiceType = document.getElementById("ttsVoiceSelect")?.value || "1"; if (voiceType === "0" || !window.speechSynthesis) return resolve(); window.__tts_queue.push(() => new Promise(taskResolve => { let voices = window.speechSynthesis.getVoices(); if (voices.length === 0) { setTimeout(() => { resolve(); taskResolve(); }, 100); return; } window.speechSynthesis.cancel(); const getKoVoice = () => voices.find(v => v.name.includes('Google') && v.lang.includes('ko')) || voices.find(v => v.name.includes('Natural') && v.lang.includes('ko')) || voices.find(v => v.lang.includes('ko')); const getEnVoice = () => voices.find(v => v.name === 'Google US English') || voices.find(v => v.lang.includes('en-US')) || voices.find(v => v.lang.includes('en')); let u1, u2; let isFinished = false; let fallbackTimer = setTimeout(() => { finalize(); }, 5000); const finalize = () => { if(!isFinished) { isFinished = true; clearTimeout(fallbackTimer); resolve(); taskResolve(); } }; if (voiceType === "1") { u1 = new SpeechSynthesisUtterance(`${studentName}! ${studentName}!`); u1.volume = ttsVolume; u1.rate = 1.05; u1.pitch = 1.1; u1.lang = 'ko-KR'; let koVoice = getKoVoice(); if (koVoice) u1.voice = koVoice; u1.onend = finalize; u1.onerror = finalize; window.speechSynthesis.speak(u1); } else if (voiceType === "2") { u1 = new SpeechSynthesisUtterance(`${studentName}!`); u1.volume = ttsVolume; u1.rate = 1.05; u1.pitch = 1.1; u1.lang = 'ko-KR'; let koVoice = getKoVoice(); if (koVoice) u1.voice = koVoice; u2 = new SpeechSynthesisUtterance("Let's go home!"); u2.volume = ttsVolume; u2.rate = 1.05; u2.pitch = 1.1; u2.lang = 'en-US'; let enVoice = getEnVoice(); if (enVoice) u2.voice = enVoice; u2.onend = finalize; u2.onerror = finalize; window.speechSynthesis.speak(u1); window.speechSynthesis.speak(u2); } else { finalize(); } })); processTTSQueue(); }); }
 
 function playMelody(type) { 
     return new Promise(resolve => { 
@@ -2717,7 +3529,7 @@ window.previewRealtime = function(type) {
     }
 };
 
-function askSoftReset() { const t = i18n[currentLang] || i18n.ko; playUISound('click'); if(confirm(t.alertSoft)) { timers.forEach((t, i) => stopTimer(i)); timers = Array.from({length: DESK_COUNT}, () => ({ student: "(empty)", remainingTime: 0, totalTime: 0, overTime: 0, interval: null, isOver: false, isPaused: false, lastTick: 0 })); attendanceMap.clear(); finishedSet.clear(); finishedTimerSnapshot = {}; assignOrderCounter = 0; guestList = []; studentModifiers = {}; for(let i=0; i<DESK_COUNT; i++) updateBoxUI(i); generateStudents(); saveToStorage(); alert(t.alertResetDone); } }
+function askSoftReset() { const t = i18n[currentLang] || i18n.ko; playUISound('click'); if(confirm(t.alertSoft)) { timers.forEach((t, i) => stopTimer(i)); timers = Array.from({length: DESK_COUNT}, () => ({ student: "(empty)", remainingTime: 0, totalTime: 0, overTime: 0, interval: null, isOver: false, isPaused: false, lastTick: 0 })); attendanceMap.clear(); finishedSet.clear(); absentSet.clear(); finishedTimerSnapshot = {}; assignOrderCounter = 0; studentModifiers = {}; for(let i=0; i<DESK_COUNT; i++) updateBoxUI(i); generateStudents(); saveToStorage(); alert(t.alertResetDone); } }
 function askFactoryReset() { const t = i18n[currentLang] || i18n.ko; playUISound('click'); if(confirm(t.alertHard)) { localStorage.removeItem(STORAGE_KEY); alert(t.alertFactoryDone); location.reload(); } }
 
 // =========================================================================
@@ -2732,16 +3544,16 @@ window.addEventListener('keydown', function(e) {
     if (e.key >= '0' && e.key <= '9') {
         remoteBuffer += e.key; 
         clearTimeout(remoteTimer); 
-        remoteTimer = setTimeout(() => { remoteBuffer = ""; }, 100);
+        remoteTimer = setTimeout(() => { remoteBuffer = ""; }, REMOTE_BUFFER_MS);
         
-        let deskIndex = deskRemoteCodes.indexOf(remoteBuffer);
+        const deskIndex = deskRemoteCodes.findIndex((code, idx) => idx < DESK_COUNT && code && code === remoteBuffer);
         
         if (deskIndex !== -1) {
             e.preventDefault();
-            if (deskIndex < DESK_COUNT && !timers[deskIndex].interval && !timers[deskIndex].isPaused) { 
-                simulateHardwareButton(deskIndex); 
+            if (deskIndex < DESK_COUNT && !timers[deskIndex].interval) {
+                simulateHardwareButton(deskIndex);
             }
-            remoteBuffer = ""; 
+            remoteBuffer = "";
             return;
         }
     } else if (e.key === 'Enter') { 
