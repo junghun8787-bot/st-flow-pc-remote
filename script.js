@@ -24,6 +24,7 @@ let studentTimes = {};
 let studentModifiers = {}; 
 
 let studentHistory = {}; 
+let deskSeatLog = {}; // 날짜별 책상 이용 기록 { "YYYY-MM-DD": [{ deskIdx, student, start, end, status }] }
 let academyHolidays = [];
 let studentRegularOffs = {}; // ⭐ 매주 정규 휴무 요일 저장 { "학생이름": [0, 1] } (0=일, 1=월...)
 
@@ -110,8 +111,8 @@ const krHolidays = {
 };
 
 const i18n = {
-    ko: { interactionMode: "👆 명단 조작 방식", interactionAuto: "자동 (태블릿=탭 배정, PC=드래그)", interactionDrag: "드래그 (PC 방식)", interactionTap: "탭 배정 (태블릿·터치)", tapHintIdle: "학생 카드를 탭해 선택한 뒤, 자리·영역을 탭하세요", tapHintSelected: "선택됨 — 자리·대기·휴원 영역을 탭하세요 (다시 탭하면 해제)", nav1: "투데이 플로우", nav2: "타이머", nav3: "학생 기록", nav4: "설정", nav5: "미니 게임", rosterMgt: "학생 명단 관리", waitSortLabel: "정렬", waitSortCustom: "기본", waitSortName: "이름", waitSortGrade: "학년", waitSortLevel: "레벨", dsWaiting: "⏳ 등원 대기 학생들", dsAttended: "✔️ 출석 학생들", dsOffAbsent: "🚫 휴원 또는 결석 학생들", endClassDay: "수업종료", saveRoster: "💾 명단 저장하기", placeholder: "이름 입력", acadInfo: "학원 정보 및 디스플레이", acadName: "학원 이름", className: "반 이름", timerCount: "⏱️ 타이머 개수 설정", colorTheme: "색상 테마 (30종)", nameColor: "이름 색상 (10종)", audioSetup: "오디오 및 효과음 설정", alarmMelody: "알람 멜로디", uiSound: "UI 클릭음", ttsVoice: "🗣️ TTS 음성 안내", volAlarm: "🔊 알람 볼륨", volTTS: "🗣️ 음성 볼륨", volUI: "🖱️ 클릭 볼륨", sysCtrl: "시스템 백업 및 초기화", backupCreate: "📦 백업 파일 저장 (.json)", backupRestore: "📂 백업 파일 불러오기 (.json)", softReset: "🔄 타이머 및 로그 초기화", hardReset: "⚠️ 모든 설정 공장 초기화", btnStart: "시작", btnStop: "정지", btnCancel: "취소", btnFinish: "수업 완료", btnClear: "초기화", statusAssign: "✔ 자리배정", statusPlaying: "▶️ 수업 중", statusTimeUp: "🔔 시간 종료", statusFinish: "🏁 완료", quickStart: "▶️ 시작", quickFinish: "🏁 종료", grpWait: "⏳ 오늘 등원 대기 명단", grpActive: "▶️ 수업 중 (진행중)", grpFinish: "🏁 수업 완료 (종료됨)", langText: "🌐 Language / 언어", days: ['일', '월', '화', '수', '목', '금', '토'], alertSoft: "타이머 기록과 출결 로그만 초기화합니다.\n진행하시겠습니까?", alertHard: "⚠️ 경고 ⚠️\n모든 설정이 초기화됩니다.\n정말 공장 초기화하시겠습니까?", alertResetDone: "기록이 리셋되었습니다.", alertFactoryDone: "초기화 완료.", alertBackupDone: "복구 완료!", alertBackupFail: "백업 파일이 유효하지 않습니다.", dashTitle: "📋 현황판", dashTotal: "전체", dashWait: "대기", dashActive: "수업 중", dashFinish: "종료", dashAbsent: "휴원/결석" },
-    en: { interactionMode: "👆 Roster control", interactionAuto: "Auto (tablet=tap, PC=drag)", interactionDrag: "Drag (desktop)", interactionTap: "Tap to assign (touch)", tapHintIdle: "Tap a student, then tap a seat or zone", tapHintSelected: "Selected — tap seat/wait/absent zone (tap again to cancel)", nav1: "Today Flow", nav2: "TIMER", nav3: "HISTORY", nav4: "SETTING", nav5: "MINI GAME", rosterMgt: "ROSTER MANAGEMENT", waitSortLabel: "Sort", waitSortCustom: "Default", waitSortName: "Name", waitSortGrade: "Grade", waitSortLevel: "Level", dsWaiting: "⏳ Waiting List", dsAttended: "✔️ Attended", dsOffAbsent: "🚫 Off / Absent", endClassDay: "End Class", saveRoster: "💾 SAVE ROSTER DATA", placeholder: "Name", acadInfo: "ACADEMY INFO & DISPLAY", acadName: "Academy Name", className: "Class Name", timerCount: "⏱️ Timer Dashboard Count", colorTheme: "Color Theme (30 Colors)", nameColor: "Name Color", audioSetup: "AUDIO SETUP", alarmMelody: "Alarm Melody", uiSound: "UI Click Sound", ttsVoice: "🗣️ TTS Voice Assistant", volAlarm: "🔊 Alarm Volume", volTTS: "🗣️ Voice Volume", volUI: "🖱️ Click Volume", sysCtrl: "SYSTEM CONTROL", backupCreate: "📦 CREATE BACKUP (.json)", backupRestore: "📂 RESTORE BACKUP (.json)", softReset: "🔄 Soft Reset (Timers & Logs)", hardReset: "⚠️ Hard Reset (Factory Reset)", btnStart: "START", btnStop: "STOP", btnCancel: "CANCEL", btnFinish: "FINISH LESSON", btnClear: "CLR", statusAssign: "✔ Assigned", statusPlaying: "▶️ Playing", statusTimeUp: "🔔 Time Up", statusFinish: "🏁 Finished", quickStart: "▶️ START", quickFinish: "🏁 FINISH", grpWait: "⏳ Waiting List", grpActive: "▶️ In Class", grpFinish: "🏁 FINISHED", langText: "🌐 Language / 언어", days: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], alertSoft: "This will reset timers and logs only.\nProceed?", alertHard: "⚠️ WARNING ⚠️\nAll settings will be reset.\nAre you sure?", alertResetDone: "Reset completed.", alertFactoryDone: "Factory reset complete.", alertBackupDone: "Restore completed!", alertBackupFail: "Invalid backup file.", dashTitle: "📋 Dashboard", dashTotal: "Total", dashWait: "Wait", dashActive: "Active", dashFinish: "Done", dashAbsent: "Off/Absent" }
+    ko: { interactionMode: "👆 명단 조작 방식", interactionAuto: "자동 (태블릿=탭 배정, PC=드래그)", interactionDrag: "드래그 (PC 방식)", interactionTap: "탭 배정 (태블릿·터치)", tapHintIdle: "학생 카드를 탭해 선택한 뒤, 자리·영역을 탭하세요", tapHintSelected: "선택됨 — 자리·대기·휴원 영역을 탭하세요 (다시 탭하면 해제)", nav1: "투데이 플로우", nav2: "타이머", nav3: "학생 기록", nav4: "설정", nav5: "미니 게임", rosterMgt: "학생 명단 관리", waitSortLabel: "정렬", waitSortCustom: "기본", waitSortName: "이름", waitSortGrade: "학년", waitSortLevel: "레벨", dsWaiting: "⏳ 등원 대기 학생들", dsAttended: "✔️ 출석 학생들", dsOffAbsent: "🚫 휴원 또는 결석 학생들", endClassDay: "수업종료", saveRoster: "💾 명단 저장하기", placeholder: "이름 입력", acadInfo: "학원 정보 및 디스플레이", acadName: "학원 이름", className: "반 이름", timerCount: "⏱️ 타이머 개수 설정", colorTheme: "색상 테마 (30종)", nameColor: "이름 색상 (10종)", audioSetup: "오디오 및 효과음 설정", alarmMelody: "알람 멜로디", uiSound: "UI 클릭음", ttsVoice: "🗣️ TTS 음성 안내", volAlarm: "🔊 알람 볼륨", volTTS: "🗣️ 음성 볼륨", volUI: "🖱️ 클릭 볼륨", sysCtrl: "시스템 백업 및 초기화", backupCreate: "📦 백업 파일 저장 (.json)", backupRestore: "📂 백업 파일 불러오기 (.json)", softReset: "🔄 타이머 및 로그 초기화", hardReset: "⚠️ 모든 설정 공장 초기화", btnStart: "시작", btnStop: "정지", btnCancel: "취소", btnFinish: "수업 완료", btnClear: "초기화", statusAssign: "✔ 자리배정", statusPlaying: "▶️ 수업 중", statusTimeUp: "🔔 시간 종료", statusFinish: "🏁 완료", quickStart: "▶️ 시작", quickFinish: "🏁 종료", grpWait: "⏳ 오늘 등원 대기 명단", grpActive: "▶️ 수업 중 (진행중)", grpFinish: "🏁 수업 완료 (종료됨)", emptyDesk: "빈 책상", langText: "🌐 Language / 언어", days: ['일', '월', '화', '수', '목', '금', '토'], alertSoft: "타이머 기록과 출결 로그만 초기화합니다.\n진행하시겠습니까?", alertHard: "⚠️ 경고 ⚠️\n모든 설정이 초기화됩니다.\n정말 공장 초기화하시겠습니까?", alertResetDone: "기록이 리셋되었습니다.", alertFactoryDone: "초기화 완료.", alertBackupDone: "복구 완료!", alertBackupFail: "백업 파일이 유효하지 않습니다.", dashTitle: "📋 현황판", dashTotal: "전체", dashWait: "대기", dashActive: "수업 중", dashFinish: "종료", dashAbsent: "휴원/결석" },
+    en: { interactionMode: "👆 Roster control", interactionAuto: "Auto (tablet=tap, PC=drag)", interactionDrag: "Drag (desktop)", interactionTap: "Tap to assign (touch)", tapHintIdle: "Tap a student, then tap a seat or zone", tapHintSelected: "Selected — tap seat/wait/absent zone (tap again to cancel)", nav1: "Today Flow", nav2: "TIMER", nav3: "HISTORY", nav4: "SETTING", nav5: "MINI GAME", rosterMgt: "ROSTER MANAGEMENT", waitSortLabel: "Sort", waitSortCustom: "Default", waitSortName: "Name", waitSortGrade: "Grade", waitSortLevel: "Level", dsWaiting: "⏳ Waiting List", dsAttended: "✔️ Attended", dsOffAbsent: "🚫 Off / Absent", endClassDay: "End Class", saveRoster: "💾 SAVE ROSTER DATA", placeholder: "Name", acadInfo: "ACADEMY INFO & DISPLAY", acadName: "Academy Name", className: "Class Name", timerCount: "⏱️ Timer Dashboard Count", colorTheme: "Color Theme (30 Colors)", nameColor: "Name Color", audioSetup: "AUDIO SETUP", alarmMelody: "Alarm Melody", uiSound: "UI Click Sound", ttsVoice: "🗣️ TTS Voice Assistant", volAlarm: "🔊 Alarm Volume", volTTS: "🗣️ Voice Volume", volUI: "🖱️ Click Volume", sysCtrl: "SYSTEM CONTROL", backupCreate: "📦 CREATE BACKUP (.json)", backupRestore: "📂 RESTORE BACKUP (.json)", softReset: "🔄 Soft Reset (Timers & Logs)", hardReset: "⚠️ Hard Reset (Factory Reset)", btnStart: "START", btnStop: "STOP", btnCancel: "CANCEL", btnFinish: "FINISH LESSON", btnClear: "CLR", statusAssign: "✔ Assigned", statusPlaying: "▶️ Playing", statusTimeUp: "🔔 Time Up", statusFinish: "🏁 Finished", quickStart: "▶️ START", quickFinish: "🏁 FINISH", grpWait: "⏳ Waiting List", grpActive: "▶️ In Class", grpFinish: "🏁 FINISHED", emptyDesk: "Empty Desk", langText: "🌐 Language / 언어", days: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], alertSoft: "This will reset timers and logs only.\nProceed?", alertHard: "⚠️ WARNING ⚠️\nAll settings will be reset.\nAre you sure?", alertResetDone: "Reset completed.", alertFactoryDone: "Factory reset complete.", alertBackupDone: "Restore completed!", alertBackupFail: "Invalid backup file.", dashTitle: "📋 Dashboard", dashTotal: "Total", dashWait: "Wait", dashActive: "Active", dashFinish: "Done", dashAbsent: "Off/Absent" }
 };
 
 // ==========================================
@@ -413,6 +414,21 @@ customStyle.innerHTML = `
     .ds-card.ds-waiting .ds-header span:first-child { color: #d97706; }
     #weekly-history-container.active { display: flex; background: var(--bg-card); border-radius: 16px; border: 2px solid var(--border); padding: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); flex-direction: column; box-sizing: border-box; }
     #daily-history-container.active { display: flex; background: var(--bg-card); border-radius: 16px; border: 2px solid var(--border); padding: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); flex-direction: column; box-sizing: border-box; }
+    #desklog-history-container { display: none; height: calc(100vh - 180px); min-height: 600px; position: relative; width: 100%; }
+    #desklog-history-container.active { display: flex; background: var(--bg-card); border-radius: 16px; border: 2px solid var(--border); padding: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); flex-direction: column; box-sizing: border-box; overflow: hidden; }
+    .desklog-hint { font-size: 13px; color: var(--text-muted); margin: 0 0 14px 0; line-height: 1.5; }
+    .desklog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; overflow-y: auto; flex: 1; padding: 4px; }
+    .desklog-card { background: var(--bg-main); border: 2px solid var(--border); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; min-height: 140px; }
+    .desklog-card-header { font-size: 18px; font-weight: 900; color: var(--accent); margin-bottom: 10px; padding-bottom: 8px; border-bottom: 2px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .desklog-card-header .desklog-now { font-size: 11px; font-weight: 800; color: #059669; background: rgba(16,185,129,0.12); padding: 3px 8px; border-radius: 999px; }
+    .desklog-entry { padding: 8px 10px; border-radius: 10px; margin-bottom: 6px; background: var(--bg-card); border-left: 4px solid var(--border); font-size: 13px; line-height: 1.45; }
+    .desklog-entry.active { border-left-color: var(--accent); background: rgba(59,130,246,0.06); }
+    .desklog-entry.finished { border-left-color: #10b981; }
+    .desklog-entry.cancelled { border-left-color: var(--text-muted); opacity: 0.75; }
+    .desklog-entry .dl-name { font-weight: 900; font-size: 15px; color: var(--text-main); display: block; margin-bottom: 3px; }
+    .desklog-entry .dl-time { font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--text-muted); font-size: 12px; }
+    .desklog-entry .dl-status { font-size: 11px; font-weight: 800; margin-top: 4px; }
+    .desklog-empty { color: var(--text-muted); font-size: 13px; font-weight: 700; opacity: 0.6; text-align: center; padding: 20px 8px; }
     
     /* ⭐ 일일 마감 보고서 전용 CSS (이름 태그 형식) */
     .daily-summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; flex: 1; align-items: stretch; margin-top: 20px; min-height: 0; }
@@ -1849,6 +1865,7 @@ function injectHistoryUI() {
                 <button id="tab-history-weekly" class="history-tab-btn" onclick="switchHistoryMode('weekly')">🗓️ 주간 전체 출결</button>
                 <button id="tab-history-daily" class="history-tab-btn" onclick="switchHistoryMode('daily')" style="background: linear-gradient(135deg, #10b981, #059669); color: white; border-color: #059669;">📊 일일 마감 보고서</button>
                 <button id="tab-history-roster" class="history-tab-btn" onclick="switchHistoryMode('roster')" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border-color: #d97706;">📋 학생 명단 관리</button>
+                <button id="tab-history-desklog" class="history-tab-btn" onclick="switchHistoryMode('desklog')" style="background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; border-color: #4f46e5;">🪑 책상 이용 기록</button>
             </div>
 
             <div id="monthly-history-container" class="monthly-history-container active">
@@ -1949,6 +1966,18 @@ function injectHistoryUI() {
             </div>
 
             <div id="roster-history-container"></div>
+
+            <div id="desklog-history-container">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 12px;">
+                    <div style="display:flex; align-items:center; gap:15px; flex-wrap: wrap;">
+                        <h2 style="margin: 0; font-size: 24px; font-weight: 900; color: #4f46e5;">🪑 책상 이용 기록</h2>
+                        <input type="date" id="deskLogDate" class="settings-input" style="width:160px; font-size:16px; padding:6px 12px; font-family:'Pretendard';" onchange="renderDeskSeatLog()">
+                        <button class="cal-nav-btn" onclick="ensureDeskLogDate(true); renderDeskSeatLog();" style="background:#4f46e5; color:white; border-color:#4f46e5;">오늘 보기</button>
+                    </div>
+                </div>
+                <p class="desklog-hint">⏱️ 시작 버튼을 누른 시각과 수업 완료·취소 시각이 책상별로 자동 기록됩니다. 매칭 대기 중인 책상에 학생이 배정되면 해당 책상의 시작 시각이 함께 기록됩니다.</p>
+                <div class="desklog-grid" id="deskLogGrid"></div>
+            </div>
         `;
     }
     injectSettingsRosterUI();
@@ -2317,6 +2346,9 @@ window.switchView = function(view) {
             renderDailySummary();
         } else if(historyViewMode === 'weekly') {
             renderWeeklyTable();
+        } else if(historyViewMode === 'desklog') {
+            ensureDeskLogDate(true);
+            renderDeskSeatLog();
         } else {
             renderHistorySidebar(); renderHistoryCalendar(); 
         }
@@ -2508,7 +2540,7 @@ function persistToStorage() {
     const data = {
         deskCount: DESK_COUNT, academyName: academyName, className: className,
         studentMasterList: studentMasterList, studentModifiers: studentModifiers,
-        studentHistory: studentHistory, academyHolidays: academyHolidays, studentRegularOffs: studentRegularOffs,
+        studentHistory: studentHistory, deskSeatLog: deskSeatLog, academyHolidays: academyHolidays, studentRegularOffs: studentRegularOffs,
         attendance: Array.from(attendanceMap.entries()), finishedSet: Array.from(finishedSet), absentSet: Array.from(absentSet), assignOrderCounter: assignOrderCounter,
         timerStates: timers.map(t => ({ student: t.student, remainingTime: t.remainingTime, totalTime: t.totalTime, overTime: t.overTime, isOver: t.isOver, startTimeStr: t.startTimeStr, isRunning: t.interval !== null, isPaused: t.isPaused || false, lastTick: t.lastTick })),
         vols: { a: alarmVolume, t: ttsVolume, u: uiVolume, ttsVoice: document.getElementById("ttsVoiceSelect")?.value || "1", melody: document.getElementById("melodyType")?.value || "0", uiType: document.getElementById("uiSoundType")?.value || "0" },
@@ -2574,6 +2606,7 @@ function loadData() {
         if (saved) {
             const data = JSON.parse(saved); 
             if(data.studentHistory) studentHistory = data.studentHistory;
+            if(data.deskSeatLog) deskSeatLog = data.deskSeatLog; else deskSeatLog = {};
             if(data.academyHolidays) academyHolidays = data.academyHolidays; 
             if(data.studentRegularOffs) studentRegularOffs = data.studentRegularOffs; else studentRegularOffs = {};
             if(data.language) { currentLang = data.language; document.getElementById("langSelect").value = currentLang; }
@@ -2794,7 +2827,8 @@ function updateRosterSlotUI(id) {
             }
             placeholder.innerHTML = `<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; width:100%; height:100%; gap:4px;"><div class="roster-waiting-text">✨ 매칭 대기중...</div><div class="css-desk" style="opacity: 0.8; flex-shrink:0;"><div class="desk-top" style="background:#dbeafe; border-color:#93c5fd;"><span class="desk-num" style="color:#2563eb;">${id+1}</span></div><div class="desk-chair" style="background:#bfdbfe; border-color:#60a5fa;"></div></div><button onclick="cancelEmptySlot(${id}, event)" style="margin-top:4px; padding:5px 12px; border-radius:10px; background:var(--brand-danger); color:#fff; border:none; font-weight:900; font-size:12px; cursor:pointer; flex-shrink:0;">✖ 대기 취소</button></div>`;
         } else {
-            placeholder.innerHTML = `<div class="css-desk"><div class="desk-top"><span class="desk-num">${id+1}</span></div><div class="desk-chair"></div></div><div class="roster-empty-text">빈자리</div>`;
+            const emptyLabel = (i18n[currentLang] || i18n.ko).emptyDesk || '빈 책상';
+            placeholder.innerHTML = `<div class="css-desk"><div class="desk-top"><span class="desk-num">${id+1}</span></div><div class="desk-chair"></div></div><div class="roster-empty-text">${emptyLabel}</div>`;
         }
         slot.appendChild(placeholder);
     }
@@ -2806,6 +2840,98 @@ function getTodayDateKey() {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 }
+
+function formatNowTime() {
+    const now = new Date();
+    return `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+}
+
+function getDeskLogSessions(dateKey) {
+    if (!deskSeatLog[dateKey]) deskSeatLog[dateKey] = [];
+    return deskSeatLog[dateKey];
+}
+
+function findActiveStudentDeskLog(dateKey, student) {
+    const sessions = getDeskLogSessions(dateKey);
+    for (let i = sessions.length - 1; i >= 0; i--) {
+        const s = sessions[i];
+        if (s.student === student && !s.end && s.status === 'active') return s;
+    }
+    return null;
+}
+
+function syncActiveDeskLogDeskIdx(student, deskIdx) {
+    const entry = findActiveStudentDeskLog(getTodayDateKey(), student);
+    if (entry) entry.deskIdx = deskIdx;
+}
+
+function recordDeskSessionStart(deskIdx, studentName, startOverride) {
+    if (studentName === '(empty)') return;
+    const dateKey = getTodayDateKey();
+    if (findActiveStudentDeskLog(dateKey, studentName)) return;
+    const start = startOverride || formatNowTime();
+    getDeskLogSessions(dateKey).push({ deskIdx, student: studentName, start, end: null, status: 'active' });
+    if (historyViewMode === 'desklog') renderDeskSeatLog();
+}
+
+function recordDeskSessionEnd(deskIdx, studentName, endTimeStr) {
+    const entry = findActiveStudentDeskLog(getTodayDateKey(), studentName);
+    if (entry) { entry.end = endTimeStr; entry.status = 'finished'; entry.deskIdx = deskIdx; }
+    if (historyViewMode === 'desklog') renderDeskSeatLog();
+}
+
+function recordDeskSessionCancel(deskIdx, studentName) {
+    const entry = findActiveStudentDeskLog(getTodayDateKey(), studentName);
+    if (entry) {
+        entry.end = formatNowTime();
+        entry.status = 'cancelled';
+        entry.deskIdx = deskIdx;
+    }
+    if (historyViewMode === 'desklog') renderDeskSeatLog();
+}
+
+function ensureDeskLogDate(forceToday) {
+    const el = document.getElementById('deskLogDate');
+    if (!el) return getTodayDateKey();
+    if (forceToday || !el.value) el.value = getTodayDateKey();
+    return el.value;
+}
+
+window.renderDeskSeatLog = function() {
+    const grid = document.getElementById('deskLogGrid');
+    if (!grid) return;
+    const dateKey = ensureDeskLogDate(false);
+    const sessions = deskSeatLog[dateKey] || [];
+    const isKo = currentLang !== 'en';
+    const emptyLabel = (i18n[currentLang] || i18n.ko).emptyDesk || '빈 책상';
+    const isToday = dateKey === getTodayDateKey();
+
+    let html = '';
+    for (let i = 0; i < DESK_COUNT; i++) {
+        const deskSessions = sessions.filter(s => s.deskIdx === i);
+        const currentTimer = isToday ? timers[i] : null;
+        const isLive = currentTimer && currentTimer.student !== '(empty)' && (currentTimer.interval || currentTimer.isPaused || currentTimer.startTimeStr);
+        const liveName = isLive ? currentTimer.student : null;
+
+        let entriesHtml = '';
+        if (deskSessions.length === 0) {
+            entriesHtml = `<div class="desklog-empty">${emptyLabel}</div>`;
+        } else {
+            deskSessions.forEach(s => {
+                let statusText = '', statusColor = 'var(--text-muted)';
+                if (s.status === 'active') { statusText = isKo ? '▶️ 수업 중' : '▶️ In class'; statusColor = 'var(--accent)'; }
+                else if (s.status === 'finished') { statusText = isKo ? '✔️ 수업 완료' : '✔️ Finished'; statusColor = '#059669'; }
+                else if (s.status === 'cancelled') { statusText = isKo ? '✖️ 취소됨' : '✖️ Cancelled'; statusColor = 'var(--text-muted)'; }
+                const endStr = s.end || (isKo ? '진행 중' : 'ongoing');
+                entriesHtml += `<div class="desklog-entry ${s.status}"><span class="dl-name">${s.student}</span><span class="dl-time">${s.start} ~ ${endStr}</span><span class="dl-status" style="color:${statusColor};">${statusText}</span></div>`;
+            });
+        }
+
+        const nowBadge = (isLive && liveName) ? `<span class="desklog-now">${isKo ? '현재' : 'NOW'}: ${liveName}</span>` : '';
+        html += `<div class="desklog-card"><div class="desklog-card-header"><span>${i + 1}${isKo ? '번 책상' : ' Desk'}</span>${nowBadge}</div>${entriesHtml}</div>`;
+    }
+    grid.innerHTML = html;
+};
 
 function ensureDailySummaryDate(forceToday) {
     const el = document.getElementById('dailySummaryDate');
@@ -2940,6 +3066,7 @@ function refreshHistoryViewsIfOpen() {
     if (historyViewMode === 'monthly' && currentHistoryStudent) renderHistoryCalendar();
     else if (historyViewMode === 'weekly') renderWeeklyTable();
     else if (historyViewMode === 'daily') renderDailySummary();
+    else if (historyViewMode === 'desklog') renderDeskSeatLog();
 }
 
 // ⭐ 휴원 처리 (드래그 또는 리스트 뷰 버튼) — 오늘 기록(studentHistory)과 동기화
@@ -3148,7 +3275,7 @@ function showTimePrompt(title, defaultTime, callback) {
 }
 window.addTimeModalMin = function(minToAdd) { const input = document.getElementById('time-modal-input'); if(!input.value) return; let [hh, mm] = input.value.split(':').map(Number); let date = new Date(); date.setHours(hh); date.setMinutes(mm + minToAdd); input.value = `${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`; playUISound('click'); }
 window.closeTimePrompt = function(isSave) { const overlay = document.getElementById('custom-time-modal-overlay'); overlay.classList.remove('show'); playUISound('click'); if (isSave) { const newTime = document.getElementById('time-modal-input').value; if (timePromptCallback && newTime) timePromptCallback(newTime); } timePromptCallback = null; }
-window.editActiveStartTime = function(name) { let tIdx = timers.findIndex(t => t.student === name); if(tIdx === -1) return; let t = timers[tIdx]; showTimePrompt(`[${name}] 시작 시간 수정`, t.startTimeStr, function(newTime) { t.startTimeStr = newTime; updateStudentStatus(name); saveToStorage(); }); };
+window.editActiveStartTime = function(name) { let tIdx = timers.findIndex(t => t.student === name); if(tIdx === -1) return; let t = timers[tIdx]; showTimePrompt(`[${name}] 시작 시간 수정`, t.startTimeStr, function(newTime) { t.startTimeStr = newTime; const logEntry = findActiveStudentDeskLog(getTodayDateKey(), name); if (logEntry) logEntry.start = newTime; updateStudentStatus(name); if (historyViewMode === 'desklog') renderDeskSeatLog(); saveToStorage(); }); };
 
 function createInitialGrid() {
     const grid = document.getElementById("grid"); grid.innerHTML = "";
@@ -3256,8 +3383,8 @@ function handleDropOnTimer(name, targetIdx, fromIdx) {
         if (fromRunning) { clearInterval(tFrom.interval); tFrom.interval = null; } if (targetRunning) { clearInterval(tTarget.interval); tTarget.interval = null; }
         let tempFrom = { ...tFrom }; let tempTarget = { ...tTarget }; timers[targetIdx] = tempFrom; timers[fromIdx] = tempTarget;
         updateBoxUI(fromIdx); updateBoxUI(targetIdx); 
-        if (timers[fromIdx].student !== "(empty)") updateStudentStatus(timers[fromIdx].student); 
-        if (timers[targetIdx].student !== "(empty)") updateStudentStatus(timers[targetIdx].student); 
+        if (timers[fromIdx].student !== "(empty)") { updateStudentStatus(timers[fromIdx].student); syncActiveDeskLogDeskIdx(timers[fromIdx].student, fromIdx); }
+        if (timers[targetIdx].student !== "(empty)") { updateStudentStatus(timers[targetIdx].student); syncActiveDeskLogDeskIdx(timers[targetIdx].student, targetIdx); }
         playUISound('assign'); if (fromRunning) startTimer(targetIdx, true); if (targetRunning) startTimer(fromIdx, true);
     } else {
         const target = timers[targetIdx];
@@ -3280,6 +3407,7 @@ function handleDropOnTimer(name, targetIdx, fromIdx) {
             if (!attendanceMap.has(name)) { assignOrderCounter++; attendanceMap.set(name, assignOrderCounter); if(finishedSet.has(name)) finishedSet.delete(name); }
             playUISound('assign'); 
             updateBoxUI(targetIdx); updateStudentStatus(name); updateGauge(name, target.remainingTime, target.totalTime);
+            if (target.startTimeStr) recordDeskSessionStart(targetIdx, name, target.startTimeStr);
             maybeTriggerBirthdayCelebration(name, targetIdx);
         } else {
             target.student = name; target.remainingTime = customTime; target.totalTime = customTime; target.overTime = 0; target.isOver = false;
@@ -3296,7 +3424,7 @@ function startTimer(id, isResume = false) {
         applyFinishedTimeExtension(target, target.student);
         updateBoxUI(id);
     }
-    if (!isResume) { initAudio(); playUISound('start'); const now = new Date(); const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`; if (!target.startTimeStr) target.startTimeStr = timeStr; }
+    if (!isResume) { initAudio(); playUISound('start'); const now = new Date(); const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`; if (!target.startTimeStr) target.startTimeStr = timeStr; if (target.student !== "(empty)") recordDeskSessionStart(id, target.student, target.startTimeStr); }
     target.lastTick = Date.now();
     target.interval = setInterval(() => {
         const nowTick = Date.now(); const delta = Math.floor((nowTick - target.lastTick) / 1000);
@@ -3314,7 +3442,7 @@ function startTimer(id, isResume = false) {
 function resumeTimer(id) { startTimer(id, true); }
 function stopTimer(id) { if (timers[id].interval) { clearInterval(timers[id].interval); timers[id].interval = null; timers[id].isPaused = true; playUISound('stop'); if (timers[id].student !== "(empty)") updateStudentStatus(timers[id].student); if (rosterViewMode === 'list') renderListView(); updateBoxUI(id); saveToStorage(); } else if (saveToStorageTimer) { saveToStorage(); } }
 function clearTime(id) { playUISound('cancel'); timers[id].remainingTime = 0; timers[id].totalTime = 0; timers[id].overTime = 0; timers[id].isOver = false; timers[id].isPaused = false; stopTimer(id); updateBoxUI(id); if(timers[id].student !== "(empty)") updateGauge(timers[id].student, 0, 1); if (rosterViewMode === 'list') renderListView(); saveToStorage(); }
-function cancelSession(id) { playUISound('cancel'); const sn = timers[id].student; if(sn !== "(empty)") attendanceMap.delete(sn); resetTimerData(id, true); }
+function cancelSession(id) { playUISound('cancel'); const sn = timers[id].student; if(sn !== "(empty)") { if (timers[id].startTimeStr) recordDeskSessionCancel(id, sn); attendanceMap.delete(sn); } resetTimerData(id, true); }
 
 function finishSession(id) { 
     if(timers[id].student === "(empty)") { resetTimerData(id, true); return; } 
@@ -3336,6 +3464,7 @@ function finishSession(id) {
     
     const startT = t.startTimeStr || '?-?';
     const endT = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+    recordDeskSessionEnd(id, sn, endT);
     if (!studentHistory[sn][dateKey].timeLogs) studentHistory[sn][dateKey].timeLogs = [];
     studentHistory[sn][dateKey].timeLogs.push(`[${startT} ~ ${endT}]`);
 
@@ -3573,12 +3702,14 @@ window.switchHistoryMode = function(mode) {
     document.getElementById('tab-history-weekly').classList.remove('active');
     document.getElementById('tab-history-daily').classList.remove('active');
     document.getElementById('tab-history-roster').classList.remove('active');
+    document.getElementById('tab-history-desklog').classList.remove('active');
     document.getElementById(`tab-history-${mode}`).classList.add('active');
 
     document.getElementById('monthly-history-container').classList.remove('active');
     document.getElementById('weekly-history-container').classList.remove('active');
     document.getElementById('daily-history-container').classList.remove('active');
     document.getElementById('roster-history-container').classList.remove('active');
+    document.getElementById('desklog-history-container').classList.remove('active');
 
     if (mode === 'monthly') {
         document.getElementById('monthly-history-container').classList.add('active');
@@ -3594,6 +3725,10 @@ window.switchHistoryMode = function(mode) {
     } else if (mode === 'roster') {
         document.getElementById('roster-history-container').classList.add('active');
         renderSettingsRoster();
+    } else if (mode === 'desklog') {
+        document.getElementById('desklog-history-container').classList.add('active');
+        ensureDeskLogDate(true);
+        renderDeskSeatLog();
     }
 }
 
