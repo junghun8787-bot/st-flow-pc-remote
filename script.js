@@ -395,9 +395,36 @@ customStyle.innerHTML = `
     .cal-record-mods { font-size: 12px; color: var(--brand-danger); }
     .cal-note-preview { font-size: 12px; color: #64748b; background: #f1f5f9; padding: 4px 6px; border-radius: 6px; margin-top: auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 700; border: 1px solid #e2e8f0; max-width: 100%; box-sizing: border-box; display: block; }
     
-    .history-top-bar { display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 20px; position: relative; }
-    .history-tab-btn { padding: 12px 25px; font-size: 16px; font-weight: 900; border-radius: 12px; border: 2px solid var(--border); background: var(--bg-main); color: var(--text-muted); cursor: pointer; transition: 0.2s; font-family: var(--app-font); }
-    .history-tab-btn.active { background: var(--accent); color: white; border-color: var(--accent); box-shadow: 0 4px 12px rgba(37,99,235,0.2); transform: scale(1.05); }
+    .history-top-bar { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; padding: 14px 16px; background: var(--bg-card); border: 2px solid var(--border); border-radius: 18px; box-shadow: 0 4px 14px rgba(0,0,0,0.04); }
+    .history-tab-btn { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 14px 22px; border-radius: 14px; border: 3px solid transparent; cursor: pointer; transition: 0.2s; font-family: var(--app-font); color: #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.12); white-space: nowrap; }
+    .history-tab-btn .ht-icon { font-size: 34px; line-height: 1; flex-shrink: 0; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2)); }
+    .history-tab-btn .ht-title { font-size: 19px; font-weight: 900; line-height: 1.15; letter-spacing: -0.02em; text-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+    .history-tab-btn:not(.active) { opacity: 0.78; filter: saturate(0.9); }
+    .history-tab-btn:hover { opacity: 1 !important; filter: saturate(1.05) brightness(1.04); transform: translateY(-2px); }
+    .history-tab-btn.active { opacity: 1; filter: none; transform: scale(1.04); box-shadow: 0 8px 22px rgba(0,0,0,0.2); outline: 3px solid rgba(255,255,255,0.6); outline-offset: 1px; }
+    .history-tab-btn.ht-monthly { background: linear-gradient(145deg, #3b82f6, #1d4ed8); border-color: #1e40af; }
+    .history-tab-btn.ht-monthly.active { box-shadow: 0 8px 24px rgba(37,99,235,0.45); }
+    .history-tab-btn.ht-weekly { background: linear-gradient(145deg, #06b6d4, #0e7490); border-color: #155e75; }
+    .history-tab-btn.ht-weekly.active { box-shadow: 0 8px 24px rgba(6,182,212,0.4); }
+    .history-tab-btn.ht-desklog { background: linear-gradient(145deg, #818cf8, #4f46e5); border-color: #4338ca; }
+    .history-tab-btn.ht-desklog.active { box-shadow: 0 8px 24px rgba(99,102,241,0.42); }
+    .history-tab-btn.ht-roster { background: linear-gradient(145deg, #fbbf24, #d97706); border-color: #b45309; }
+    .history-tab-btn.ht-roster.active { box-shadow: 0 8px 24px rgba(245,158,11,0.42); }
+    .history-tab-btn.ht-daily { background: linear-gradient(145deg, #34d399, #059669); border-color: #047857; }
+    .history-tab-btn.ht-daily.active { box-shadow: 0 8px 24px rgba(16,185,129,0.45); }
+    .history-tab-divider { width: 3px; height: 48px; background: linear-gradient(180deg, transparent, var(--border), transparent); margin: 0 2px; border-radius: 3px; flex-shrink: 0; }
+    .history-view-hint { font-size: 14px; color: var(--text-muted); font-weight: 700; margin: 0 0 14px 0; padding: 11px 14px; background: rgba(0,0,0,0.03); border-left: 4px solid var(--border); border-radius: 0 10px 10px 0; line-height: 1.55; flex-shrink: 0; }
+    .history-view-hint.hint-monthly { border-left-color: #3b82f6; }
+    .history-view-hint.hint-weekly { border-left-color: #06b6d4; }
+    .history-view-hint.hint-desklog { border-left-color: #6366f1; }
+    .history-view-hint.hint-roster { border-left-color: #f59e0b; }
+    .history-view-hint.hint-daily { border-left-color: #10b981; }
+    .daily-header-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 14px; }
+    .daily-date-nav { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .daily-close-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 14px 18px; margin-bottom: 16px; background: linear-gradient(135deg, rgba(16,185,129,0.08), rgba(124,58,237,0.06)); border: 2px solid rgba(16,185,129,0.25); border-radius: 14px; }
+    .daily-close-label { font-size: 16px; font-weight: 900; color: #047857; white-space: nowrap; }
+    .daily-close-btns { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .daily-close-btns .export-btn { position: static; margin: 0; }
     
     .monthly-history-container, #weekly-history-container, #daily-history-container, #roster-history-container { display: none; height: calc(100vh - 180px); min-height: 600px; position: relative; width: 100%; }
     .monthly-history-container.active { display: flex; gap: 20px; }
@@ -416,7 +443,6 @@ customStyle.innerHTML = `
     #daily-history-container.active { display: flex; background: var(--bg-card); border-radius: 16px; border: 2px solid var(--border); padding: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); flex-direction: column; box-sizing: border-box; }
     #desklog-history-container { display: none; height: calc(100vh - 180px); min-height: 600px; position: relative; width: 100%; }
     #desklog-history-container.active { display: flex; background: var(--bg-card); border-radius: 16px; border: 2px solid var(--border); padding: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); flex-direction: column; box-sizing: border-box; overflow: hidden; }
-    .desklog-hint { font-size: 13px; color: var(--text-muted); margin: 0 0 14px 0; line-height: 1.5; }
     .desklog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; overflow-y: auto; flex: 1; padding: 4px; }
     .desklog-card { background: var(--bg-main); border: 2px solid var(--border); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; min-height: 140px; }
     .desklog-card-header { font-size: 18px; font-weight: 900; color: var(--accent); margin-bottom: 10px; padding-bottom: 8px; border-bottom: 2px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
@@ -453,7 +479,6 @@ customStyle.innerHTML = `
     .weekly-time-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25); }
     .weekly-time-input.weekly-time-edited { background: #eff6ff; border-color: #93c5fd; }
     .weekly-time-empty { color: #94a3b8; font-weight: 700; font-size: 16px; }
-    .weekly-time-hint { text-align: center; font-size: 13px; color: #64748b; font-weight: 700; margin: -6px 0 10px 0; }
     .fixed-col-name { position: sticky; left: 0; z-index: 12; background: #f8fafc; border-right: 1px solid #cbd5e1; }
     .fixed-col-grade { position: sticky; left: 140px; z-index: 12; background: #f8fafc; border-right: 3px solid #94a3b8 !important; box-shadow: 3px 0 6px rgba(0,0,0,0.05); }
     .weekly-table td { padding: 14px 8px; text-align: center; vertical-align: middle; background: #fff; border-bottom: 1px solid #cbd5e1; border-right: 1px solid #e2e8f0; transition: background 0.1s; }
@@ -553,6 +578,13 @@ customStyle.innerHTML = `
         .academy-subtitle { font-size: 11px !important; }
         .class-main-title { font-size: 18px !important; }
         #weekly-history-container, #daily-history-container { padding: 15px !important; }
+        .history-top-bar { gap: 8px !important; padding: 10px !important; }
+        .history-tab-btn { width: 100% !important; padding: 14px 16px !important; justify-content: flex-start !important; }
+        .history-tab-btn .ht-icon { font-size: 30px !important; }
+        .history-tab-btn .ht-title { font-size: 17px !important; }
+        .history-tab-divider { display: none; }
+        .daily-close-bar { flex-direction: column; align-items: stretch; text-align: center; }
+        .daily-close-btns { justify-content: center; }
         .weekly-name-cell { font-size: 20px !important; }
         .weekly-time-cell { font-size: 18px !important; }
         .daily-summary-grid { grid-template-columns: 1fr !important; overflow-y: auto; }
@@ -1780,8 +1812,9 @@ function injectSettingsRosterUI() {
     if(!container || container.dataset.rosterInjected) return;
     container.dataset.rosterInjected = '1';
     container.innerHTML = `
+        <p class="history-view-hint hint-roster">학생 이름·학년·레벨·수업시간·생일을 편집합니다. 변경 후 반드시 하단의 저장 버튼을 눌러야 적용됩니다.</p>
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px; flex-shrink: 0;">
-            <h3 style="margin:0;" data-i18n="rosterMgt">📋 학생 명단 관리 (통합 목록)</h3>
+            <h3 style="margin:0; font-size:22px; font-weight:900;" data-i18n="rosterMgt">📋 학생 명단 관리</h3>
             <button class="admin-btn btn-3d" onclick="addSettingsStudentRow()" style="margin:0; width:auto; padding:12px 20px; font-size:16px; font-weight:900; background:var(--brand-success); color:#fff;">➕ 새로운 학생 추가</button>
         </div>
         <div class="roster-table-scroll">
@@ -1861,11 +1894,12 @@ function injectHistoryUI() {
         historyView.className = 'view-section';
         historyView.innerHTML = `
             <div class="history-top-bar">
-                <button id="tab-history-monthly" class="history-tab-btn active" onclick="switchHistoryMode('monthly')">👤 월간 개인 기록</button>
-                <button id="tab-history-weekly" class="history-tab-btn" onclick="switchHistoryMode('weekly')">🗓️ 주간 전체 출결</button>
-                <button id="tab-history-daily" class="history-tab-btn" onclick="switchHistoryMode('daily')" style="background: linear-gradient(135deg, #10b981, #059669); color: white; border-color: #059669;">📊 일일 마감 보고서</button>
-                <button id="tab-history-roster" class="history-tab-btn" onclick="switchHistoryMode('roster')" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border-color: #d97706;">📋 학생 명단 관리</button>
-                <button id="tab-history-desklog" class="history-tab-btn" onclick="switchHistoryMode('desklog')" style="background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; border-color: #4f46e5;">🪑 책상 이용 기록</button>
+                <button id="tab-history-monthly" class="history-tab-btn ht-monthly active" onclick="switchHistoryMode('monthly')"><span class="ht-icon">👤</span><span class="ht-title">월간 개인 기록</span></button>
+                <button id="tab-history-weekly" class="history-tab-btn ht-weekly" onclick="switchHistoryMode('weekly')"><span class="ht-icon">🗓️</span><span class="ht-title">주간 전체 출결</span></button>
+                <button id="tab-history-desklog" class="history-tab-btn ht-desklog" onclick="switchHistoryMode('desklog')"><span class="ht-icon">🪑</span><span class="ht-title">책상 이용 기록</span></button>
+                <button id="tab-history-roster" class="history-tab-btn ht-roster" onclick="switchHistoryMode('roster')"><span class="ht-icon">📋</span><span class="ht-title">학생 명단 관리</span></button>
+                <div class="history-tab-divider" aria-hidden="true"></div>
+                <button id="tab-history-daily" class="history-tab-btn ht-daily" onclick="switchHistoryMode('daily')"><span class="ht-icon">📊</span><span class="ht-title">일일 마감 보고서</span></button>
             </div>
 
             <div id="monthly-history-container" class="monthly-history-container active">
@@ -1881,6 +1915,7 @@ function injectHistoryUI() {
                     <div id="historyStudentList" style="overflow-y:auto; flex:1;"></div>
                 </div>
                 <div class="history-content">
+                    <p class="history-view-hint hint-monthly">왼쪽 목록에서 학생을 선택하면, 달력에서 날짜별 학습시간·출결 시간·쿠폰·메모를 확인할 수 있습니다.</p>
                     <div class="calendar-header" style="position: relative;">
                         <div style="display:flex; align-items:center; gap:10px;">
                             <button class="cal-nav-btn" onclick="changeHistoryMonth(-1)">◀ 이전</button>
@@ -1921,6 +1956,7 @@ function injectHistoryUI() {
             </div>
 
             <div id="weekly-history-container">
+                <p class="history-view-hint hint-weekly">모든 학생의 주간 출결을 한 표에서 확인합니다. 수업 시작~종료는 타이머가 자동 기록하며, 기록된 시간은 키보드로 수정할 수 있습니다(예: 1430 또는 14:30).</p>
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; position: relative;">
                     <div style="display:flex; align-items:center; gap:10px; margin: 0 auto;">
                         <button class="cal-nav-btn" onclick="changeWeeklyDate(-7)">◀ 이전 주</button>
@@ -1930,7 +1966,6 @@ function injectHistoryUI() {
                     </div>
                     <button class="export-btn" onclick="exportWeeklyToExcel()">💾 이 주간 표 엑셀 저장</button>
                 </div>
-                <p class="weekly-time-hint">⏱️ 수업 시작~종료는 타이머가 자동 기록합니다. 기록된 시간만 키보드로 수정할 수 있으며(예: 1430 또는 14:30), 월간 기록에도 반영됩니다.</p>
                 <div class="weekly-table-wrapper">
                     <table class="weekly-table">
                         <thead id="weeklyTableHead"></thead>
@@ -1940,14 +1975,20 @@ function injectHistoryUI() {
             </div>
             
             <div id="daily-history-container">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 12px;">
-                    <div style="display:flex; align-items:center; gap:15px; flex-wrap: wrap;">
-                        <h2 style="margin: 0; font-size: 24px; font-weight: 900; color: var(--accent);">📊 일일 마감 보고서</h2>
+                <p class="history-view-hint hint-daily">오늘 등원·출석·휴원 현황을 확인하고, 수업이 끝나면 아래에서 메모장 저장 또는 수업종료를 진행하세요.</p>
+                <div class="daily-header-row">
+                    <h2 style="margin: 0; font-size: 24px; font-weight: 900; color: #059669;">📊 일일 마감 보고서</h2>
+                    <div class="daily-date-nav">
                         <input type="date" id="dailySummaryDate" class="settings-input" style="width:160px; font-size:16px; padding:6px 12px; font-family:'Pretendard';" onchange="renderDailySummary()">
                         <button class="cal-nav-btn" onclick="ensureDailySummaryDate(true); renderDailySummary();" style="background:var(--accent); color:white; border-color:var(--accent);">오늘 보기</button>
-                        <button class="export-btn" onclick="exportDailySummaryToTxt()" style="position:static; margin-left:0;">📝 메모장 저장 (.txt)</button>
                     </div>
-                    <button id="btnEndClassDay" class="btn-end-class-day btn-3d" onclick="endClassDay()">🏁 수업종료</button>
+                </div>
+                <div class="daily-close-bar">
+                    <span class="daily-close-label">🏁 오늘 수업 마감</span>
+                    <div class="daily-close-btns">
+                        <button class="export-btn" onclick="exportDailySummaryToTxt()">📝 메모장 저장 (.txt)</button>
+                        <button id="btnEndClassDay" class="btn-end-class-day btn-3d" onclick="endClassDay()">🏁 수업종료</button>
+                    </div>
                 </div>
                 <div class="daily-summary-grid">
                     <div class="ds-card ds-waiting">
@@ -1975,7 +2016,7 @@ function injectHistoryUI() {
                         <button class="cal-nav-btn" onclick="ensureDeskLogDate(true); renderDeskSeatLog();" style="background:#4f46e5; color:white; border-color:#4f46e5;">오늘 보기</button>
                     </div>
                 </div>
-                <p class="desklog-hint">⏱️ 시작 버튼을 누른 시각과 수업 완료·취소 시각이 책상별로 자동 기록됩니다. 매칭 대기 중인 책상에 학생이 배정되면 해당 책상의 시작 시각이 함께 기록됩니다.</p>
+                <p class="history-view-hint hint-desklog">책상별로 누가 몇 시에 앉아서 수업을 시작·종료했는지 확인합니다. 시작 버튼 시각과 완료·취소 시각이 자동 기록됩니다.</p>
                 <div class="desklog-grid" id="deskLogGrid"></div>
             </div>
         `;
