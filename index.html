@@ -6,13 +6,13 @@
 <meta name="description" content="ST Flow - 영어학원 수업 타이머, 출결 관리, 학생 기록 PWA">
 <meta name="theme-color" content="#3b82f6">
 <meta name="mobile-web-app-capable" content="yes">
-<title>ST Flow v5.5.0 (Smart 3D Edition)</title>
+<title>ST Flow v4</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png" type="image/png" sizes="192x192">
 <link rel="apple-touch-icon" href="apple-touch-icon.png" sizes="180x180">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="ST Flow">
+<meta name="apple-mobile-web-app-title" content="ST Flow v4">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net">
@@ -25,17 +25,13 @@
 <div class="main-wrapper">
     <header class="global-header" id="mainHeader">
         <div class="header-center">
-            <div class="academy-subtitle" id="displayAcademyName">향촌삼성영어학원</div>
             <h1 class="class-main-title" id="displayClassName">Maple Classroom</h1>
         </div>
-        
         <div class="header-right">
-            <div class="date-display" id="displayDate" style="font-size: 13px; padding: 4px 15px;">2026. 00. 00 (일)</div>
             <div class="st-logo-container">
                 <img src="logo.png" alt="ST Flow Logo" class="st-logo-img" onerror="this.style.display='none'">
                 <div style="display: flex; align-items: center;">
-                    <span class="st-title">ST Flow</span>
-                    <span class="st-version">v5.5.0</span>
+                    <span class="st-title">ST Flow v4</span>
                 </div>
             </div>
         </div>
@@ -171,9 +167,9 @@
                         <div class="settings-row">
                             <span class="settings-label" data-i18n="nameColor">이름 색상 (10종)</span>
                             <select id="nameColorSelect" class="settings-input" onchange="changeNameColor(); playUISound('click');">
-                                <option value="dark">1. Dark (Default)</option>
-                                <option value="white">2. Pure White</option>
-                                <option value="black">3. Black (White Outline)</option>
+                                <option value="black" selected>1. Black (White Outline / Default)</option>
+                                <option value="dark">2. Dark Navy</option>
+                                <option value="white">3. Pure White</option>
                                 <option value="yellow">4. Neon Yellow</option>
                                 <option value="pink">5. Pastel Pink</option>
                                 <option value="cyan">6. Soft Cyan</option>

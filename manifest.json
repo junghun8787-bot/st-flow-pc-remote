@@ -1,6 +1,6 @@
 {
-  "name": "ST Flow Timer",
-  "short_name": "ST Flow",
+  "name": "ST Flow v4",
+  "short_name": "ST Flow v4",
   "description": "영어학원 수업 타이머, 출결 관리, 학생 기록 PWA",
   "lang": "ko",
   "start_url": "./index.html",

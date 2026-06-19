@@ -1,4 +1,4 @@
-const CACHE_NAME = 'st-flow-v5.5.0';
+const CACHE_NAME = 'st-flow-v4';
 const STATIC_ASSETS = [
   './',
   './index.html',

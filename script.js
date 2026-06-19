@@ -57,6 +57,11 @@ let operationalDate = null;
 let academyName = "향촌삼성영어학원"; 
 let className = "Maple Classroom";
 
+const ALARM_GRACE_SECONDS = 300;
+const DEFAULT_WEEKLY_MINUTES = 250;
+const MEMO_POPUP_DURATION_MS = 5000;
+const activeMemoPopups = new Map();
+
 let alarmVolume = 0.5; 
 let ttsVolume = 0.8; 
 let uiVolume = 0.5; 
@@ -102,6 +107,11 @@ let historyViewMode = 'monthly';
 let currentWeeklyDate = new Date();
 let weeklySortConfig = { col: 'name', asc: true }; 
 let historySidebarSortConfig = { col: 'name', asc: true }; 
+let statsPeriodMode = 'weekly';
+let currentStatsMonth = new Date().getMonth();
+let currentStatsYear = new Date().getFullYear();
+let timerLastPersistAt = 0;
+const TIMER_PERSIST_INTERVAL_MS = 8000;
 
 const krHolidays = {
     "01-01":"신정", "03-01":"삼일절", "05-05":"어린이날", "06-06":"현충일", "08-15":"광복절", "10-03":"개천절", "10-09":"한글날", "12-25":"기독탄신일",
@@ -157,19 +167,20 @@ customStyle.innerHTML = `
     .level-color-PRE { background: var(--selena-yellow); color: #000; } .level-color-BASIC { background: var(--selena-pink); color: #fff; } .level-color-INTER { background: var(--selena-orange); color: #fff; } .level-color-ADV { background: var(--selena-cyan); color: #fff; } .level-color-PREP { background: var(--selena-brown); color: #fff; } .level-color-GUEST { background: #94a3b8; color: #fff; }
 
     #mainHeader { position: relative; }
-    .header-dashboard-box { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; align-items: stretch; gap: 6px; background: rgba(255, 255, 255, 0.92); border: 2px solid var(--border, #e2e8f0); padding: 8px 12px; border-radius: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); backdrop-filter: blur(8px); z-index: 100; font-family: 'Pretendard', sans-serif; max-width: 248px; min-width: 210px; box-sizing: border-box; }
-    .hd-date-display { font-size: 12px; font-weight: 800; color: var(--text-main, #334155); white-space: nowrap; text-align: center; padding-bottom: 6px; border-bottom: 1px solid var(--border); letter-spacing: -0.3px; line-height: 1.3; }
-    .hd-dashboard-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-    .hd-title { font-size: 13px; font-weight: 900; color: var(--accent); white-space: nowrap; padding-right: 8px; border-right: 2px solid var(--border); flex-shrink: 0; }
-    .hd-items-container { display: flex; gap: 4px; flex-wrap: wrap; flex: 1; min-width: 0; }
-    .hd-item { display: flex; align-items: baseline; gap: 4px; background: #ffffff; border-radius: 8px; padding: 3px 6px; min-width: 40px; justify-content: center; }
-    .hd-label { font-size: 11px; font-weight: 800; opacity: 0.7; color: var(--text-main, #334155); }
-    .hd-count { font-size: 17px; font-weight: 900; color: var(--text-main, #0f172a); letter-spacing: -0.5px; }
+    .header-dashboard-box { position: absolute; left: 14px; top: 56%; transform: translateY(-50%); display: flex; flex-direction: column; align-items: stretch; gap: 6px; background: rgba(255, 255, 255, 0.92); border: 2px solid var(--border, #e2e8f0); padding: 10px 14px; border-radius: 14px; box-shadow: 0 3px 10px rgba(0,0,0,0.07); backdrop-filter: blur(8px); z-index: 100; font-family: 'Pretendard', sans-serif; max-width: 520px; min-width: 360px; box-sizing: border-box; }
+    .hd-top-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+    .hd-academy-name { font-size: 14px; font-weight: 800; color: var(--text-muted, #64748b); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 0; letter-spacing: -0.2px; }
+    .hd-date-display { font-size: 14px; font-weight: 700; color: var(--text-muted, #64748b); white-space: nowrap; flex-shrink: 0; letter-spacing: -0.2px; }
+    .hd-dashboard-row { display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; }
+    .hd-title { font-size: 15px; font-weight: 900; color: var(--accent); white-space: nowrap; padding-right: 8px; border-right: 2px solid var(--border); flex-shrink: 0; }
+    .hd-items-container { display: flex; gap: 4px; flex-wrap: nowrap; flex: 1; min-width: 0; }
+    .hd-item { display: flex; align-items: baseline; gap: 4px; background: #ffffff; border-radius: 8px; padding: 4px 8px; min-width: 0; justify-content: center; flex-shrink: 0; }
+    .hd-label { font-size: 13px; font-weight: 800; opacity: 0.75; color: var(--text-main, #334155); white-space: nowrap; }
+    .hd-count { font-size: 20px; font-weight: 900; color: var(--text-main, #0f172a); letter-spacing: -0.5px; }
     .hd-item.hd-wait { background: #fffbeb; } .hd-item.hd-wait .hd-count { color: #d97706; }
     .hd-item.hd-active { background: #eff6ff; } .hd-item.hd-active .hd-count { color: #2563eb; }
     .hd-item.hd-finish { background: #f0fdf4; } .hd-item.hd-finish .hd-count { color: #16a34a; }
     .hd-item.hd-absent { background: #f1f5f9; } .hd-item.hd-absent .hd-count { color: #64748b; }
-    #displayDate { display: none !important; }
 
     .start-time-badge { position: absolute; top: 6px; right: 6px; background: #2563eb; border: 2px solid #60a5fa; color: white; font-size: 14px; font-weight: 900; padding: 6px 10px; border-radius: 8px; cursor: pointer; z-index: 10; box-shadow: 0 4px 8px rgba(0,0,0,0.4); transition: background 0.2s, transform 0.1s; }
     .start-time-badge:hover { background: #1d4ed8; transform: scale(1.05); }
@@ -199,15 +210,27 @@ customStyle.innerHTML = `
     #grid-absent::-webkit-scrollbar, #grid-finished::-webkit-scrollbar { width: 8px; }
     #grid-absent::-webkit-scrollbar-thumb, #grid-finished::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
     
-    #grid-unassigned .student-btn { width: 100% !important; height: 66px !important; min-height: 66px !important; padding: 9px 14px !important; display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: flex-start !important; border-radius: 12px !important; flex-shrink: 0; margin: 0 !important; overflow: visible !important; }
-    #grid-unassigned .student-btn .card-badge-group { position: relative !important; top: 0 !important; left: 0 !important; margin-right: 15px !important; display: flex !important; flex-direction: column !important; align-items: center !important; gap: 4px !important; }
-    #grid-unassigned .student-btn .new-level-pill, #grid-unassigned .student-btn .card-grade-badge { padding: 4px 6px !important; font-size: 11px !important; margin-right: 0 !important; width: 100%; box-sizing: border-box; text-align: center; }
-    #grid-unassigned .student-btn .name-text { margin-top: 0 !important; font-size: 20px !important; flex: 1; text-align: left; padding-left: 8px; justify-content: flex-start; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
-    #grid-unassigned .student-btn .card-mod-container { position: relative !important; bottom: 0 !important; left: 0 !important; flex-direction: row !important; margin-right: 6px; gap:4px; }
-    #grid-unassigned .student-btn .mod-badge { padding: 2px 4px !important; font-size: 10px !important; }
-    #grid-unassigned .student-btn .quick-controls { position: absolute !important; right: 5px !important; top: 50% !important; transform: translateY(-50%) !important; width: auto !important; height: auto !important; background: rgba(255,255,255,0.95) !important; flex-direction: row !important; gap: 4px !important; padding: 4px !important; border-radius: 10px !important; opacity: 0; transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.15); z-index: 20; }
-    #grid-unassigned .student-btn:hover .quick-controls { opacity: 1; }
-    #grid-unassigned .student-btn .quick-btn { padding: 6px 10px !important; font-size: 13px !important; }
+    #grid-unassigned .student-btn.wait-student-card { width: 100% !important; height: 68px !important; min-height: 68px !important; padding: 8px 12px 8px 10px !important; display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: flex-start !important; gap: 14px !important; border-radius: 14px !important; flex-shrink: 0; margin: 0 !important; overflow: hidden !important; border: 3px solid transparent !important; color: #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.12) !important; filter: none !important; opacity: 1 !important; transition: transform 0.2s, box-shadow 0.2s, filter 0.2s !important; font-family: var(--app-font, 'Pretendard', sans-serif); }
+    #grid-unassigned .student-btn.wait-student-card:hover { transform: translateY(-2px) !important; filter: brightness(1.02) !important; box-shadow: 0 6px 18px rgba(0,0,0,0.1) !important; }
+    #grid-unassigned .student-btn.wait-student-card:active { transform: translateY(0) scale(0.98) !important; }
+    #grid-unassigned .student-btn.wait-student-card.drag-over { transform: scale(1.03) !important; outline: 3px solid rgba(255,255,255,0.75) !important; outline-offset: 1px !important; z-index: 10 !important; }
+    #grid-unassigned .student-btn.wait-student-card.wait-lvl-PRE { background: linear-gradient(145deg, #fffbeb, #fef3c7) !important; border-color: #fde68a !important; box-shadow: 0 3px 10px rgba(250, 204, 21, 0.14) !important; color: #92400e; }
+    #grid-unassigned .student-btn.wait-student-card.wait-lvl-BASIC { background: linear-gradient(145deg, #fdf2f8, #fce7f3) !important; border-color: #f9a8d4 !important; box-shadow: 0 3px 10px rgba(244, 114, 182, 0.14) !important; color: #9d174d; }
+    #grid-unassigned .student-btn.wait-student-card.wait-lvl-INTER { background: linear-gradient(145deg, #fff7ed, #ffedd5) !important; border-color: #fdba74 !important; box-shadow: 0 3px 10px rgba(251, 146, 60, 0.14) !important; color: #9a3412; }
+    #grid-unassigned .student-btn.wait-student-card.wait-lvl-ADV { background: linear-gradient(145deg, #f0f9ff, #e0f2fe) !important; border-color: #7dd3fc !important; box-shadow: 0 3px 10px rgba(56, 189, 248, 0.14) !important; color: #075985; }
+    #grid-unassigned .student-btn.wait-student-card.wait-lvl-PREP { background: linear-gradient(145deg, #faf5f2, #efebe9) !important; border-color: #d7ccc8 !important; box-shadow: 0 3px 10px rgba(161, 136, 127, 0.14) !important; color: #5d4037; }
+    #grid-unassigned .student-btn.wait-student-card.wait-lvl-GUEST { background: linear-gradient(145deg, #f8fafc, #f1f5f9) !important; border-color: #cbd5e1 !important; box-shadow: 0 3px 10px rgba(148, 163, 184, 0.14) !important; color: #475569; }
+    #grid-unassigned .student-btn.wait-student-card .gauge-bg { display: none !important; }
+    #grid-unassigned .student-btn.wait-student-card .card-badge-group { position: relative !important; top: 0 !important; left: 0 !important; margin: 0 !important; display: flex !important; flex-direction: column !important; align-items: center !important; gap: 0 !important; flex-shrink: 0; width: 38px; min-width: 38px; }
+    #grid-unassigned .student-btn.wait-student-card .new-level-pill { width: 38px !important; height: 38px !important; padding: 0 !important; margin: 0 !important; border-radius: 10px !important; display: flex !important; align-items: center !important; justify-content: center !important; font-size: 10px !important; font-weight: 900 !important; font-family: 'Montserrat', 'Pretendard', sans-serif !important; letter-spacing: -0.02em !important; line-height: 1 !important; background: rgba(255,255,255,0.55) !important; border: 2px solid rgba(255,255,255,0.75) !important; color: inherit !important; box-shadow: 0 1px 4px rgba(0,0,0,0.06) !important; text-shadow: none !important; -webkit-font-smoothing: antialiased; }
+    #grid-unassigned .student-btn.wait-student-card .card-grade-badge { display: none !important; }
+    #grid-unassigned .student-btn.wait-student-card .wait-name-wrap { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; padding-left: 6px; }
+    #grid-unassigned .student-btn.wait-student-card .name-text { margin: 0 !important; font-size: 28px !important; font-weight: 900 !important; font-family: var(--app-font, 'Pretendard', sans-serif) !important; flex: none; width: 100%; text-align: left; padding: 0 !important; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; color: var(--custom-name-color) !important; text-shadow: var(--custom-name-shadow) !important; letter-spacing: 1px !important; line-height: 1.1 !important; -webkit-font-smoothing: antialiased; transition: color 0.3s, text-shadow 0.3s; }
+    #grid-unassigned .student-btn.wait-student-card .card-mod-container { position: relative !important; bottom: 0 !important; left: 0 !important; flex-direction: row !important; flex-shrink: 0; margin-right: 0; gap: 4px; }
+    #grid-unassigned .student-btn.wait-student-card .mod-badge { padding: 3px 5px !important; font-size: 10px !important; }
+    #grid-unassigned .student-btn.wait-student-card .quick-controls { position: absolute !important; right: 6px !important; top: 50% !important; transform: translateY(-50%) !important; width: auto !important; height: auto !important; background: rgba(255,255,255,0.96) !important; flex-direction: row !important; gap: 4px !important; padding: 4px !important; border-radius: 10px !important; opacity: 0; transition: opacity 0.2s; box-shadow: 0 4px 14px rgba(15, 23, 42, 0.18); border: 1px solid rgba(148, 163, 184, 0.3); z-index: 20; }
+    #grid-unassigned .student-btn.wait-student-card:hover .quick-controls { opacity: 1; }
+    #grid-unassigned .student-btn.wait-student-card .quick-btn { padding: 6px 10px !important; font-size: 13px !important; }
 
     #grid-active { display: grid !important; grid-template-columns: repeat(5, 1fr) !important; gap: 10px !important; margin: 0 !important; align-content: start !important; }
     .roster-desk-slot { height: clamp(136px, calc((100vh - 340px) / 2), 160px) !important; min-height: 136px !important; max-height: 160px !important; }
@@ -391,7 +414,8 @@ customStyle.innerHTML = `
     .holiday-label { font-size: 11px; color: #ef4444; font-weight: bold; margin-left: 6px; background: #fee2e2; padding: 2px 5px; border-radius: 4px; white-space:nowrap;}
     .acad-holiday-label { font-size: 11px; color: #fff; background: #8b5cf6; padding: 2px 5px; border-radius: 4px; margin-left: 6px; white-space:nowrap;}
     .cal-date-num { font-weight: 900; font-size: 16px; color: var(--text-main); margin-bottom: 6px; display:flex; align-items:center; }
-    .cal-record-summary { font-size: 16px; font-weight: 900; color: #059669; margin-top: auto; line-height: 1.4; }
+    .cal-record-summary { font-size: 18px; font-weight: 900; color: #059669; margin-top: 8px; line-height: 1.3; flex-shrink: 0; }
+    .cal-record-mins { font-size: 20px; font-weight: 900; color: #059669; margin-top: 8px; line-height: 1.2; flex-shrink: 0; letter-spacing: -0.3px; }
     .cal-record-mods { font-size: 12px; color: var(--brand-danger); }
     .cal-note-preview { font-size: 12px; color: #64748b; background: #f1f5f9; padding: 4px 6px; border-radius: 6px; margin-top: auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 700; border: 1px solid #e2e8f0; max-width: 100%; box-sizing: border-box; display: block; }
     
@@ -443,17 +467,26 @@ customStyle.innerHTML = `
     #daily-history-container.active { display: flex; background: var(--bg-card); border-radius: 16px; border: 2px solid var(--border); padding: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); flex-direction: column; box-sizing: border-box; }
     #desklog-history-container { display: none; height: calc(100vh - 180px); min-height: 600px; position: relative; width: 100%; }
     #desklog-history-container.active { display: flex; background: var(--bg-card); border-radius: 16px; border: 2px solid var(--border); padding: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); flex-direction: column; box-sizing: border-box; overflow: hidden; }
-    .desklog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; overflow-y: auto; flex: 1; padding: 4px; }
-    .desklog-card { background: var(--bg-main); border: 2px solid var(--border); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; min-height: 140px; }
-    .desklog-card-header { font-size: 18px; font-weight: 900; color: var(--accent); margin-bottom: 10px; padding-bottom: 8px; border-bottom: 2px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
-    .desklog-card-header .desklog-now { font-size: 11px; font-weight: 800; color: #059669; background: rgba(16,185,129,0.12); padding: 3px 8px; border-radius: 999px; }
+    .desklog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; overflow-y: auto; flex: 1; padding: 4px; align-content: start; }
+    .desklog-card { background: var(--bg-main); border: 2px solid var(--border); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; min-height: 120px; max-height: 300px; overflow: hidden; }
+    .desklog-card-header { font-size: 17px; font-weight: 900; color: var(--accent); margin-bottom: 8px; padding-bottom: 8px; border-bottom: 2px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-shrink: 0; min-width: 0; }
+    .desklog-card-header .desklog-count { font-size: 11px; font-weight: 800; color: var(--text-muted); background: var(--bg-card); padding: 3px 8px; border-radius: 999px; border: 1px solid var(--border); flex-shrink: 0; }
+    .desklog-card-header .desklog-now { font-size: 11px; font-weight: 800; color: #059669; background: rgba(16,185,129,0.12); padding: 3px 8px; border-radius: 999px; max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-shrink: 1; min-width: 0; }
+    .desklog-card-body { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding-right: 2px; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+    .desklog-card-body::-webkit-scrollbar { width: 5px; }
+    .desklog-card-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
     .desklog-entry { padding: 8px 10px; border-radius: 10px; margin-bottom: 6px; background: var(--bg-card); border-left: 4px solid var(--border); font-size: 13px; line-height: 1.45; }
+    .desklog-entry:last-child { margin-bottom: 0; }
     .desklog-entry.active { border-left-color: var(--accent); background: rgba(59,130,246,0.06); }
     .desklog-entry.finished { border-left-color: #10b981; }
     .desklog-entry.cancelled { border-left-color: var(--text-muted); opacity: 0.75; }
-    .desklog-entry .dl-name { font-weight: 900; font-size: 15px; color: var(--text-main); display: block; margin-bottom: 3px; }
-    .desklog-entry .dl-time { font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--text-muted); font-size: 12px; }
+    .desklog-entry .dl-name { font-weight: 900; font-size: 15px; color: var(--text-main); display: block; margin-bottom: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .desklog-entry .dl-time { font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--text-muted); font-size: 12px; word-break: break-all; }
     .desklog-entry .dl-status { font-size: 11px; font-weight: 800; margin-top: 4px; }
+    .desklog-card.has-many .desklog-entry { padding: 5px 8px; margin-bottom: 4px; line-height: 1.3; }
+    .desklog-card.has-many .desklog-entry .dl-name { font-size: 13px; margin-bottom: 1px; }
+    .desklog-card.has-many .desklog-entry .dl-time { font-size: 11px; }
+    .desklog-card.has-many .desklog-entry .dl-status { font-size: 10px; margin-top: 2px; }
     .desklog-empty { color: var(--text-muted); font-size: 13px; font-weight: 700; opacity: 0.6; text-align: center; padding: 20px 8px; }
     
     /* ⭐ 일일 마감 보고서 전용 CSS (이름 태그 형식) */
@@ -469,25 +502,26 @@ customStyle.innerHTML = `
 
     /* ⭐ 주간 전체 출결 뷰 특화 CSS (고급형 진한 사선 적용) */
     .weekly-table-wrapper { flex: 1; overflow-y: auto; overflow-x: auto; margin-top: 15px; border-radius: 12px; border: 2px solid #cbd5e1; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
-    .weekly-table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 1400px; table-layout: fixed; }
-    .weekly-table th { background: #f1f5f9; font-weight: 900; color: #0f172a; font-size: 18px; text-align: center; border-right: 1px solid #cbd5e1; border-bottom: 3px solid #94a3b8; margin: 0; }
-    .weekly-table th.main-date-th { position: sticky; top: 0; z-index: 10; height: 50px; box-sizing: border-box; }
-    .weekly-table th.sub-th { position: sticky; top: 50px; z-index: 10; height: 40px; font-size: 16px !important; color: #475569; background: #f8fafc; border-bottom: 2px solid #cbd5e1; box-sizing: border-box; padding: 10px !important; }
-    .weekly-edit-cell { padding: 6px 4px !important; vertical-align: middle !important; }
-    .weekly-time-input { width: 100%; max-width: 100px; min-width: 72px; padding: 6px 4px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; font-weight: 700; font-family: 'JetBrains Mono', monospace; text-align: center; background: #fff; cursor: pointer; box-sizing: border-box; transition: border-color 0.15s, box-shadow 0.15s; }
+    .weekly-table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 2140px; table-layout: fixed; }
+    .weekly-table th { background: #f1f5f9; font-weight: 900; color: #0f172a; font-size: 16px; text-align: center; border-right: 1px solid #cbd5e1; border-bottom: 3px solid #94a3b8; margin: 0; }
+    .weekly-table th.main-date-th { position: sticky; top: 0; z-index: 10; height: 46px; box-sizing: border-box; font-size: 15px !important; padding: 6px 4px !important; }
+    .weekly-table th.sub-th { position: sticky; top: 46px; z-index: 10; height: 36px; font-size: 13px !important; color: #475569; background: #f8fafc; border-bottom: 2px solid #cbd5e1; box-sizing: border-box; padding: 6px 4px !important; }
+    .weekly-table th.sub-th-min { min-width: 54px; width: 54px; }
+    .weekly-edit-cell { padding: 5px 3px !important; vertical-align: middle !important; overflow: hidden; }
+    .weekly-time-input { width: 100%; max-width: none; min-width: 0; padding: 5px 3px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; font-weight: 700; font-family: 'JetBrains Mono', monospace; text-align: center; background: #fff; cursor: pointer; box-sizing: border-box; transition: border-color 0.15s, box-shadow 0.15s; }
     .weekly-time-input:hover { border-color: var(--accent); }
     .weekly-time-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25); }
     .weekly-time-input.weekly-time-edited { background: #eff6ff; border-color: #93c5fd; }
-    .weekly-time-empty { color: #94a3b8; font-weight: 700; font-size: 16px; }
-    .fixed-col-name { position: sticky; left: 0; z-index: 12; background: #f8fafc; border-right: 1px solid #cbd5e1; }
-    .fixed-col-grade { position: sticky; left: 140px; z-index: 12; background: #f8fafc; border-right: 3px solid #94a3b8 !important; box-shadow: 3px 0 6px rgba(0,0,0,0.05); }
-    .weekly-table td { padding: 14px 8px; text-align: center; vertical-align: middle; background: #fff; border-bottom: 1px solid #cbd5e1; border-right: 1px solid #e2e8f0; transition: background 0.1s; }
+    .weekly-time-empty { color: #94a3b8; font-weight: 700; font-size: 14px; padding: 8px 4px !important; }
+    .fixed-col-name { position: sticky; left: 0; z-index: 12; background: #f8fafc; border-right: 1px solid #cbd5e1; width: 118px; min-width: 118px; max-width: 118px; }
+    .fixed-col-grade { position: sticky; left: 118px; z-index: 12; background: #f8fafc; border-right: 3px solid #94a3b8 !important; box-shadow: 3px 0 6px rgba(0,0,0,0.05); width: 68px; min-width: 68px; max-width: 68px; }
+    .weekly-table td { padding: 10px 5px; text-align: center; vertical-align: middle; background: #fff; border-bottom: 1px solid #cbd5e1; border-right: 1px solid #e2e8f0; transition: background 0.1s; overflow: hidden; }
     .weekly-table tr:hover td { background: #f1f5f9; }
     .col-divider { border-right: 2px solid #94a3b8 !important; }
-    .weekly-name-cell { font-size: 26px !important; font-weight: 900 !important; color: #0f172a; letter-spacing: 1px; }
-    .weekly-grade-cell { font-size: 19px !important; color: #475569; font-weight: 800; }
-    .weekly-time-cell { font-size: 23px !important; font-family: 'JetBrains Mono', monospace; font-weight: 900; color: #1e293b; }
-    .time-empty { color: #cbd5e1; font-weight: 400; font-size: 20px !important; }
+    .weekly-name-cell { font-size: 22px !important; font-weight: 900 !important; color: #0f172a; letter-spacing: 0.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 10px 8px !important; }
+    .weekly-grade-cell { font-size: 16px !important; color: #475569; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .weekly-time-cell { font-family: 'JetBrains Mono', monospace; font-weight: 700; color: #1e293b; }
+    .time-empty { color: #cbd5e1; font-weight: 400; font-size: 16px !important; }
     .weekly-table th.sortable { transition: color 0.2s; user-select: none; cursor: pointer; }
     .weekly-table th.sortable:hover { color: var(--accent); }
     .weekly-table th.sort-asc::after { content: " ▲"; font-size: 12px; color: var(--accent); }
@@ -498,6 +532,47 @@ customStyle.innerHTML = `
     
     /* ⭐ 진해진 휴무일 사선(빗금) 패턴 */
     .weekly-no-class-cell { background: repeating-linear-gradient(45deg, rgba(0,0,0,0.02), rgba(0,0,0,0.02) 10px, rgba(0,0,0,0.08) 10px, rgba(0,0,0,0.08) 20px) !important; }
+    .weekly-min-cell { font-size: 14px !important; font-family: 'JetBrains Mono', monospace; font-weight: 900; color: #059669; padding: 8px 3px !important; white-space: nowrap; }
+    .weekly-summary-total { font-size: 17px !important; font-weight: 900; color: #0f172a; background: #f0fdf4; white-space: nowrap; }
+    .weekly-summary-target { font-size: 15px !important; font-weight: 800; color: #475569; background: #f8fafc; white-space: nowrap; }
+    .weekly-summary-remain { font-size: 14px !important; font-weight: 900; white-space: nowrap; line-height: 1.3; }
+    .weekly-summary-remain.need { color: #d97706; background: #fffbeb; }
+    .weekly-summary-remain.done { color: #16a34a; background: #f0fdf4; }
+    .weekly-summary-remain.over { color: #2563eb; background: #eff6ff; }
+    .weekly-table th.summary-th { background: #e0f2fe; color: #0369a1; font-size: 15px !important; }
+    #student-memo-toast-root { position: fixed; inset: 0; pointer-events: none; z-index: 10000; overflow: visible; }
+    .student-memo-anchor-popup { position: fixed; transform: translate(-50%, calc(-100% - 8px)); max-width: min(300px, 44vw); min-width: 120px; background: linear-gradient(135deg, #1e3a8a, #2563eb); color: #fff; padding: 11px 14px; border-radius: 12px; box-shadow: 0 8px 26px rgba(37,99,235,0.5); border: 2px solid rgba(255,255,255,0.28); font-family: var(--app-font, 'Pretendard', sans-serif); opacity: 0; transition: opacity 0.28s ease, transform 0.28s ease; pointer-events: none; z-index: 10001; }
+    .student-memo-anchor-popup.visible { opacity: 1; transform: translate(-50%, calc(-100% - 12px)); animation: memoToastPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    .student-memo-anchor-popup .memo-toast-title { font-size: 11px; font-weight: 900; margin-bottom: 5px; letter-spacing: 0.02em; opacity: 0.88; }
+    .student-memo-anchor-popup .memo-toast-body { font-size: 14px; font-weight: 700; line-height: 1.45; white-space: pre-wrap; word-break: break-word; max-height: 110px; overflow-y: auto; }
+    .student-memo-anchor-popup::after { content: ''; position: absolute; bottom: -7px; left: 50%; transform: translateX(-50%); border: 7px solid transparent; border-top-color: #2563eb; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.12)); }
+    @keyframes memoToastPop { 0% { transform: translate(-50%, calc(-100% - 4px)) scale(0.92); opacity: 0; } 100% { transform: translate(-50%, calc(-100% - 12px)) scale(1); opacity: 1; } }
+
+    #stats-history-container { display: none; height: calc(100vh - 180px); min-height: 600px; position: relative; width: 100%; }
+    #stats-history-container.active { display: flex; flex-direction: column; background: var(--bg-card); border-radius: 16px; border: 2px solid var(--border); padding: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); box-sizing: border-box; overflow: hidden; }
+    .stats-period-bar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+    .stats-period-btn { padding: 12px 22px; border-radius: 12px; border: 2px solid var(--border); background: var(--bg-main); font-weight: 900; font-size: 16px; cursor: pointer; font-family: var(--app-font); transition: 0.2s; }
+    .stats-period-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); box-shadow: 0 4px 14px rgba(37,99,235,0.3); }
+    .stats-nav-row { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
+    .stats-charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; flex: 1; min-height: 0; overflow-y: auto; padding-right: 4px; }
+    .stats-card { background: var(--bg-main); border: 2px solid var(--border); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; min-height: 320px; }
+    .stats-card-title { font-size: 20px; font-weight: 900; color: var(--text-main); margin: 0 0 6px 0; display: flex; align-items: center; gap: 8px; }
+    .stats-card-sub { font-size: 13px; font-weight: 700; color: var(--text-muted); margin: 0 0 16px 0; }
+    .stats-bar-list { display: flex; flex-direction: column; gap: 10px; flex: 1; overflow-y: auto; padding-right: 4px; }
+    .stats-bar-row { display: grid; grid-template-columns: 72px 1fr 58px; gap: 10px; align-items: center; }
+    .stats-bar-name { font-size: 14px; font-weight: 900; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: right; }
+    .stats-bar-track { height: 22px; background: #e2e8f0; border-radius: 999px; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,0.08); }
+    .stats-bar-fill { height: 100%; border-radius: 999px; transition: width 0.5s ease; min-width: 2px; }
+    .stats-bar-fill.rate { background: linear-gradient(90deg, #34d399, #059669); }
+    .stats-bar-fill.mins { background: linear-gradient(90deg, #60a5fa, #2563eb); }
+    .stats-bar-val { font-size: 13px; font-weight: 900; font-family: 'JetBrains Mono', monospace; color: var(--text-main); text-align: right; }
+    .stats-summary-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+    .stats-summary-pill { background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; padding: 10px 16px; font-size: 14px; font-weight: 800; color: var(--text-muted); }
+    .stats-summary-pill strong { color: var(--accent); font-size: 18px; margin-left: 6px; }
+    .history-tab-btn.ht-stats { background: linear-gradient(145deg, #a78bfa, #7c3aed); border-color: #6d28d9; }
+    .history-tab-btn.ht-stats.active { box-shadow: 0 8px 24px rgba(124,58,237,0.42); }
+    .history-view-hint.hint-stats { border-left-color: #8b5cf6; }
+    @media screen and (max-width: 1366px) { .stats-charts-grid { grid-template-columns: 1fr; } }
 
     /* ⭐ 결석/휴원 및 분할 레이아웃 추가 CSS */
     .bottom-split-container { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; height: 100%; align-items: stretch; flex: 1; min-height: 0; }
@@ -554,9 +629,12 @@ customStyle.innerHTML = `
         .custom-col-wait { max-width: 320px !important; max-height: none !important; }
         .custom-roster-layout { grid-template-rows: minmax(0, 1fr) minmax(210px, 36vh) !important; min-height: calc(100vh - 92px) !important; }
         #grid-unassigned { grid-template-columns: 1fr !important; } 
-        #grid-unassigned .student-btn { height: 58px !important; padding: 8px 12px !important; }
-        #grid-unassigned .student-btn .name-text { font-size: 19px !important; }
-        #grid-unassigned .student-btn .quick-btn { padding: 4px 8px !important; font-size: 11px !important; }
+        #grid-unassigned .student-btn.wait-student-card { height: 62px !important; padding: 7px 10px !important; gap: 12px !important; }
+        #grid-unassigned .student-btn.wait-student-card .new-level-pill { width: 34px !important; height: 34px !important; font-size: 9px !important; }
+        #grid-unassigned .student-btn.wait-student-card .card-badge-group { width: 34px; min-width: 34px; }
+        #grid-unassigned .student-btn.wait-student-card .wait-name-wrap { padding-left: 4px; }
+        #grid-unassigned .student-btn.wait-student-card .name-text { font-size: 24px !important; letter-spacing: 0.6px !important; }
+        #grid-unassigned .student-btn.wait-student-card .quick-btn { padding: 4px 8px !important; font-size: 11px !important; }
         #grid-active { gap: 8px !important; }
         .roster-desk-slot { height: clamp(124px, calc((100vh - 330px) / 2), 148px) !important; min-height: 124px !important; max-height: 148px !important; }
         .roster-desk-slot.slot-waiting-match { min-height: 152px !important; height: 152px !important; max-height: 156px !important; }
@@ -574,9 +652,9 @@ customStyle.innerHTML = `
         .action-btn-row { margin-bottom: 5px !important; }
         .action-btn { padding: 10px !important; font-size: 14px !important; }
         .time-btn { padding: 6px 2px !important; font-size: 11px !important; }
-        .header-dashboard-box { transform: translateY(-50%) scale(0.85); transform-origin: left center; }
-        .academy-subtitle { font-size: 11px !important; }
-        .class-main-title { font-size: 18px !important; }
+        .header-dashboard-box { transform: translateY(-50%) scale(0.92); transform-origin: left center; max-width: 380px !important; min-width: 280px !important; }
+        .class-main-title { font-size: 42px !important; }
+        .sidebar { padding-top: 40px !important; }
         #weekly-history-container, #daily-history-container { padding: 15px !important; }
         .history-top-bar { gap: 8px !important; padding: 10px !important; }
         .history-tab-btn { width: 100% !important; padding: 14px 16px !important; justify-content: flex-start !important; }
@@ -585,8 +663,9 @@ customStyle.innerHTML = `
         .history-tab-divider { display: none; }
         .daily-close-bar { flex-direction: column; align-items: stretch; text-align: center; }
         .daily-close-btns { justify-content: center; }
-        .weekly-name-cell { font-size: 20px !important; }
-        .weekly-time-cell { font-size: 18px !important; }
+        .weekly-name-cell { font-size: 18px !important; }
+        .weekly-time-input { font-size: 12px !important; }
+        .weekly-table { min-width: 1900px !important; }
         .daily-summary-grid { grid-template-columns: 1fr !important; overflow-y: auto; }
         .ds-card { max-height: none; }
     }
@@ -610,7 +689,8 @@ window.onload = () => {
     injectInteractionModeUI();
     injectRemoteSettingUI(); 
     loadData(); 
-    updateDateUI(); 
+    updateDateUI();
+    updateNavTooltips();
     setTimeout(applyCustomRosterLayout, 500);
     registerServiceWorker();
 };
@@ -624,16 +704,11 @@ function registerServiceWorker() {
     navigator.serviceWorker.register('./sw.js').catch(() => {});
 }
 
-setInterval(() => {
-    updateDateUI();
-    if(rosterViewMode === 'list') { renderListView(); } 
-    else { finishedSet.forEach(name => { updateStudentStatus(name); }); }
-}, 60000); 
+setInterval(() => { updateDateUI(); }, 60000);
 
 function updateDateUI() {
     const now = new Date(); const t = i18n[currentLang] || i18n.ko;
     const str = `${now.getFullYear()}. ${String(now.getMonth()+1).padStart(2,'0')}. ${String(now.getDate()).padStart(2,'0')} (${t.days[now.getDay()]})`;
-    const el = document.getElementById('displayDate'); if(el) el.innerText = str;
     const hdDate = document.getElementById('hd-date'); if(hdDate) hdDate.innerText = str;
 }
 
@@ -1774,8 +1849,9 @@ window.sortSettingsRoster = function(col) {
         const inputs = row.querySelectorAll('input'); const select = row.querySelector('select');
         const name = inputs[0]?.value.trim(); const grade = inputs[1]?.value.trim();
         const level = select?.value; const time = parseInt(inputs[2]?.value) || 50; 
-        const birthday = inputs[3] ? inputs[3].value.trim() : '';
-        if(name) { tempRoster.push({name, grade, level, time, birthday}); }
+        const weeklyMinutes = parseInt(inputs[3]?.value) || DEFAULT_WEEKLY_MINUTES;
+        const birthday = inputs[4] ? inputs[4].value.trim() : '';
+        if(name) { tempRoster.push({name, grade, level, time, birthday, weeklyMinutes}); }
     });
     studentMasterList = tempRoster;
 
@@ -1821,12 +1897,13 @@ function injectSettingsRosterUI() {
             <table class="settings-roster-table" id="settingsRosterTable">
                 <thead style="position: sticky; top: 0; z-index: 2; background: var(--bg-main); box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
                     <tr>
-                        <th onclick="sortSettingsRoster('name')" class="sortable" id="th-set-name" style="width: 15%;">이름</th>
-                        <th onclick="sortSettingsRoster('grade')" class="sortable" id="th-set-grade" style="width: 15%;">학년</th>
-                        <th onclick="sortSettingsRoster('level')" class="sortable" id="th-set-level" style="width: 25%;">레벨</th>
-                        <th style="width: 15%;">수업시간(분)</th>
-                        <th style="width: 15%;">생일(MM-DD)</th>
-                        <th style="width: 15%;">관리</th>
+                        <th onclick="sortSettingsRoster('name')" class="sortable" id="th-set-name" style="width: 13%;">이름</th>
+                        <th onclick="sortSettingsRoster('grade')" class="sortable" id="th-set-grade" style="width: 12%;">학년</th>
+                        <th onclick="sortSettingsRoster('level')" class="sortable" id="th-set-level" style="width: 18%;">레벨</th>
+                        <th style="width: 11%;">수업시간(분)</th>
+                        <th style="width: 13%;">주간목표(분)</th>
+                        <th style="width: 13%;">생일(MM-DD)</th>
+                        <th style="width: 12%;">관리</th>
                     </tr>
                 </thead>
                 <tbody id="settingsRosterBody"></tbody>
@@ -1842,16 +1919,18 @@ function injectSettingsRosterUI() {
 function renderSettingsRoster() {
     const tbody = document.getElementById('settingsRosterBody'); if(!tbody) return; tbody.innerHTML = '';
     if(studentMasterList.length === 0) { addSettingsStudentRow(); return; }
-    studentMasterList.forEach(st => { tbody.insertAdjacentHTML('beforeend', createStudentRowHTML(st.name, st.grade, st.level, st.time, st.birthday)); });
+    studentMasterList.forEach(st => { tbody.insertAdjacentHTML('beforeend', createStudentRowHTML(st.name, st.grade, st.level, st.time, st.birthday, st.weeklyMinutes)); });
     tbody.querySelectorAll('select').forEach(sel => updateSelectColor(sel));
 }
 
-function createStudentRowHTML(name = '', grade = '', level = 'PRE', time = 50, birthday = '') {
+function createStudentRowHTML(name = '', grade = '', level = 'PRE', time = 50, birthday = '', weeklyMinutes = DEFAULT_WEEKLY_MINUTES) {
+    const weekMins = weeklyMinutes || DEFAULT_WEEKLY_MINUTES;
     return `<tr>
         <td><input type="text" class="settings-roster-input" value="${name}" placeholder="이름"></td>
         <td><input type="text" class="settings-roster-input" value="${grade}" placeholder="학년"></td>
         <td><select class="settings-roster-select" onchange="updateSelectColor(this)"><option value="PRE" ${level==='PRE'?'selected':''}>PRE</option><option value="BASIC" ${level==='BASIC'?'selected':''}>BASIC</option><option value="INTER" ${level==='INTER'?'selected':''}>INTER</option><option value="ADV" ${level==='ADV'?'selected':''}>ADV</option><option value="PREP" ${level==='PREP'?'selected':''}>PREP31</option></select></td>
         <td><input type="number" class="settings-roster-input" value="${time}" min="1" max="300"></td>
+        <td><input type="number" class="settings-roster-input" value="${weekMins}" min="1" max="2000" title="한 주 총 수업 목표(분)"></td>
         <td><input type="text" class="settings-roster-input" value="${birthday}" placeholder="04-23"></td>
         <td><button class="btn-delete-row" onclick="deleteSettingsStudentRow(this)">삭제</button></td>
     </tr>`;
@@ -1871,8 +1950,9 @@ window.saveSettingsRoster = function() {
         const inputs = row.querySelectorAll('input'); const select = row.querySelector('select');
         const name = inputs[0].value.trim(); const grade = inputs[1].value.trim();
         const level = select.value; const time = parseInt(inputs[2].value) || 50; 
-        const birthday = inputs[3] ? inputs[3].value.trim() : '';
-        if(name) { studentMasterList.push({name, grade, level, time, birthday}); }
+        const weeklyMinutes = parseInt(inputs[3].value) || DEFAULT_WEEKLY_MINUTES;
+        const birthday = inputs[4] ? inputs[4].value.trim() : '';
+        if(name) { studentMasterList.push({name, grade, level, time, birthday, weeklyMinutes}); }
     });
     saveToStorage(); generateStudents(); renderHistorySidebar(); alert("학생 명단이 성공적으로 저장되었습니다!");
 };
@@ -1896,6 +1976,7 @@ function injectHistoryUI() {
             <div class="history-top-bar">
                 <button id="tab-history-monthly" class="history-tab-btn ht-monthly active" onclick="switchHistoryMode('monthly')"><span class="ht-icon">👤</span><span class="ht-title">월간 개인 기록</span></button>
                 <button id="tab-history-weekly" class="history-tab-btn ht-weekly" onclick="switchHistoryMode('weekly')"><span class="ht-icon">🗓️</span><span class="ht-title">주간 전체 출결</span></button>
+                <button id="tab-history-stats" class="history-tab-btn ht-stats" onclick="switchHistoryMode('stats')"><span class="ht-icon">📈</span><span class="ht-title">통계 그래프</span></button>
                 <button id="tab-history-desklog" class="history-tab-btn ht-desklog" onclick="switchHistoryMode('desklog')"><span class="ht-icon">🪑</span><span class="ht-title">책상 이용 기록</span></button>
                 <button id="tab-history-roster" class="history-tab-btn ht-roster" onclick="switchHistoryMode('roster')"><span class="ht-icon">📋</span><span class="ht-title">학생 명단 관리</span></button>
                 <div class="history-tab-divider" aria-hidden="true"></div>
@@ -1956,7 +2037,7 @@ function injectHistoryUI() {
             </div>
 
             <div id="weekly-history-container">
-                <p class="history-view-hint hint-weekly">모든 학생의 주간 출결을 한 표에서 확인합니다. 수업 시작~종료는 타이머가 자동 기록하며, 기록된 시간은 키보드로 수정할 수 있습니다(예: 1430 또는 14:30).</p>
+                <p class="history-view-hint hint-weekly">모든 학생의 주간 출결을 한 표에서 확인합니다. 수업 시작~종료·학습 분은 타이머가 자동 기록하며, 월~금 합계와 주간 목표(기본 250분)를 비교해 부족·초과 분을 확인할 수 있습니다.</p>
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; position: relative;">
                     <div style="display:flex; align-items:center; gap:10px; margin: 0 auto;">
                         <button class="cal-nav-btn" onclick="changeWeeklyDate(-7)">◀ 이전 주</button>
@@ -1972,6 +2053,17 @@ function injectHistoryUI() {
                         <tbody id="weeklyTableBody"></tbody>
                     </table>
                 </div>
+            </div>
+
+            <div id="stats-history-container">
+                <p class="history-view-hint hint-stats">주간·월간 출석율과 학습시간을 그래프로 한눈에 비교합니다. 월~금 수업일 기준으로 계산됩니다.</p>
+                <div class="stats-period-bar">
+                    <button id="stats-btn-weekly" class="stats-period-btn active" onclick="switchStatsPeriod('weekly')">📅 주간 통계</button>
+                    <button id="stats-btn-monthly" class="stats-period-btn" onclick="switchStatsPeriod('monthly')">🗓️ 월간 통계</button>
+                </div>
+                <div class="stats-nav-row" id="statsNavRow"></div>
+                <div class="stats-summary-row" id="statsSummaryRow"></div>
+                <div class="stats-charts-grid" id="statsChartsGrid"></div>
             </div>
             
             <div id="daily-history-container">
@@ -2088,6 +2180,19 @@ window.goToTodayHistory = function() {
 
 window.closeHistoryDetail = function() { const popup = document.getElementById('historyDetailPopup'); if(popup) popup.classList.remove('active'); currentSelectedDate = null; renderHistoryCalendar(); };
 
+function getDayRecordMinutes(record) {
+    if (!record) return 0;
+    const stored = Number(record.totalMinutes) || 0;
+    if (stored > 0) return stored;
+    if (record.timeLogs && record.timeLogs.length > 0) {
+        const ext = extractStartEnd(record.timeLogs);
+        const start = parseTypedTimeInput(formatWeeklyTimeInputValue(ext.start));
+        const end = parseTypedTimeInput(formatWeeklyTimeInputValue(ext.end));
+        if (start && end) return calcMinutesFromTimeRange(start, end);
+    }
+    return 0;
+}
+
 function renderHistoryCalendar() {
     const gridEl = document.getElementById('historyCalGrid'); const titleEl = document.getElementById('historyMonthTitle'); if(!gridEl || !titleEl) return;
     titleEl.innerText = `${currentHistoryYear}년 ${currentHistoryMonth + 1}월 - ${currentHistoryStudent ? currentHistoryStudent : '학생을 선택하세요'}`; gridEl.innerHTML = ''; if(!currentHistoryStudent) return; 
@@ -2109,6 +2214,7 @@ function renderHistoryCalendar() {
         const dateStr = `${currentHistoryYear}-${String(currentHistoryMonth+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
         const mmddStr = `${String(currentHistoryMonth+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
         const record = studentData[dateStr];
+        const dayMins = getDayRecordMinutes(record);
         const dayOfWeek = new Date(currentHistoryYear, currentHistoryMonth, i).getDay();
         const isSunday = dayOfWeek === 0; const isSaturday = dayOfWeek === 6;
         const holidayName = krHolidays[dateStr] || krHolidays[mmddStr]; const isAcadHoliday = academyHolidays.includes(dateStr);
@@ -2119,7 +2225,7 @@ function renderHistoryCalendar() {
         const dayEl = document.createElement('div'); dayEl.className = 'cal-day';
         if(isSunday || holidayName) dayEl.classList.add('is-holiday'); if(isSaturday) dayEl.classList.add('is-saturday');
         if(currentSelectedDate === dateStr) dayEl.classList.add('active');
-        if(record && (record.totalMinutes > 0 || (record.timeLogs && record.timeLogs.length > 0))) dayEl.classList.add('has-record');
+        if(dayMins > 0 || (record && record.timeLogs && record.timeLogs.length > 0)) dayEl.classList.add('has-record');
         
         if((record && record.isNoClassDay) || isRegOff) dayEl.classList.add('is-no-class');
 
@@ -2138,10 +2244,10 @@ function renderHistoryCalendar() {
         dateHtml += `</div>`;
         let contentHtml = dateHtml;
         
-        if(record && (record.totalMinutes > 0 || (record.timeLogs && record.timeLogs.length > 0))) {
-            if (record.totalMinutes > 0) contentHtml += `<div class="cal-record-summary">${record.totalMinutes}분 학습</div>`;
-            else contentHtml += `<div class="cal-record-summary" style="color:var(--accent);">출결 기록</div>`;
-            if (record.timeLogs && record.timeLogs.length > 0) { contentHtml += `<div style="font-size:11px; color:#64748b; font-weight:bold; margin-top:3px; background:#e2e8f0; border-radius:4px; padding:2px; font-family:'JetBrains Mono', monospace;">${record.timeLogs.join('<br>')}</div>`; }
+        if(record && (dayMins > 0 || (record.timeLogs && record.timeLogs.length > 0))) {
+            if (dayMins > 0) contentHtml += `<div class="cal-record-mins">${dayMins}분 학습</div>`;
+            else contentHtml += `<div class="cal-record-summary" style="color:var(--accent); font-size:16px;">출결 기록</div>`;
+            if (record.timeLogs && record.timeLogs.length > 0) { contentHtml += `<div style="font-size:11px; color:#64748b; font-weight:bold; margin-top:4px; background:#e2e8f0; border-radius:4px; padding:2px 4px; font-family:'JetBrains Mono', monospace;">${record.timeLogs.join('<br>')}</div>`; }
             let mods = []; if(record.coupon > 0) mods.push(`🎟️${record.coupon}`); if(record.penalty > 0) mods.push(`🚨${record.penalty}`);
             if(mods.length > 0) contentHtml += `<div class="cal-record-mods">${mods.join(' ')}</div>`;
         } else if (isAcadHoliday) { 
@@ -2152,7 +2258,7 @@ function renderHistoryCalendar() {
         
         if(record && record.note) { 
             let shortNote = record.note.length > 10 ? record.note.substring(0, 10) + '...' : record.note; 
-            contentHtml += `<div class="cal-note-preview" title="${record.note}">📝 ${shortNote}</div>`; 
+            contentHtml += `<div class="cal-note-preview" title="${record.note}" style="margin-top:auto;">📝 ${shortNote}</div>`; 
         }
         
         dayEl.innerHTML = contentHtml; dayEl.onclick = () => { selectHistoryDate(dateStr, record); }; gridEl.appendChild(dayEl);
@@ -2184,7 +2290,7 @@ window.selectHistoryDate = function(dateStr, record) {
     }
 
     if(record) {
-        document.getElementById('detailTotalMins').innerText = record.totalMinutes;
+        document.getElementById('detailTotalMins').innerText = getDayRecordMinutes(record);
         document.getElementById('detailCoupons').innerText = record.coupon || 0;
         document.getElementById('detailPenalties').innerText = record.penalty || 0;
         document.getElementById('detailTimeLogs').innerHTML = (record.timeLogs && record.timeLogs.length > 0) ? record.timeLogs.join('<br>') : '-';
@@ -2222,6 +2328,7 @@ window.toggleTempOffDay = function() {
 
     saveToStorage(); selectHistoryDate(currentSelectedDate, rec);
     if (historyViewMode === 'weekly') renderWeeklyTable();
+    if (historyViewMode === 'stats') renderStatsCharts();
     if (historyViewMode === 'daily') renderDailySummary();
 };
 
@@ -2329,7 +2436,10 @@ function injectHeaderDashboard() {
     if(mainHeader && !document.getElementById('header-dashboard')) {
         const dashboard = document.createElement('div'); dashboard.id = 'header-dashboard'; dashboard.className = 'header-dashboard-box'; let t = i18n[currentLang] || i18n.ko;
         dashboard.innerHTML = `
-            <div class="hd-date-display" id="hd-date"></div>
+            <div class="hd-top-row">
+                <span class="hd-academy-name" id="displayAcademyName">${academyName || '향촌삼성영어학원'}</span>
+                <span class="hd-date-display" id="hd-date"></span>
+            </div>
             <div class="hd-dashboard-row">
                 <div class="hd-title" data-i18n="dashTitle">${t.dashTitle}</div>
                 <div class="hd-items-container">
@@ -2344,6 +2454,13 @@ function injectHeaderDashboard() {
         mainHeader.insertBefore(dashboard, mainHeader.firstChild);
         updateDateUI();
     }
+}
+
+function updateNavTooltips() {
+    document.querySelectorAll('.nav-tab').forEach(tab => {
+        const textEl = tab.querySelector('.nav-text');
+        if (textEl) tab.setAttribute('data-tooltip', textEl.textContent.trim());
+    });
 }
 
 function getAllStudentNames() {
@@ -2365,8 +2482,8 @@ function updateRosterCounts() {
     if(document.getElementById('hd-absent')) document.getElementById('hd-absent').innerText = absent;
 }
 
-function changeLanguage() { currentLang = document.getElementById("langSelect").value; saveToStorage(); applyLanguage(); const dashBox = document.getElementById('header-dashboard'); if(dashBox) { dashBox.remove(); injectHeaderDashboard(); updateRosterCounts(); } updateWaitSortUI(); updateInteractionModeDesc(); updateTapAssignHint(); }
-function applyLanguage() { const t = i18n[currentLang] || i18n.ko; document.querySelectorAll("[data-i18n]").forEach(el => { el.innerHTML = t[el.getAttribute("data-i18n")]; }); document.querySelectorAll('[data-i18n-opt]').forEach(el => { const key = el.getAttribute('data-i18n-opt'); if (t[key]) el.textContent = t[key]; }); updateDateUI(); updateHeaderTitle(); updateEndClassDayButton(); generateStudents(); for (let i = 0; i < DESK_COUNT; i++) updateBoxUI(i); }
+function changeLanguage() { currentLang = document.getElementById("langSelect").value; saveToStorage(); applyLanguage(); const dashBox = document.getElementById('header-dashboard'); if(dashBox) { dashBox.remove(); injectHeaderDashboard(); updateRosterCounts(); updateCustomNames(); } updateWaitSortUI(); updateInteractionModeDesc(); updateTapAssignHint(); }
+function applyLanguage() { const t = i18n[currentLang] || i18n.ko; document.querySelectorAll("[data-i18n]").forEach(el => { el.innerHTML = t[el.getAttribute("data-i18n")]; }); document.querySelectorAll('[data-i18n-opt]').forEach(el => { const key = el.getAttribute('data-i18n-opt'); if (t[key]) el.textContent = t[key]; }); updateNavTooltips(); updateDateUI(); updateHeaderTitle(); updateEndClassDayButton(); generateStudents(); for (let i = 0; i < DESK_COUNT; i++) updateBoxUI(i); }
 
 window.switchView = function(view) {
     if (view === 'log') view = 'history';
@@ -2387,6 +2504,8 @@ window.switchView = function(view) {
             renderDailySummary();
         } else if(historyViewMode === 'weekly') {
             renderWeeklyTable();
+        } else if(historyViewMode === 'stats') {
+            renderStatsCharts();
         } else if(historyViewMode === 'desklog') {
             ensureDeskLogDate(true);
             renderDeskSeatLog();
@@ -2445,9 +2564,34 @@ function applyViewMode() {
 }
 
 const gradeMap = {'초1':1, '초등학교1학년':1, '초등1':1, '초2':2, '초등학교2학년':2, '초등2':2, '초3':3, '초등학교3학년':3, '초등3':3, '초4':4, '초등학교4학년':4, '초등4':4, '초5':5, '초등학교5학년':5, '초등5':5, '초6':6, '초등학교6학년':6, '초등6':6, '중1':7, '중학교1학년':7, '중등1':7, '중2':8, '중학교2학년':8, '중등2':8, '중3':9, '중학교3학년':9, '중등3':9, '고1':10, '고등학교1학년':10, '고등1':10, '고2':11, '고등학교2학년':11, '고등2':11, '고3':12, '고등학교3학년':12, '고등3':12};
-function getGradeWeight(g) { return gradeMap[g.replace(/\s+/g,'')] || 99; }
+function getGradeWeight(g) {
+    if (!g || !String(g).trim()) return 99;
+    const normalized = String(g).replace(/\s+/g, '');
+    if (gradeMap[normalized] !== undefined) return gradeMap[normalized];
+    const elem = normalized.match(/초(?:등|등학교)?(\d)/);
+    if (elem) return Math.min(6, Math.max(1, parseInt(elem[1], 10) || 99));
+    const mid = normalized.match(/중(?:등|등학교)?(\d)/);
+    if (mid) return 6 + Math.min(3, Math.max(1, parseInt(mid[1], 10) || 0));
+    const high = normalized.match(/고(?:등|등학교)?(\d)/);
+    if (high) return 9 + Math.min(3, Math.max(1, parseInt(high[1], 10) || 0));
+    const onlyNum = normalized.match(/^(\d{1,2})학년?$/);
+    if (onlyNum) return Math.min(12, Math.max(1, parseInt(onlyNum[1], 10) || 99));
+    return 99;
+}
 const levelMap = {'PRE':1, 'BASIC':2, 'INTER':3, 'ADV':4, 'PREP':5, 'GUEST':6};
 function getLevelWeight(l) { return levelMap[l] || 99; }
+const WAIT_LEVEL_SHORT = { PRE: 'PRE', BASIC: 'BA', INTER: 'IN', ADV: 'AD', PREP: 'PREP', GUEST: 'GST' };
+function getWaitLevelShortLabel(lvl) { return WAIT_LEVEL_SHORT[lvl] || lvl || ''; }
+function clearWaitLevelClasses(btn) {
+    if (!btn) return;
+    btn.classList.remove('wait-student-card');
+    Object.keys(WAIT_LEVEL_SHORT).forEach(l => btn.classList.remove(`wait-lvl-${l}`));
+}
+function applyWaitStudentCardClasses(btn, lvl) {
+    clearWaitLevelClasses(btn);
+    if (!btn || !lvl) return;
+    btn.classList.add('wait-student-card', `wait-lvl-${lvl}`);
+}
 
 window.sortList = function(col) { playUISound('click'); if (listSortConfig.col === col) { listSortConfig.asc = !listSortConfig.asc; } else { listSortConfig.col = col; listSortConfig.asc = true; } ['name', 'grade', 'level', 'seat', 'startTime', 'time'].forEach(c => { let th = document.getElementById(`th-${c}`); if(th) { th.classList.remove('sort-asc', 'sort-desc'); if(c === col) th.classList.add(listSortConfig.asc ? 'sort-asc' : 'sort-desc'); } }); renderListView(); }
 
@@ -2546,14 +2690,14 @@ window.goToTimer = function(name) { let tIdx = timers.findIndex(t => t.student =
 function updateCustomNames() { academyName = document.getElementById('inputAcademyName').value || "향촌삼성영어학원"; className = document.getElementById('inputClassName').value || "Maple Classroom"; document.getElementById('displayAcademyName').innerText = academyName; updateHeaderTitle(); updateEndClassDayButton(); saveToStorage(); }
 
 function applyNameColor(val) {
-    const preset = NAME_COLOR_MAP[val] || NAME_COLOR_MAP.dark;
+    const preset = NAME_COLOR_MAP[val] || NAME_COLOR_MAP.black;
     const root = document.documentElement;
     root.style.setProperty('--custom-name-color', preset.color);
     root.style.setProperty('--custom-name-shadow', preset.shadow);
 }
 
 function changeNameColor() {
-    applyNameColor(document.getElementById("nameColorSelect")?.value || 'dark');
+    applyNameColor(document.getElementById("nameColorSelect")?.value || 'black');
     saveToStorage();
 }
 
@@ -2576,7 +2720,7 @@ function updateVolumes() { alarmVolume = document.getElementById('volAlarm').val
 
 function changeDeskCount() { const newCount = parseInt(document.getElementById("deskCountSelect").value); if(newCount < timers.length) { for(let i=newCount; i<timers.length; i++) { if(timers[i].student !== "(empty)") { if(!confirm(`타이머 ${newCount+1}번 이상에 배치된 학생이 있습니다. 강제 취소됩니다.`)) { document.getElementById("deskCountSelect").value = DESK_COUNT; return; } break; } } for(let i=newCount; i<timers.length; i++) { stopTimer(i); if(timers[i].student !== "(empty)") { attendanceMap.delete(timers[i].student); updateStudentStatus(timers[i].student); } } timers.length = newCount; } else if(newCount > timers.length) { for(let i=timers.length; i<newCount; i++) { timers.push({ student: "(empty)", remainingTime: 0, totalTime: 0, overTime: 0, interval: null, isOver: false, isPaused: false, lastTick: 0 }); } } DESK_COUNT = newCount; ensureDeskRemoteCodesLength(DESK_COUNT); createInitialGrid(); generateStudents(); renderRemoteCodeInputs(); saveToStorage(); }
 
-function persistToStorage() {
+function persistToStorage(skipRosterCounts) {
     saveRemoteCodesFromUI();
     const data = {
         deskCount: DESK_COUNT, academyName: academyName, className: className,
@@ -2585,26 +2729,33 @@ function persistToStorage() {
         attendance: Array.from(attendanceMap.entries()), finishedSet: Array.from(finishedSet), absentSet: Array.from(absentSet), assignOrderCounter: assignOrderCounter,
         timerStates: timers.map(t => ({ student: t.student, remainingTime: t.remainingTime, totalTime: t.totalTime, overTime: t.overTime, isOver: t.isOver, startTimeStr: t.startTimeStr, isRunning: t.interval !== null, isPaused: t.isPaused || false, lastTick: t.lastTick })),
         vols: { a: alarmVolume, t: ttsVolume, u: uiVolume, ttsVoice: document.getElementById("ttsVoiceSelect")?.value || "1", melody: document.getElementById("melodyType")?.value || "0", uiType: document.getElementById("uiSoundType")?.value || "0" },
-        theme: currentTheme, nameColor: document.getElementById("nameColorSelect")?.value || "dark", language: currentLang, fontFamily: currentFontFamily,
+        theme: currentTheme, nameColor: document.getElementById("nameColorSelect")?.value || "black", language: currentLang, fontFamily: currentFontFamily,
         customStudentOrder: customStudentOrder, guestList: guestList, guestGrades: guestGrades, rosterViewMode: rosterViewMode, waitSortConfig: waitSortConfig, interactionMode: interactionMode,
         dayClosedDate: dayClosedDate, operationalDate: operationalDate,
         deskRemoteCodes: deskRemoteCodes.slice(0, DESK_COUNT), finishedTimerSnapshot: finishedTimerSnapshot
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    updateRosterCounts();
+    if (!skipRosterCounts) updateRosterCounts();
 }
 
-function saveToStorage(immediate) {
+function maybePersistRunningTimers() {
+    const now = Date.now();
+    if (now - timerLastPersistAt < TIMER_PERSIST_INTERVAL_MS) return;
+    timerLastPersistAt = now;
+    saveToStorage(false, true);
+}
+
+function saveToStorage(immediate, skipRosterCounts) {
     if (immediate === false) {
         if (saveToStorageTimer) clearTimeout(saveToStorageTimer);
         saveToStorageTimer = setTimeout(() => {
             saveToStorageTimer = null;
-            try { persistToStorage(); } catch (e) { handleStorageSaveError(e); }
+            try { persistToStorage(skipRosterCounts); } catch (e) { handleStorageSaveError(e); }
         }, STORAGE_SAVE_DEBOUNCE_MS);
         return;
     }
     if (saveToStorageTimer) { clearTimeout(saveToStorageTimer); saveToStorageTimer = null; }
-    try { persistToStorage(); } catch (e) { handleStorageSaveError(e); }
+    try { persistToStorage(skipRosterCounts); } catch (e) { handleStorageSaveError(e); }
 }
 
 function handleStorageSaveError(err) {
@@ -2681,7 +2832,12 @@ function loadData() {
             ensureDeskRemoteCodesLength(DESK_COUNT);
             renderRemoteCodeInputs();
 
-            if (data.studentMasterList) { studentMasterList = data.studentMasterList; } 
+            if (data.studentMasterList) {
+                studentMasterList = data.studentMasterList.map(st => ({
+                    ...st,
+                    weeklyMinutes: (st.weeklyMinutes > 0) ? st.weeklyMinutes : DEFAULT_WEEKLY_MINUTES
+                }));
+            }
             renderSettingsRoster(); 
             
             attendanceMap = new Map(data.attendance || []); finishedSet = new Set(data.finishedSet || []); absentSet = new Set(data.absentSet || []); assignOrderCounter = data.assignOrderCounter || 0;
@@ -2699,7 +2855,7 @@ function loadData() {
 
             applyPersistedAudioSettings(data.vols);
             if(data.theme) { currentTheme = data.theme; document.getElementById("themeSelect").value = currentTheme; document.body.className = "theme-" + currentTheme; }
-            const nameColorVal = data.nameColor || 'dark';
+            const nameColorVal = data.nameColor || 'black';
             const nameColorSelect = document.getElementById("nameColorSelect");
             if (nameColorSelect) nameColorSelect.value = nameColorVal;
             applyNameColor(nameColorVal);
@@ -2709,7 +2865,7 @@ function loadData() {
             applyLanguage(); createInitialGrid(); applyViewMode(); syncTodayAbsentFromHistory(); updateRosterCounts(); updateWaitSortUI(); syncDailySummaryReport();
             if (data.timerStates) { data.timerStates.forEach((ts, idx) => { if (ts.isRunning && !ts.isPaused) { resumeTimer(idx); } }); }
         } else {
-            studentMasterList = []; studentModifiers = {}; guestGrades = {}; renderSettingsRoster(); timers = Array.from({length: DESK_COUNT}, () => ({ student: "(empty)", remainingTime: 0, totalTime: 0, overTime: 0, interval: null, isOver: false, isPaused: false, lastTick: 0 })); applyNameColor('dark'); applyInteractionModeBodyClass(); applyLanguage(); createInitialGrid(); applyViewMode(); updateRosterCounts();
+            studentMasterList = []; studentModifiers = {}; guestGrades = {}; renderSettingsRoster(); timers = Array.from({length: DESK_COUNT}, () => ({ student: "(empty)", remainingTime: 0, totalTime: 0, overTime: 0, interval: null, isOver: false, isPaused: false, lastTick: 0 })); applyNameColor('black'); applyInteractionModeBodyClass(); applyLanguage(); createInitialGrid(); applyViewMode(); updateRosterCounts();
         }
     } catch(e) {
         console.error('ST Flow: loadData failed', e);
@@ -2828,8 +2984,10 @@ window.removeModifier = function(name, type, event) {
     updateStudentStatus(name); if (rosterViewMode === 'list') renderListView(); saveToStorage();
 };
 
-function initRosterSlots() {
-    const gridActive = document.getElementById("grid-active"); if(!gridActive) return; gridActive.innerHTML = "";
+function initRosterSlots(forceReset) {
+    const gridActive = document.getElementById("grid-active"); if(!gridActive) return;
+    if (!forceReset && gridActive.children.length === DESK_COUNT) return;
+    gridActive.innerHTML = "";
     for (let i = 0; i < DESK_COUNT; i++) {
         const slot = document.createElement("div");
         slot.id = `roster-desk-${i}`;
@@ -2855,24 +3013,23 @@ window.cancelEmptySlot = function(id, e) { if(e) e.stopPropagation(); playUISoun
 function updateRosterSlotUI(id) {
     if(rosterViewMode === 'list') return; const slot = document.getElementById(`roster-desk-${id}`); if(!slot) return;
     const t = timers[id]; const isAssigned = t.student !== "(empty)"; const isPlaying = t.interval !== null || t.isPaused;
-    const existingPlaceholder = slot.querySelector('.roster-placeholder'); if(existingPlaceholder) existingPlaceholder.remove();
+    slot.querySelectorAll('.roster-placeholder').forEach(el => el.remove());
     slot.classList.remove('slot-waiting-match');
-    if (!isAssigned) {
-        let placeholder = document.createElement('div'); placeholder.className = 'roster-placeholder';
-        if (isPlaying) {
-            slot.classList.add('slot-waiting-match');
-            placeholder.style.cursor = isTapAssignMode() ? "pointer" : "grab";
-            placeholder.draggable = !isTapAssignMode();
-            if (!isTapAssignMode()) {
-                placeholder.ondragstart = (e) => { draggedName = "(empty)"; draggedFromIndex = id; e.dataTransfer.effectAllowed = 'move'; playUISound('click'); };
-            }
-            placeholder.innerHTML = `<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; width:100%; height:100%; gap:4px;"><div class="roster-waiting-text">✨ 매칭 대기중...</div><div class="css-desk" style="opacity: 0.8; flex-shrink:0;"><div class="desk-top" style="background:#dbeafe; border-color:#93c5fd;"><span class="desk-num" style="color:#2563eb;">${id+1}</span></div><div class="desk-chair" style="background:#bfdbfe; border-color:#60a5fa;"></div></div><button onclick="cancelEmptySlot(${id}, event)" style="margin-top:4px; padding:5px 12px; border-radius:10px; background:var(--brand-danger); color:#fff; border:none; font-weight:900; font-size:12px; cursor:pointer; flex-shrink:0;">✖ 대기 취소</button></div>`;
-        } else {
-            const emptyLabel = (i18n[currentLang] || i18n.ko).emptyDesk || '빈 책상';
-            placeholder.innerHTML = `<div class="css-desk"><div class="desk-top"><span class="desk-num">${id+1}</span></div><div class="desk-chair"></div></div><div class="roster-empty-text">${emptyLabel}</div>`;
+    if (isAssigned) return;
+    let placeholder = document.createElement('div'); placeholder.className = 'roster-placeholder';
+    if (isPlaying) {
+        slot.classList.add('slot-waiting-match');
+        placeholder.style.cursor = isTapAssignMode() ? "pointer" : "grab";
+        placeholder.draggable = !isTapAssignMode();
+        if (!isTapAssignMode()) {
+            placeholder.ondragstart = (e) => { draggedName = "(empty)"; draggedFromIndex = id; e.dataTransfer.effectAllowed = 'move'; playUISound('click'); };
         }
-        slot.appendChild(placeholder);
+        placeholder.innerHTML = `<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; width:100%; height:100%; gap:4px;"><div class="roster-waiting-text">✨ 매칭 대기중...</div><div class="css-desk" style="opacity: 0.8; flex-shrink:0;"><div class="desk-top" style="background:#dbeafe; border-color:#93c5fd;"><span class="desk-num" style="color:#2563eb;">${id+1}</span></div><div class="desk-chair" style="background:#bfdbfe; border-color:#60a5fa;"></div></div><button onclick="cancelEmptySlot(${id}, event)" style="margin-top:4px; padding:5px 12px; border-radius:10px; background:var(--brand-danger); color:#fff; border:none; font-weight:900; font-size:12px; cursor:pointer; flex-shrink:0;">✖ 대기 취소</button></div>`;
+    } else {
+        const emptyLabel = (i18n[currentLang] || i18n.ko).emptyDesk || '빈 책상';
+        placeholder.innerHTML = `<div class="css-desk"><div class="desk-top"><span class="desk-num">${id+1}</span></div><div class="desk-chair"></div></div><div class="roster-empty-text">${emptyLabel}</div>`;
     }
+    slot.appendChild(placeholder);
 }
 
 let allNames = []; 
@@ -2880,6 +3037,109 @@ let allNames = [];
 function getTodayDateKey() {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+}
+
+function getStudentWeeklyTarget(name) {
+    const info = studentMasterList.find(s => s.name === name);
+    return (info && info.weeklyMinutes > 0) ? info.weeklyMinutes : DEFAULT_WEEKLY_MINUTES;
+}
+
+function escapeHtml(str) {
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function findStudentMemoAnchor(studentName) {
+    const card = document.getElementById('btn-' + studentName);
+    if (card) {
+        const nameText = card.querySelector('.name-text');
+        const target = nameText || card;
+        if (target.getBoundingClientRect().width > 0) return target;
+    }
+    const tIdx = timers.findIndex(t => t.student === studentName);
+    if (tIdx !== -1) {
+        const box = document.getElementById('box-' + tIdx);
+        const nameEl = box?.querySelector('.student-name-display');
+        if (nameEl && nameEl.getBoundingClientRect().width > 0) return nameEl;
+    }
+    const listRows = document.querySelectorAll('#rosterListBody tr');
+    for (const row of listRows) {
+        const td = row.querySelector('td');
+        if (!td) continue;
+        const raw = td.innerText.replace(/🎉/g, '').trim().split('\n')[0].trim();
+        if (raw === studentName) return td;
+    }
+    return null;
+}
+
+function positionMemoPopup(popup, anchor) {
+    const rect = anchor.getBoundingClientRect();
+    const centerX = Math.min(Math.max(rect.left + rect.width / 2, 80), window.innerWidth - 80);
+    const topY = Math.max(rect.top, 12);
+    popup.style.left = centerX + 'px';
+    popup.style.top = topY + 'px';
+}
+
+function removeMemoPopup(studentName) {
+    const item = activeMemoPopups.get(studentName);
+    if (!item) return;
+    clearTimeout(item.timer);
+    item.el.classList.remove('visible');
+    setTimeout(() => { if (item.el.parentNode) item.el.remove(); }, 300);
+    activeMemoPopups.delete(studentName);
+}
+
+function showStudentDayMemoPopup(studentName) {
+    if (!studentName || studentName === '(empty)') return;
+    const note = studentHistory[studentName]?.[getTodayDateKey()]?.note?.trim();
+    if (!note) return;
+
+    const now = Date.now();
+    const lastShown = activeMemoPopups.get(studentName);
+    if (lastShown && now - lastShown.shownAt < 1500) return;
+
+    const placePopup = () => {
+        const anchor = findStudentMemoAnchor(studentName);
+        if (!anchor) return false;
+
+        let root = document.getElementById('student-memo-toast-root');
+        if (!root) {
+            root = document.createElement('div');
+            root.id = 'student-memo-toast-root';
+            document.body.appendChild(root);
+        }
+
+        let item = activeMemoPopups.get(studentName);
+        if (item) {
+            clearTimeout(item.timer);
+            item.el.querySelector('.memo-toast-body').innerHTML = escapeHtml(note);
+            positionMemoPopup(item.el, anchor);
+            item.timer = setTimeout(() => removeMemoPopup(studentName), MEMO_POPUP_DURATION_MS);
+            item.shownAt = now;
+            item.el.classList.add('visible');
+            return true;
+        }
+
+        const popup = document.createElement('div');
+        popup.className = 'student-memo-anchor-popup';
+        popup.innerHTML = `<div class="memo-toast-title">📝 오늘의 메모</div><div class="memo-toast-body">${escapeHtml(note)}</div>`;
+        root.appendChild(popup);
+        positionMemoPopup(popup, anchor);
+        requestAnimationFrame(() => popup.classList.add('visible'));
+
+        const timer = setTimeout(() => removeMemoPopup(studentName), MEMO_POPUP_DURATION_MS);
+        activeMemoPopups.set(studentName, { el: popup, timer, shownAt: now, anchor });
+        return true;
+    };
+
+    if (!placePopup()) {
+        setTimeout(() => placePopup(), 120);
+    }
+}
+
+function getBillableLessonSeconds(t) {
+    const taught = Math.max(0, (t.totalTime || 0) - (t.remainingTime || 0));
+    const billableOver = Math.max(0, (t.overTime || 0) - ALARM_GRACE_SECONDS);
+    return taught + billableOver;
 }
 
 function formatNowTime() {
@@ -2968,8 +3228,10 @@ window.renderDeskSeatLog = function() {
             });
         }
 
-        const nowBadge = (isLive && liveName) ? `<span class="desklog-now">${isKo ? '현재' : 'NOW'}: ${liveName}</span>` : '';
-        html += `<div class="desklog-card"><div class="desklog-card-header"><span>${i + 1}${isKo ? '번 책상' : ' Desk'}</span>${nowBadge}</div>${entriesHtml}</div>`;
+        const manyClass = deskSessions.length > 4 ? ' has-many' : '';
+        const countBadge = deskSessions.length > 0 ? `<span class="desklog-count">${deskSessions.length}${isKo ? '명' : ''}</span>` : '';
+        const nowBadge = (isLive && liveName) ? `<span class="desklog-now" title="${liveName}">${isKo ? '현재' : 'NOW'}: ${liveName}</span>` : '';
+        html += `<div class="desklog-card${manyClass}"><div class="desklog-card-header"><span>${i + 1}${isKo ? '번 책상' : ' Desk'}</span><span style="display:flex;align-items:center;gap:6px;min-width:0;flex-shrink:1;">${countBadge}${nowBadge}</span></div><div class="desklog-card-body">${entriesHtml}</div></div>`;
     }
     grid.innerHTML = html;
 };
@@ -3106,6 +3368,7 @@ function refreshHistoryViewsIfOpen() {
     if (!historyView || !historyView.classList.contains('active')) return;
     if (historyViewMode === 'monthly' && currentHistoryStudent) renderHistoryCalendar();
     else if (historyViewMode === 'weekly') renderWeeklyTable();
+    else if (historyViewMode === 'stats') renderStatsCharts();
     else if (historyViewMode === 'daily') renderDailySummary();
     else if (historyViewMode === 'desklog') renderDeskSeatLog();
 }
@@ -3173,6 +3436,8 @@ window.restoreFinishedToClass = function(name) {
         if (idx !== deskIdx && t.student === name) {
             if (t.interval) { clearInterval(t.interval); t.interval = null; }
             timers[idx] = { student: "(empty)", remainingTime: 0, totalTime: 0, overTime: 0, interval: null, isOver: false, isPaused: false, lastTick: 0, startTimeStr: '' };
+            updateBoxUI(idx);
+            updateRosterSlotUI(idx);
         }
     });
 
@@ -3194,15 +3459,39 @@ window.restoreFinishedToClass = function(name) {
     updateBoxUI(deskIdx);
     updateRosterSlotUI(deskIdx);
     updateStudentStatus(name);
+    updateGauge(name, t.remainingTime, t.totalTime);
     updateRosterCounts();
-    if (rosterViewMode === 'list') {
-        renderListView();
-    } else {
-        generateStudents();
-    }
+    if (rosterViewMode === 'list') renderListView();
     refreshHistoryViewsIfOpen();
     saveToStorage();
 };
+
+function configureStudentCard(btn, n, index, tLang, lvl) {
+    const levelShort = getWaitLevelShortLabel(lvl);
+    btn.className = `student-btn wait-student-card wait-lvl-${lvl} level-${lvl}`;
+    btn.innerHTML = `<div class="gauge-bg"></div><button class="card-cancel-btn" onclick="event.stopPropagation(); cancelFromCard('${n}')">✖</button><button class="guest-delete-btn" onclick="event.stopPropagation(); removeGuest('${n}')">✖</button><div class="alarm-alert-text">${tLang.statusTimeUp}</div><div class="card-badge-group"><div class="new-level-pill level-color-${lvl}">${levelShort}</div></div><div class="wait-name-wrap"><div class="name-text">${n}</div></div><div class="quick-controls"><button class="quick-btn q-start" onclick="event.stopPropagation(); quickStart('${n}')">${tLang.quickStart}</button><button class="quick-btn q-finish" onclick="event.stopPropagation(); quickFinish('${n}')">${tLang.quickFinish}</button></div>`;
+    const useTap = isTapAssignMode();
+    btn.draggable = !useTap;
+    btn.style.order = index;
+    if (!useTap) {
+        btn.ondragstart = (e) => { draggedName = n; draggedNameForList = n; draggedFromAbsent = absentSet.has(n); let tIdx = timers.findIndex(t => t.student === n); draggedFromIndex = tIdx !== -1 ? tIdx : null; e.dataTransfer.effectAllowed = 'move'; playUISound('click'); };
+        btn.ondragend = () => { clearDragState(); };
+        btn.ondragenter = (e) => { e.preventDefault(); btn.classList.add("drag-over"); };
+        btn.ondragover = (e) => { e.preventDefault(); btn.classList.add("drag-over"); };
+        btn.ondragleave = () => { btn.classList.remove("drag-over"); };
+        btn.ondrop = (e) => {
+            e.preventDefault(); btn.classList.remove("drag-over");
+            if (draggedFromAbsent && draggedName) { restoreFromAbsent(draggedName); clearDragState(); return; }
+            if (draggedFromIndex !== null) return;
+            if (waitSortConfig.col === 'custom' && draggedNameForList && draggedNameForList !== n) { let i1 = customStudentOrder.indexOf(draggedNameForList); let i2 = customStudentOrder.indexOf(n); if (i1 > -1 && i2 > -1) { let temp = customStudentOrder[i1]; customStudentOrder[i1] = customStudentOrder[i2]; customStudentOrder[i2] = temp; playUISound('click'); generateStudents(); } }
+            clearDragState();
+        };
+    } else {
+        btn.ondragstart = null;
+        btn.ondrop = null;
+    }
+    btn.onclick = (e) => handleStudentCardTap(n, e);
+}
 
 function generateStudents() {
     studentLevels = {}; studentGrades = {}; studentTimes = {};
@@ -3218,41 +3507,35 @@ function generateStudents() {
     customStudentOrder = newOrder; allNames = customStudentOrder;
 
     if (rosterViewMode === 'list') { renderListView(); } else {
-        document.getElementById("grid-unassigned").innerHTML = ""; initRosterSlots(); document.getElementById("grid-finished").innerHTML = "";
-        
-        // 새로 추가된 absent 창도 초기화 (존재한다면)
+        const existingCards = new Map();
+        document.querySelectorAll('.student-btn[id^="btn-"]').forEach(btn => {
+            existingCards.set(btn.id.replace('btn-', ''), btn);
+        });
+
+        document.getElementById("grid-unassigned").innerHTML = "";
+        initRosterSlots();
+        document.getElementById("grid-finished").innerHTML = "";
+
         const gridAbsent = document.getElementById("grid-absent");
         if(gridAbsent) gridAbsent.innerHTML = "";
 
+        const waitFrag = document.createDocumentFragment();
         getSortedWaitNames(allNames).forEach((n, index) => {
-            const lvl = studentLevels[n]; const grade = studentGrades[n];
-            const btn = document.createElement("button"); btn.id = "btn-" + n; 
-            let levelLabel = (lvl === 'PREP') ? 'PREP31' : (lvl === 'ADV' ? 'ADV' : lvl); if(lvl === 'GUEST') levelLabel = 'GUEST';
-
-            btn.innerHTML = `<div class="gauge-bg"></div><button class="card-cancel-btn" onclick="event.stopPropagation(); cancelFromCard('${n}')">✖</button><button class="guest-delete-btn" onclick="event.stopPropagation(); removeGuest('${n}')">✖</button><div class="alarm-alert-text">${tLang.statusTimeUp}</div><div class="card-badge-group"><div class="new-level-pill level-color-${lvl}">${levelLabel}</div>${grade ? `<div class="card-grade-badge">${grade}</div>` : ''}</div><div class="name-text">${n}</div><div class="quick-controls"><button class="quick-btn q-start" onclick="event.stopPropagation(); quickStart('${n}')">${tLang.quickStart}</button><button class="quick-btn q-finish" onclick="event.stopPropagation(); quickFinish('${n}')">${tLang.quickFinish}</button></div>`;
-            const useTap = isTapAssignMode();
-            btn.draggable = !useTap;
-            btn.style.order = index;
-            if (!useTap) {
-                btn.ondragstart = (e) => { draggedName = n; draggedNameForList = n; draggedFromAbsent = absentSet.has(n); let tIdx = timers.findIndex(t => t.student === n); draggedFromIndex = tIdx !== -1 ? tIdx : null; e.dataTransfer.effectAllowed = 'move'; playUISound('click'); };
-                btn.ondragend = () => { clearDragState(); };
-                btn.ondragenter = (e) => { e.preventDefault(); btn.classList.add("drag-over"); };
-                btn.ondragover = (e) => { e.preventDefault(); btn.classList.add("drag-over"); };
-                btn.ondragleave = () => { btn.classList.remove("drag-over"); };
-                btn.ondrop = (e) => {
-                    e.preventDefault(); btn.classList.remove("drag-over");
-                    if (draggedFromAbsent && draggedName) { restoreFromAbsent(draggedName); clearDragState(); return; }
-                    if (draggedFromIndex !== null) return;
-                    if (waitSortConfig.col === 'custom' && draggedNameForList && draggedNameForList !== n) { let i1 = customStudentOrder.indexOf(draggedNameForList); let i2 = customStudentOrder.indexOf(n); if (i1 > -1 && i2 > -1) { let temp = customStudentOrder[i1]; customStudentOrder[i1] = customStudentOrder[i2]; customStudentOrder[i2] = temp; playUISound('click'); generateStudents(); } }
-                    clearDragState();
-                };
+            const lvl = studentLevels[n];
+            let btn = existingCards.get(n);
+            if (!btn) {
+                btn = document.createElement("button");
+                btn.id = "btn-" + n;
             } else {
-                btn.ondragstart = null;
-                btn.ondrop = null;
+                existingCards.delete(n);
             }
-            btn.onclick = (e) => handleStudentCardTap(n, e);
-            document.getElementById("grid-unassigned").appendChild(btn); updateStudentStatus(n);
+            configureStudentCard(btn, n, index, tLang, lvl);
+            waitFrag.appendChild(btn);
         });
+        existingCards.forEach(btn => btn.remove());
+
+        document.getElementById("grid-unassigned").appendChild(waitFrag);
+        getSortedWaitNames(allNames).forEach(n => updateStudentStatus(n));
         setupRosterDropZones();
         if (tapSelectedName && document.getElementById('btn-' + tapSelectedName)) {
             selectStudentForTap(tapSelectedName);
@@ -3261,7 +3544,7 @@ function generateStudents() {
         }
     }
     timers.forEach((t, idx) => { if(t.student !== "(empty)") updateGauge(t.student, t.remainingTime, t.totalTime); updateBoxUI(idx); }); 
-    updateRosterCounts(); saveToStorage();
+    updateRosterCounts();
 }
 
 function updateStudentStatus(name) {
@@ -3270,8 +3553,8 @@ function updateStudentStatus(name) {
     
     const studentInfo = studentMasterList.find(s => s.name === name);
     const isBday = studentInfo ? isTodayBirthday(studentInfo.birthday) : false;
-    btn.className = `student-btn level-${lvl} ${isBday ? 'bday-card' : ''}`; 
-    
+    btn.className = `student-btn level-${lvl} ${isBday ? 'bday-card' : ''}`;
+
     let badge = btn.querySelector(".status-badge"); if (!badge) { badge = document.createElement("div"); badge.className = "status-badge"; btn.appendChild(badge); } badge.style.background = ""; badge.style.color = ""; badge.style.display = ""; 
     let timeBadge = btn.querySelector(".start-time-badge"); if (!timeBadge) { timeBadge = document.createElement("div"); timeBadge.className = "start-time-badge"; btn.appendChild(timeBadge); } timeBadge.style.display = "none"; 
     
@@ -3285,9 +3568,11 @@ function updateStudentStatus(name) {
     const gridFinished = document.getElementById("grid-finished");
     const gridAbsent = document.getElementById("grid-absent"); 
 
-    if (absentSet.has(name)) { 
+    if (absentSet.has(name)) {
+        clearWaitLevelClasses(btn);
         btn.classList.add("absent"); badge.style.display = "none"; if(gridAbsent) gridAbsent.appendChild(btn);
-    } else if (finishedSet.has(name)) { 
+    } else if (finishedSet.has(name)) {
+        clearWaitLevelClasses(btn);
         btn.classList.add("finished"); badge.style.display = "none"; timeBadge.style.display = "none";
         modContainer.style.display = "none";
         const restoreBtn = btn.querySelector('.restore-class-btn');
@@ -3303,8 +3588,13 @@ function updateStudentStatus(name) {
             if (t.isOver) { btn.classList.add("alarm-blink", "attended"); badge.innerHTML = tLang.statusTimeUp; badge.style.background = "var(--brand-danger)"; } 
             else if (t.interval || t.isPaused) { btn.classList.add("playing", "attended"); badge.style.display = "none"; if (t.isPaused) { badge.innerHTML = "⏸️ 정지"; badge.style.background = "var(--text-muted)"; badge.style.display = "block"; } if(t.startTimeStr) { timeBadge.innerHTML = `⏰ ${t.startTimeStr}`; timeBadge.style.display = "block"; timeBadge.onclick = (e) => { e.stopPropagation(); editActiveStartTime(name); }; } } 
             else { btn.classList.add("attended"); badge.innerHTML = tLang.statusAssign; badge.style.background = "var(--brand-success)"; }
-            let slot = document.getElementById(`roster-desk-${tIdx}`); if(slot) slot.appendChild(btn);
-        } else { badge.remove(); timeBadge.remove(); gridUnassigned.appendChild(btn); }
+            clearWaitLevelClasses(btn);
+            let slot = document.getElementById(`roster-desk-${tIdx}`);
+            if (slot) {
+                slot.querySelectorAll('.student-btn').forEach(el => { if (el !== btn) el.remove(); });
+                slot.appendChild(btn);
+            }
+        } else { badge.remove(); timeBadge.remove(); applyWaitStudentCardClasses(btn, lvl); gridUnassigned.appendChild(btn); }
     }
 }
 
@@ -3456,6 +3746,7 @@ function handleDropOnTimer(name, targetIdx, fromIdx) {
             playUISound('assign'); updateBoxUI(targetIdx); updateStudentStatus(name); updateGauge(name, customTime, customTime);
         }
     }
+    if (name && name !== "(empty)") showStudentDayMemoPopup(name);
     saveToStorage();
 }
 
@@ -3467,17 +3758,33 @@ function startTimer(id, isResume = false) {
     }
     if (!isResume) { initAudio(); playUISound('start'); const now = new Date(); const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`; if (!target.startTimeStr) target.startTimeStr = timeStr; if (target.student !== "(empty)") recordDeskSessionStart(id, target.student, target.startTimeStr); }
     target.lastTick = Date.now();
+    timerLastPersistAt = Date.now();
     target.interval = setInterval(() => {
         const nowTick = Date.now(); const delta = Math.floor((nowTick - target.lastTick) / 1000);
         if (delta >= 1) {
             target.lastTick = nowTick - ((nowTick - target.lastTick) % 1000);
-            if (target.remainingTime > 0) { target.remainingTime = Math.max(0, target.remainingTime - delta); if (target.student !== "(empty)") updateGauge(target.student, target.remainingTime, target.totalTime); document.getElementById(`display-${id}`).innerText = formatTime(target.remainingTime); updateListViewTime(target.student, target.remainingTime, false, 0); if (target.remainingTime === 0 && !target.isOver) triggerAlarm(id); } 
-            else { if (!target.isOver) triggerAlarm(id); target.overTime += delta; document.getElementById(`display-${id}`).innerText = "+" + formatTime(target.overTime); updateListViewTime(target.student, 0, true, target.overTime); if (target.overTime >= 300) { finishSession(id); } }
-            saveToStorage(false); 
+            const displayEl = document.getElementById(`display-${id}`);
+            if (target.remainingTime > 0) {
+                target.remainingTime = Math.max(0, target.remainingTime - delta);
+                if (target.student !== "(empty)") updateGauge(target.student, target.remainingTime, target.totalTime);
+                if (displayEl) displayEl.innerText = formatTime(target.remainingTime);
+                if (rosterViewMode === 'list') updateListViewTime(target.student, target.remainingTime, false, 0);
+                if (target.remainingTime === 0 && !target.isOver) triggerAlarm(id);
+            } else {
+                if (!target.isOver) triggerAlarm(id);
+                target.overTime += delta;
+                if (displayEl) displayEl.innerText = "+" + formatTime(target.overTime);
+                if (rosterViewMode === 'list') updateListViewTime(target.student, 0, true, target.overTime);
+                if (target.overTime >= ALARM_GRACE_SECONDS) { finishSession(id); return; }
+            }
+            maybePersistRunningTimers();
         }
     }, 250);
     if (target.student !== "(empty)") updateStudentStatus(target.student); if (rosterViewMode === 'list') renderListView(); updateBoxUI(id);
-    if (!isResume && target.student !== "(empty)") maybeTriggerBirthdayCelebration(target.student, id);
+    if (!isResume && target.student !== "(empty)") {
+        maybeTriggerBirthdayCelebration(target.student, id);
+        showStudentDayMemoPopup(target.student);
+    }
 }
 
 function resumeTimer(id) { startTimer(id, true); }
@@ -3491,7 +3798,7 @@ function finishSession(id) {
     
     const sn = timers[id].student; 
     const t = timers[id];
-    const actualSeconds = t.totalTime - t.remainingTime + t.overTime;
+    const actualSeconds = getBillableLessonSeconds(t);
     const actualMinutes = Math.floor(actualSeconds / 60);
     const mods = studentModifiers[sn] || { coupon: 0, penalty: 0 };
     
@@ -3744,13 +4051,15 @@ window.switchHistoryMode = function(mode) {
     document.getElementById('tab-history-daily').classList.remove('active');
     document.getElementById('tab-history-roster').classList.remove('active');
     document.getElementById('tab-history-desklog').classList.remove('active');
-    document.getElementById(`tab-history-${mode}`).classList.add('active');
+    document.getElementById('tab-history-stats')?.classList.remove('active');
+    document.getElementById(`tab-history-${mode}`)?.classList.add('active');
 
     document.getElementById('monthly-history-container').classList.remove('active');
     document.getElementById('weekly-history-container').classList.remove('active');
     document.getElementById('daily-history-container').classList.remove('active');
     document.getElementById('roster-history-container').classList.remove('active');
     document.getElementById('desklog-history-container').classList.remove('active');
+    document.getElementById('stats-history-container')?.classList.remove('active');
 
     if (mode === 'monthly') {
         document.getElementById('monthly-history-container').classList.add('active');
@@ -3759,6 +4068,9 @@ window.switchHistoryMode = function(mode) {
     } else if (mode === 'weekly') {
         document.getElementById('weekly-history-container').classList.add('active');
         renderWeeklyTable();
+    } else if (mode === 'stats') {
+        document.getElementById('stats-history-container').classList.add('active');
+        renderStatsCharts();
     } else if (mode === 'daily') {
         document.getElementById('daily-history-container').classList.add('active');
         ensureDailySummaryDate(true);
@@ -4007,6 +4319,153 @@ function getMonday(d) {
     return new Date(date.setDate(diff));
 }
 
+function formatDateKeyFromDate(d) {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function isWeekdayMonFri(dayOfWeek) {
+    return dayOfWeek >= 1 && dayOfWeek <= 5;
+}
+
+function isStudentAttendedOnRecord(record) {
+    if (!record) return false;
+    return record.totalMinutes > 0 || record.sessionFinished || (record.timeLogs && record.timeLogs.length > 0);
+}
+
+function isExpectedSchoolDayForStudent(name, dateKey, dayOfWeek) {
+    if (!isWeekdayMonFri(dayOfWeek)) return false;
+    if (academyHolidays.includes(dateKey)) return false;
+    if (studentRegularOffs[name]?.includes(dayOfWeek)) return false;
+    return true;
+}
+
+function computeStudentStatsInRange(startDate, endDate) {
+    const results = [];
+    const names = studentMasterList.map(s => s.name);
+    names.forEach(name => {
+        let expectedDays = 0;
+        let attendedDays = 0;
+        let totalMinutes = 0;
+        const history = studentHistory[name] || {};
+        const cursor = new Date(startDate);
+        while (cursor <= endDate) {
+            const dateKey = formatDateKeyFromDate(cursor);
+            const dow = cursor.getDay();
+            const record = history[dateKey];
+            if (isExpectedSchoolDayForStudent(name, dateKey, dow)) {
+                if (!(record && record.isNoClassDay)) {
+                    expectedDays++;
+                    if (isStudentAttendedOnRecord(record)) attendedDays++;
+                }
+            }
+            if (isWeekdayMonFri(dow) && record && record.totalMinutes > 0) {
+                totalMinutes += record.totalMinutes;
+            }
+            cursor.setDate(cursor.getDate() + 1);
+        }
+        const attendanceRate = expectedDays > 0 ? Math.round((attendedDays / expectedDays) * 100) : 0;
+        results.push({ name, grade: studentMasterList.find(s => s.name === name)?.grade || '', expectedDays, attendedDays, attendanceRate, totalMinutes });
+    });
+    return results;
+}
+
+function buildStatsBarRows(items, valueKey, maxVal, suffix, fillClass) {
+    if (!items.length) return '<p style="color:var(--text-muted); font-weight:700; text-align:center; margin:auto;">표시할 데이터가 없습니다.</p>';
+    return items.map(item => {
+        const val = item[valueKey];
+        const pct = maxVal > 0 ? Math.max(2, Math.round((val / maxVal) * 100)) : 0;
+        const display = suffix === '%' ? `${val}%` : `${val}${suffix}`;
+        return `<div class="stats-bar-row">
+            <span class="stats-bar-name" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</span>
+            <div class="stats-bar-track"><div class="stats-bar-fill ${fillClass}" style="width:${pct}%"></div></div>
+            <span class="stats-bar-val">${display}</span>
+        </div>`;
+    }).join('');
+}
+
+window.switchStatsPeriod = function(period) {
+    playUISound('click');
+    statsPeriodMode = period;
+    document.getElementById('stats-btn-weekly')?.classList.toggle('active', period === 'weekly');
+    document.getElementById('stats-btn-monthly')?.classList.toggle('active', period === 'monthly');
+    renderStatsCharts();
+};
+
+window.changeStatsMonth = function(delta) {
+    playUISound('click');
+    currentStatsMonth += delta;
+    if (currentStatsMonth > 11) { currentStatsMonth = 0; currentStatsYear++; }
+    else if (currentStatsMonth < 0) { currentStatsMonth = 11; currentStatsYear--; }
+    renderStatsCharts();
+};
+
+window.goToThisStatsMonth = function() {
+    playUISound('click');
+    const now = new Date();
+    currentStatsMonth = now.getMonth();
+    currentStatsYear = now.getFullYear();
+    renderStatsCharts();
+};
+
+window.renderStatsCharts = function() {
+    const navEl = document.getElementById('statsNavRow');
+    const summaryEl = document.getElementById('statsSummaryRow');
+    const gridEl = document.getElementById('statsChartsGrid');
+    if (!navEl || !summaryEl || !gridEl) return;
+
+    let startDate, endDate, periodLabel;
+    if (statsPeriodMode === 'weekly') {
+        const monday = getMonday(currentWeeklyDate);
+        startDate = new Date(monday);
+        endDate = new Date(monday);
+        endDate.setDate(monday.getDate() + 6);
+        const startStr = `${startDate.getFullYear()}.${String(startDate.getMonth()+1).padStart(2,'0')}.${String(startDate.getDate()).padStart(2,'0')}`;
+        const endStr = `${endDate.getFullYear()}.${String(endDate.getMonth()+1).padStart(2,'0')}.${String(endDate.getDate()).padStart(2,'0')}`;
+        periodLabel = `${startStr} ~ ${endStr}`;
+        navEl.innerHTML = `
+            <button class="cal-nav-btn" onclick="changeWeeklyDate(-7); renderStatsCharts();">◀ 이전 주</button>
+            <h2 style="margin:0; font-size:22px; font-weight:900; color:#7c3aed;">${periodLabel}</h2>
+            <button class="cal-nav-btn" onclick="changeWeeklyDate(7); renderStatsCharts();">다음 주 ▶</button>
+            <button class="cal-nav-btn" onclick="goToThisWeek(); renderStatsCharts();" style="background:#7c3aed; color:white; border-color:#7c3aed;">이번 주</button>`;
+    } else {
+        startDate = new Date(currentStatsYear, currentStatsMonth, 1);
+        endDate = new Date(currentStatsYear, currentStatsMonth + 1, 0);
+        periodLabel = `${currentStatsYear}년 ${currentStatsMonth + 1}월`;
+        navEl.innerHTML = `
+            <button class="cal-nav-btn" onclick="changeStatsMonth(-1)">◀ 이전 달</button>
+            <h2 style="margin:0; font-size:22px; font-weight:900; color:#7c3aed;">${periodLabel}</h2>
+            <button class="cal-nav-btn" onclick="changeStatsMonth(1)">다음 달 ▶</button>
+            <button class="cal-nav-btn" onclick="goToThisStatsMonth()" style="background:#7c3aed; color:white; border-color:#7c3aed;">이번 달</button>`;
+    }
+
+    const stats = computeStudentStatsInRange(startDate, endDate);
+    const byRate = [...stats].filter(s => s.expectedDays > 0).sort((a, b) => b.attendanceRate - a.attendanceRate || b.totalMinutes - a.totalMinutes);
+    const byMins = [...stats].sort((a, b) => b.totalMinutes - a.totalMinutes || b.attendanceRate - a.attendanceRate);
+    const maxRate = byRate.length ? byRate[0].attendanceRate : 100;
+    const maxMins = byMins.length ? Math.max(byMins[0].totalMinutes, 1) : 1;
+    const avgRate = byRate.length ? Math.round(byRate.reduce((s, x) => s + x.attendanceRate, 0) / byRate.length) : 0;
+    const totalMinsAll = stats.reduce((s, x) => s + x.totalMinutes, 0);
+    const topMins = byMins[0];
+
+    summaryEl.innerHTML = `
+        <div class="stats-summary-pill">평균 출석율<strong>${avgRate}%</strong></div>
+        <div class="stats-summary-pill">전체 학습시간<strong>${totalMinsAll}분</strong></div>
+        <div class="stats-summary-pill">학습 1위<strong>${topMins && topMins.totalMinutes > 0 ? topMins.name + ' ' + topMins.totalMinutes + '분' : '-'}</strong></div>
+        <div class="stats-summary-pill">출석 1위<strong>${byRate[0] ? byRate[0].name + ' ' + byRate[0].attendanceRate + '%' : '-'}</strong></div>`;
+
+    gridEl.innerHTML = `
+        <div class="stats-card">
+            <h3 class="stats-card-title">📊 출석율 순위</h3>
+            <p class="stats-card-sub">월~금 수업일 중 실제 출석 비율 (높을수록 좋음)</p>
+            <div class="stats-bar-list">${buildStatsBarRows(byRate.slice(0, 20), 'attendanceRate', maxRate, '%', 'rate')}</div>
+        </div>
+        <div class="stats-card">
+            <h3 class="stats-card-title">⏱️ 학습시간 순위</h3>
+            <p class="stats-card-sub">월~금 누적 수업 분 (많을수록 상위)</p>
+            <div class="stats-bar-list">${buildStatsBarRows(byMins.filter(s => s.totalMinutes > 0).slice(0, 20), 'totalMinutes', maxMins, '분', 'mins')}</div>
+        </div>`;
+};
+
 window.changeWeeklyDate = function(days) {
     playUISound('click');
     currentWeeklyDate.setDate(currentWeeklyDate.getDate() + days);
@@ -4077,8 +4536,8 @@ window.renderWeeklyTable = function() {
     let todayStr = `${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}`;
 
     let theadHtml = `<tr>
-        <th rowspan="2" onclick="sortWeekly('name')" class="main-date-th fixed-col-name sortable ${nameSortClass}" style="width:140px; min-width:140px; z-index:15;">이름</th>
-        <th rowspan="2" onclick="sortWeekly('grade')" class="main-date-th fixed-col-grade sortable ${gradeSortClass}" style="width:110px; min-width:110px; z-index:15;">학년</th>
+        <th rowspan="2" onclick="sortWeekly('name')" class="main-date-th fixed-col-name sortable ${nameSortClass}" style="z-index:15;">이름</th>
+        <th rowspan="2" onclick="sortWeekly('grade')" class="main-date-th fixed-col-grade sortable ${gradeSortClass}" style="z-index:15;">학년</th>
     `;
     let subHeadHtml = `<tr>`;
 
@@ -4091,28 +4550,51 @@ window.renderWeeklyTable = function() {
         let todayStartClass = isToday ? 'today-start-cell' : '';
         let todayEndClass = isToday ? 'today-end-cell' : '';
         
-        theadHtml += `<th colspan="2" class="main-date-th col-divider ${todayTopClass} ${todayStartClass} ${todayEndClass}" style="${isWeekend} width:11%;">
+        theadHtml += `<th colspan="3" class="main-date-th col-divider ${todayTopClass} ${todayStartClass} ${todayEndClass}" style="${isWeekend}">
             ${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} (${weekDaysKr[idx]})
         </th>`;
         
         subHeadHtml += `
             <th class="sub-th ${todayStartClass}">시작</th>
-            <th class="sub-th col-divider ${todayEndClass}">종료</th>
+            <th class="sub-th">종료</th>
+            <th class="sub-th sub-th-min col-divider ${todayEndClass}">분</th>
         `;
     });
-    theadHtml += `</tr>` + subHeadHtml + `</tr>`;
+    theadHtml += `
+        <th colspan="3" class="main-date-th summary-th col-divider">주간 (월~금)</th>
+    </tr>`;
+    subHeadHtml += `
+        <th class="sub-th summary-th">합계</th>
+        <th class="sub-th summary-th">목표</th>
+        <th class="sub-th summary-th col-divider">잔여/초과</th>
+    </tr>`;
+    theadHtml += subHeadHtml;
     document.getElementById('weeklyTableHead').innerHTML = theadHtml;
+
+    const weeklyTable = document.querySelector('.weekly-table');
+    if (weeklyTable) {
+        let colgroup = weeklyTable.querySelector('colgroup');
+        if (!colgroup) {
+            colgroup = document.createElement('colgroup');
+            weeklyTable.insertBefore(colgroup, weeklyTable.firstChild);
+        }
+        let cols = '<col style="width:118px"><col style="width:68px">';
+        for (let i = 0; i < 7; i++) cols += '<col style="width:82px"><col style="width:82px"><col style="width:54px">';
+        cols += '<col style="width:72px"><col style="width:68px"><col style="width:96px">';
+        colgroup.innerHTML = cols;
+    }
     
     let tbodyHtml = '';
     
     studentsData.forEach((sd, sIdx) => {
         let isLastRow = (sIdx === studentsData.length - 1);
+        let weekTotalMins = 0;
         
         tbodyHtml += `<tr>`;
         tbodyHtml += `<td class="weekly-name-cell fixed-col-name" style="z-index:4;">${sd.name}</td>`;
         tbodyHtml += `<td class="weekly-grade-cell fixed-col-grade" style="z-index:4;">${sd.grade || '-'}</td>`;
         
-        days.forEach(d => {
+        days.forEach((d, dayIdx) => {
             let dateKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
             let isToday = (dateKey === todayStr);
             
@@ -4122,15 +4604,17 @@ window.renderWeeklyTable = function() {
 
             let record = (studentHistory[sd.name] && studentHistory[sd.name][dateKey]) ? studentHistory[sd.name][dateKey] : null;
             let isRegOff = studentRegularOffs[sd.name]?.includes(d.getDay());
+            const dayMins = (record && record.totalMinutes > 0) ? record.totalMinutes : 0;
+            if (dayIdx < 5) weekTotalMins += dayMins;
             
             let noClassClass = ((record && record.isNoClassDay) || isRegOff) ? 'weekly-no-class-cell' : '';
             
             if (academyHolidays.includes(dateKey)) {
-                tbodyHtml += `<td colspan="2" class="col-divider ${todayStartClass} ${todayEndClass}" style="background:#f8fafc; color:#8b5cf6; font-weight:900; font-size:16px; text-align:center; letter-spacing: 5px; ${todayBottomClass}">🏝️ 휴무</td>`;
+                tbodyHtml += `<td colspan="3" class="col-divider ${todayStartClass} ${todayEndClass}" style="background:#f8fafc; color:#8b5cf6; font-weight:900; font-size:16px; text-align:center; letter-spacing: 5px; ${todayBottomClass}">🏝️ 휴무</td>`;
                 return; 
             }
             if (record && record.isNoClassDay) {
-                tbodyHtml += `<td colspan="2" class="col-divider ${todayStartClass} ${todayEndClass} ${noClassClass}" style="background:#f1f5f9; color:#64748b; font-weight:900; font-size:15px; text-align:center; ${todayBottomClass}">🚫 휴원</td>`;
+                tbodyHtml += `<td colspan="3" class="col-divider ${todayStartClass} ${todayEndClass} ${noClassClass}" style="background:#f1f5f9; color:#64748b; font-weight:900; font-size:15px; text-align:center; ${todayBottomClass}">🚫 휴원</td>`;
                 return;
             }
 
@@ -4140,12 +4624,32 @@ window.renderWeeklyTable = function() {
                 const isEdited = !!(record.timeEditedByTeacher || record.manuallyEdited);
                 const cellStyle = 'weekly-time-cell';
                 tbodyHtml += `<td class="weekly-edit-cell ${cellStyle} ${todayStartClass} ${noClassClass}" style="${todayBottomClass}">${buildWeeklyTimeTextInput(sd.name, dateKey, 'start', ext.start, isEdited)}</td>`;
-                tbodyHtml += `<td class="weekly-edit-cell ${cellStyle} col-divider ${todayEndClass} ${noClassClass}" style="${todayBottomClass}">${buildWeeklyTimeTextInput(sd.name, dateKey, 'end', ext.end, isEdited)}</td>`;
+                tbodyHtml += `<td class="weekly-edit-cell ${cellStyle} ${noClassClass}" style="${todayBottomClass}">${buildWeeklyTimeTextInput(sd.name, dateKey, 'end', ext.end, isEdited)}</td>`;
+                tbodyHtml += `<td class="weekly-min-cell col-divider ${todayEndClass} ${noClassClass}" style="${todayBottomClass}">${dayMins > 0 ? dayMins + '분' : '-'}</td>`;
             } else {
                 tbodyHtml += `<td class="time-empty ${todayStartClass} ${noClassClass} weekly-time-empty" style="${todayBottomClass}">-</td>`;
-                tbodyHtml += `<td class="time-empty col-divider ${todayEndClass} ${noClassClass} weekly-time-empty" style="${todayBottomClass}">-</td>`;
+                tbodyHtml += `<td class="time-empty ${noClassClass} weekly-time-empty" style="${todayBottomClass}">-</td>`;
+                tbodyHtml += `<td class="time-empty col-divider ${todayEndClass} ${noClassClass} weekly-time-empty" style="${todayBottomClass}">${dayMins > 0 ? dayMins + '분' : '-'}</td>`;
             }
         });
+
+        const weekTarget = getStudentWeeklyTarget(sd.name);
+        const weekDiff = weekTarget - weekTotalMins;
+        let remainHtml = '';
+        let remainClass = 'weekly-summary-remain done';
+        if (weekDiff > 0) {
+            remainHtml = `${weekDiff}분 부족`;
+            remainClass = 'weekly-summary-remain need';
+        } else if (weekDiff < 0) {
+            remainHtml = `${Math.abs(weekDiff)}분 초과`;
+            remainClass = 'weekly-summary-remain over';
+        } else {
+            remainHtml = '완료';
+        }
+
+        tbodyHtml += `<td class="weekly-summary-total col-divider">${weekTotalMins}분</td>`;
+        tbodyHtml += `<td class="weekly-summary-target">${weekTarget}분</td>`;
+        tbodyHtml += `<td class="${remainClass} col-divider">${remainHtml}</td>`;
         tbodyHtml += `</tr>`;
     });
     
@@ -4230,9 +4734,11 @@ window.exportWeeklyToExcel = function() {
         days.push(tempDate);
         
         let dateStr = `${String(tempDate.getMonth()+1).padStart(2,'0')}.${String(tempDate.getDate()).padStart(2,'0')} (${weekDaysKr[i]})`;
-        headerRow1.push(dateStr, ""); 
-        headerRow2.push("시작", "종료");
+        headerRow1.push(dateStr, "", "");
+        headerRow2.push("시작", "종료", "분");
     }
+    headerRow1.push("주간합계(월~금)", "주간목표", "잔여/초과");
+    headerRow2.push("", "", "");
     
     let csvData = [headerRow1.join(","), headerRow2.join(",")];
 
@@ -4251,24 +4757,31 @@ window.exportWeeklyToExcel = function() {
 
     studentsData.forEach(sd => {
         let row = [sd.name, sd.grade];
-        days.forEach(d => {
+        let weekTotalMins = 0;
+        days.forEach((d, dayIdx) => {
             let dateKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
             let record = (studentHistory[sd.name] && studentHistory[sd.name][dateKey]) ? studentHistory[sd.name][dateKey] : null;
             let isRegOff = studentRegularOffs[sd.name]?.includes(d.getDay());
+            const dayMins = (record && record.totalMinutes > 0) ? record.totalMinutes : 0;
+            if (dayIdx < 5) weekTotalMins += dayMins;
             
             if (record && record.timeLogs && record.timeLogs.length > 0) {
                 let ext = extractStartEnd(record.timeLogs);
-                row.push(`"${ext.start}"`, `"${ext.end}"`);
+                row.push(`"${ext.start}"`, `"${ext.end}"`, dayMins);
             } else if (academyHolidays.includes(dateKey)) {
-                row.push("휴무", "");
+                row.push("휴무", "", 0);
             } else if (record && record.isNoClassDay) {
-                row.push("휴원", "");
+                row.push("휴원", "", 0);
             } else if (isRegOff) {
-                row.push("정규휴무", "");
+                row.push("정규휴무", "", 0);
             } else {
-                row.push("-", "-");
+                row.push("-", "-", dayMins > 0 ? dayMins : 0);
             }
         });
+        const weekTarget = getStudentWeeklyTarget(sd.name);
+        const weekDiff = weekTarget - weekTotalMins;
+        let remainLabel = weekDiff > 0 ? `${weekDiff}분 부족` : (weekDiff < 0 ? `${Math.abs(weekDiff)}분 초과` : '완료');
+        row.push(weekTotalMins, weekTarget, `"${remainLabel}"`);
         csvData.push(row.join(","));
     });
     
