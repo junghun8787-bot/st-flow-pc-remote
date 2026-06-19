@@ -2056,7 +2056,7 @@ function injectHistoryUI() {
             </div>
 
             <div id="stats-history-container">
-                <p class="history-view-hint hint-stats">주간·월간 출석율과 학습시간을 그래프로 한눈에 비교합니다. 월~금 수업일 기준으로 계산됩니다.</p>
+                <p class="history-view-hint hint-stats">주간·월간 출석율(학생별 주간 목표 분·정규 휴무 반영)과 학습시간을 그래프로 한눈에 비교합니다.</p>
                 <div class="stats-period-bar">
                     <button id="stats-btn-weekly" class="stats-period-btn active" onclick="switchStatsPeriod('weekly')">📅 주간 통계</button>
                     <button id="stats-btn-monthly" class="stats-period-btn" onclick="switchStatsPeriod('monthly')">🗓️ 월간 통계</button>
@@ -4339,6 +4339,15 @@ function isExpectedSchoolDayForStudent(name, dateKey, dayOfWeek) {
     return true;
 }
 
+function getStudentExpectedWeekdays(name) {
+    const regOffs = studentRegularOffs[name] || [];
+    let count = 0;
+    for (let d = 1; d <= 5; d++) {
+        if (!regOffs.includes(d)) count++;
+    }
+    return count;
+}
+
 function computeStudentStatsInRange(startDate, endDate) {
     const results = [];
     const names = studentMasterList.map(s => s.name);
@@ -4346,6 +4355,8 @@ function computeStudentStatsInRange(startDate, endDate) {
         let expectedDays = 0;
         let attendedDays = 0;
         let totalMinutes = 0;
+        const weeklyTarget = getStudentWeeklyTarget(name);
+        const expectedWeekdays = getStudentExpectedWeekdays(name);
         const history = studentHistory[name] || {};
         const cursor = new Date(startDate);
         while (cursor <= endDate) {
@@ -4358,13 +4369,19 @@ function computeStudentStatsInRange(startDate, endDate) {
                     if (isStudentAttendedOnRecord(record)) attendedDays++;
                 }
             }
-            if (isWeekdayMonFri(dow) && record && record.totalMinutes > 0) {
-                totalMinutes += record.totalMinutes;
+            if (isWeekdayMonFri(dow) && record) {
+                const mins = getDayRecordMinutes(record);
+                if (mins > 0) totalMinutes += mins;
             }
             cursor.setDate(cursor.getDate() + 1);
         }
-        const attendanceRate = expectedDays > 0 ? Math.round((attendedDays / expectedDays) * 100) : 0;
-        results.push({ name, grade: studentMasterList.find(s => s.name === name)?.grade || '', expectedDays, attendedDays, attendanceRate, totalMinutes });
+        const periodTarget = expectedWeekdays > 0
+            ? Math.round(weeklyTarget * (expectedDays / expectedWeekdays))
+            : 0;
+        const attendanceRate = periodTarget > 0
+            ? Math.min(100, Math.round((totalMinutes / periodTarget) * 100))
+            : 0;
+        results.push({ name, grade: studentMasterList.find(s => s.name === name)?.grade || '', expectedDays, expectedWeekdays, attendedDays, attendanceRate, totalMinutes, periodTarget, weeklyTarget });
     });
     return results;
 }
@@ -4439,24 +4456,22 @@ window.renderStatsCharts = function() {
     }
 
     const stats = computeStudentStatsInRange(startDate, endDate);
-    const byRate = [...stats].filter(s => s.expectedDays > 0).sort((a, b) => b.attendanceRate - a.attendanceRate || b.totalMinutes - a.totalMinutes);
+    const byRate = [...stats].filter(s => s.expectedWeekdays > 0 && s.periodTarget > 0).sort((a, b) => b.attendanceRate - a.attendanceRate || b.totalMinutes - a.totalMinutes);
     const byMins = [...stats].sort((a, b) => b.totalMinutes - a.totalMinutes || b.attendanceRate - a.attendanceRate);
     const maxRate = byRate.length ? byRate[0].attendanceRate : 100;
     const maxMins = byMins.length ? Math.max(byMins[0].totalMinutes, 1) : 1;
     const avgRate = byRate.length ? Math.round(byRate.reduce((s, x) => s + x.attendanceRate, 0) / byRate.length) : 0;
-    const totalMinsAll = stats.reduce((s, x) => s + x.totalMinutes, 0);
     const topMins = byMins[0];
 
     summaryEl.innerHTML = `
         <div class="stats-summary-pill">평균 출석율<strong>${avgRate}%</strong></div>
-        <div class="stats-summary-pill">전체 학습시간<strong>${totalMinsAll}분</strong></div>
         <div class="stats-summary-pill">학습 1위<strong>${topMins && topMins.totalMinutes > 0 ? topMins.name + ' ' + topMins.totalMinutes + '분' : '-'}</strong></div>
         <div class="stats-summary-pill">출석 1위<strong>${byRate[0] ? byRate[0].name + ' ' + byRate[0].attendanceRate + '%' : '-'}</strong></div>`;
 
     gridEl.innerHTML = `
         <div class="stats-card">
             <h3 class="stats-card-title">📊 출석율 순위</h3>
-            <p class="stats-card-sub">월~금 수업일 중 실제 출석 비율 (높을수록 좋음)</p>
+            <p class="stats-card-sub">학생별 주간 목표(분)·정규 휴무·학원 휴무를 반영한 기간 목표 대비 달성률 (100% = 목표 분 충족)</p>
             <div class="stats-bar-list">${buildStatsBarRows(byRate.slice(0, 20), 'attendanceRate', maxRate, '%', 'rate')}</div>
         </div>
         <div class="stats-card">
