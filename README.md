@@ -28,8 +28,24 @@ npx serve .
 
 ### GitHub Pages 배포
 
-1. 저장소 Settings → Pages → Source: `main` 브랜치, `/ (root)` 선택
-2. `https://<username>.github.io/<repo-name>/` 에서 접속
+**방법 A — GitHub Actions (권장)**
+
+1. 저장소 **Settings → Pages → Build and deployment**
+2. **Source**를 `GitHub Actions`로 선택 (브랜치 배포가 아님)
+3. `main` 브랜치에 push하면 `.github/workflows/pages.yml`이 자동 배포
+4. Actions 탭에서 초록색이 되면 `https://<username>.github.io/<repo-name>/` 접속
+
+배포가 `Deployment failed, try again later`로 실패하면:
+- Pages Source가 **GitHub Actions**인지 다시 확인
+- Actions에서 실패한 워크플로 **Re-run all jobs** (GitHub 일시 장애인 경우가 많음)
+- Settings → Pages에서 사이트가 Public인지 확인 (Private 저장소는 유료 플랜 필요)
+
+**방법 B — 브랜치 배포 (Actions 없이)**
+
+1. Settings → Pages → Source: `main` 브랜치, `/ (root)`
+2. `.github/workflows/pages.yml`은 사용하지 않거나 삭제
+
+> 두 방법을 동시에 쓰면 배포가 충돌할 수 있습니다. **하나만** 선택하세요.
 
 > Service Worker와 PWA는 **HTTPS** 또는 **localhost** 환경에서 동작합니다.
 
