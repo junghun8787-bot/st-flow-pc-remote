@@ -185,7 +185,7 @@ body { font-family: 'Pretendard', sans-serif; background: var(--bg-main); color:
 #grid-unassigned .student-btn .status-badge, #grid-finished .student-btn .status-badge { display: none !important; } 
 
 .student-btn .gauge-bg, .student-btn .name-text, .student-btn .level-tag, .student-btn .status-badge { pointer-events: none; }
-.gauge-bg { position: absolute; top: 0; left: 0; height: 100%; width: 0%; z-index: -1; transition: width 0.5s ease; border-radius: 12px 0 0 12px; display: none; }
+.gauge-bg { position: absolute; top: 0; left: 0; height: 100%; width: 0%; z-index: -1; transition: width 0.75s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 12px 0 0 12px; display: none; overflow: hidden; }
 .name-text { position: relative; z-index: 2; font-family: var(--app-font, 'Pretendard', sans-serif); color: var(--custom-name-color); text-shadow: var(--custom-name-shadow); letter-spacing: 2px; transition: color 0.3s, text-shadow 0.3s; }
 .quick-controls { display: none; position: absolute; bottom: 10px; left: 0; width: 100%; justify-content: center; gap: 8px; z-index: 10; padding: 0 15px; }
 #grid-active .student-btn.attended .quick-controls, #grid-active .student-btn.playing .quick-controls, #grid-active .student-btn.alarm-blink .quick-controls { display: flex; }

@@ -284,7 +284,8 @@ customStyle.innerHTML = `
     body.roster-desk-pill #grid-active .student-btn.pill-desk-card.playing { animation: none !important; transform: none !important; border-width: 3px !important; }
     body.roster-desk-pill .pill-desk-card .pill-top-bar { display: flex; justify-content: space-between; align-items: center; width: 100%; flex-shrink: 0; min-height: 30px; padding: 0 2px; position: relative; z-index: 12; }
     body.roster-desk-pill .pill-desk-card .card-cancel-btn { position: static !important; display: flex !important; width: 28px; height: 28px; flex-shrink: 0; margin: 0; }
-    body.roster-desk-pill .pill-desk-card .pill-start-time { position: static !important; display: none; font-size: 12px; font-weight: 800; padding: 4px 8px; margin: 0; flex-shrink: 0; cursor: pointer; border-radius: 8px; background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2); color: var(--accent); font-family: 'Montserrat', 'Pretendard', sans-serif; }
+    body.roster-desk-pill .pill-desk-card .pill-start-time { position: static !important; display: none; font-size: 14px; font-weight: 900; padding: 6px 10px; margin: 0; flex-shrink: 0; cursor: pointer; border-radius: 8px; background: #2563eb; border: 2px solid #60a5fa; color: #fff; font-family: 'Montserrat', 'Pretendard', sans-serif; box-shadow: 0 4px 8px rgba(0,0,0,0.25); font-variant-numeric: tabular-nums; }
+    body.roster-desk-pill .pill-desk-card .pill-start-time:hover { background: #1d4ed8; }
     body.roster-desk-pill .pill-desk-card .pill-center { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 0; padding: 0 6px; }
     body.roster-desk-pill .pill-desk-card .pill-mod-row { display: flex; justify-content: center; align-items: center; gap: 5px; min-height: 24px; max-height: 28px; flex-shrink: 0; margin: 4px 0 0; padding: 0 4px; overflow: hidden; }
     body.roster-desk-pill .pill-desk-card .pill-mod-row:empty { min-height: 0; max-height: 0; margin: 0; visibility: hidden; }
@@ -292,17 +293,27 @@ customStyle.innerHTML = `
     body.roster-desk-pill .pill-desk-card .card-mod-container { display: none !important; }
     body.roster-desk-pill .pill-desk-card .card-badge-group { display: none !important; }
     body.roster-desk-pill .pill-desk-card .status-badge { display: none !important; }
-    body.roster-desk-pill .pill-desk-card .name-text { margin: 0 !important; flex: 0 0 auto; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 38px !important; line-height: 1.08; padding: 0 4px; min-height: 0; width: 100%; }
-    body.roster-desk-pill .pill-desk-card.playing .name-text { font-size: 40px !important; }
-    body.roster-desk-pill .pill-desk-card.alarm-blink .name-text { font-size: 36px !important; }
+    body.roster-desk-pill .pill-desk-card .name-text { margin: 0 !important; flex: 0 0 auto; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 44px !important; line-height: 1.06; padding: 0 4px; min-height: 0; width: 100%; }
+    body.roster-desk-pill .pill-desk-card.playing .name-text { font-size: 48px !important; }
+    body.roster-desk-pill .pill-desk-card.alarm-blink .name-text { font-size: 42px !important; }
     body.roster-desk-pill .pill-desk-card .quick-controls { position: static !important; display: flex !important; width: 100%; padding: 0; margin: 0; flex-shrink: 0; }
-    body.roster-desk-pill .pill-desk-card .gauge-bg { display: block !important; border-radius: 20px 0 0 20px; }
+    body.roster-desk-pill .pill-desk-card .gauge-bg { display: block !important; border-radius: 20px 0 0 20px; overflow: hidden; transition: width 0.75s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: inset 0 1px 0 rgba(255,255,255,0.45), inset 0 -1px 0 rgba(0,0,0,0.06); opacity: 0.95; }
+    body.roster-desk-pill .pill-desk-card .gauge-bg::before { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(255,255,255,0.38) 0%, rgba(255,255,255,0.08) 42%, rgba(0,0,0,0.06) 100%); pointer-events: none; }
+    body.roster-desk-pill .pill-desk-card .gauge-bg::after { content: ''; position: absolute; top: 0; right: 0; width: 36px; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.55)); pointer-events: none; border-radius: 0 20px 20px 0; }
+    body.roster-desk-pill .pill-desk-card.playing .gauge-bg.gauge-active { animation: pill-gauge-shimmer 2.8s ease-in-out infinite; }
+    @keyframes pill-gauge-shimmer { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.08); } }
+    body.roster-desk-pill .pill-desk-card.level-PRE .gauge-bg { background: linear-gradient(135deg, rgba(255,215,0,0.92) 0%, rgba(234,179,8,0.78) 100%) !important; }
+    body.roster-desk-pill .pill-desk-card.level-BASIC .gauge-bg { background: linear-gradient(135deg, rgba(255,0,163,0.82) 0%, rgba(219,39,119,0.72) 100%) !important; }
+    body.roster-desk-pill .pill-desk-card.level-INTER .gauge-bg { background: linear-gradient(135deg, rgba(240,112,31,0.84) 0%, rgba(234,88,12,0.74) 100%) !important; }
+    body.roster-desk-pill .pill-desk-card.level-ADV .gauge-bg { background: linear-gradient(135deg, rgba(33,199,250,0.86) 0%, rgba(14,165,233,0.76) 100%) !important; }
+    body.roster-desk-pill .pill-desk-card.level-PREP .gauge-bg { background: linear-gradient(135deg, rgba(121,85,72,0.82) 0%, rgba(93,64,55,0.72) 100%) !important; }
+    body.roster-desk-pill .pill-desk-card.level-GUEST .gauge-bg { background: linear-gradient(135deg, rgba(148,163,184,0.84) 0%, rgba(100,116,139,0.74) 100%) !important; }
     .active-desk-card .adc-cancel { width: 24px; height: 24px; border: none; border-radius: 8px; background: rgba(239,68,68,0.12); color: var(--brand-danger); font-size: 11px; font-weight: 900; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 0; line-height: 1; transition: 0.15s; }
     .active-desk-card .adc-cancel:hover { background: var(--brand-danger); color: #fff; }
     .active-desk-card .adc-time-block { flex-shrink: 0; display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; width: 100%; padding: 0 0 2px; }
-    .active-desk-card .adc-start-time { font-size: 13px; font-weight: 800; color: var(--accent); cursor: pointer; flex-shrink: 0; padding: 4px 8px; line-height: 1.2; border-radius: 8px; background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.15); font-family: 'Montserrat', 'Pretendard', sans-serif; font-variant-numeric: tabular-nums; min-width: 62px; text-align: center; align-self: flex-start; margin-top: 2px; }
-    .active-desk-card .adc-start-time.placeholder { color: var(--text-muted); background: rgba(0,0,0,0.03); border-color: transparent; cursor: default; font-weight: 700; font-size: 11px; }
-    .active-desk-card .adc-start-time:not(.placeholder):hover { background: rgba(59,130,246,0.14); }
+    .active-desk-card .adc-start-time { font-size: 15px; font-weight: 900; color: #fff; cursor: pointer; flex-shrink: 0; padding: 6px 12px; line-height: 1.2; border-radius: 8px; background: #2563eb; border: 2px solid #60a5fa; font-family: 'Montserrat', 'Pretendard', sans-serif; font-variant-numeric: tabular-nums; min-width: 72px; text-align: center; align-self: flex-start; margin-top: 2px; box-shadow: 0 4px 8px rgba(0,0,0,0.25); }
+    .active-desk-card .adc-start-time.placeholder { color: var(--text-muted); background: rgba(0,0,0,0.03); border-color: transparent; cursor: default; font-weight: 700; font-size: 11px; box-shadow: none; }
+    .active-desk-card .adc-start-time:not(.placeholder):hover { background: #1d4ed8; }
     .active-desk-card .adc-time { font-family: 'Montserrat', 'Pretendard', sans-serif; font-size: 44px; font-weight: 800; text-align: right; line-height: 1; letter-spacing: -0.04em; color: var(--time-color); flex: 1; min-width: 0; pointer-events: none; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; align-self: flex-start; margin-top: -2px; }
     .active-desk-card .adc-time.rdp-time-running { color: #059669; }
     .active-desk-card .adc-time.rdp-time-paused { color: var(--text-muted); }
@@ -315,15 +326,14 @@ customStyle.innerHTML = `
     .active-desk-card .adc-badge.penalty-applied { background: linear-gradient(145deg, #fca5a5, #f87171); color: #7f1d1d; border: 1.5px solid #ef4444; }
     .active-desk-card .adc-row { display: flex; gap: 5px; width: 100%; flex-shrink: 0; }
     .active-desk-card .adc-praise-btn { flex: 1; padding: 10px 2px; border: none; border-radius: 9px; font-weight: 800; font-size: 12px; cursor: pointer; color: #92400e; background: linear-gradient(145deg, #fef3c7, #fde68a); font-family: 'Pretendard', sans-serif; box-shadow: 0 2px 6px rgba(245,158,11,0.2); transition: 0.15s; }
-    .active-desk-card .adc-warn-btn { flex: 1; padding: 10px 2px; border: none; border-radius: 9px; font-weight: 800; font-size: 12px; cursor: pointer; color: #9a3412; background: linear-gradient(145deg, #ffedd5, #fdba74); font-family: 'Pretendard', sans-serif; box-shadow: 0 2px 6px rgba(249,115,22,0.18); transition: 0.15s; }
-    .active-desk-card .adc-warn-btn:disabled { opacity: 0.45; cursor: not-allowed; filter: grayscale(0.3); box-shadow: none; }
+    .active-desk-card .adc-penalty-btn { flex: 1; padding: 10px 2px; border: none; border-radius: 9px; font-weight: 800; font-size: 12px; cursor: pointer; color: #7f1d1d; background: linear-gradient(145deg, #fecaca, #fca5a5); font-family: 'Pretendard', sans-serif; box-shadow: 0 2px 6px rgba(239,68,68,0.2); transition: 0.15s; }
     .active-desk-card .adc-time-btn { flex: 1; padding: 9px 0; border: none; border-radius: 8px; font-weight: 800; font-size: 12px; cursor: pointer; background: rgba(255,255,255,0.85); color: var(--text-main); box-shadow: 0 1px 4px rgba(0,0,0,0.08); font-family: 'Montserrat', monospace; border: 1px solid rgba(0,0,0,0.06); transition: 0.15s; }
     .active-desk-card .adc-time-btn.minus { color: var(--brand-danger); }
     .active-desk-card .adc-act-btn { flex: 1; padding: 12px 2px; border: none; border-radius: 10px; font-weight: 900; font-size: 13px; cursor: pointer; color: #fff; font-family: 'Pretendard', sans-serif; white-space: nowrap; transition: 0.15s; letter-spacing: 0.02em; }
     .active-desk-card .adc-act-btn.btn-play { background: linear-gradient(145deg, #34d399, #059669); box-shadow: 0 3px 8px rgba(16,185,129,0.28); }
     .active-desk-card .adc-act-btn.btn-pause { background: linear-gradient(145deg, #94a3b8, #64748b); box-shadow: 0 3px 8px rgba(100,116,139,0.25); }
     .active-desk-card .adc-act-btn.btn-finish { background: linear-gradient(145deg, #60a5fa, #2563eb); box-shadow: 0 3px 8px rgba(37,99,235,0.28); }
-    .active-desk-card .adc-praise-btn:active, .active-desk-card .adc-warn-btn:active:not(:disabled), .active-desk-card .adc-time-btn:active, .active-desk-card .adc-act-btn:active, .active-desk-card .adc-cancel:active { transform: scale(0.96); }
+    .active-desk-card .adc-praise-btn:active, .active-desk-card .adc-penalty-btn:active, .active-desk-card .adc-time-btn:active, .active-desk-card .adc-act-btn:active, .active-desk-card .adc-cancel:active { transform: scale(0.96); }
     .active-desk-card.alarm-blink .adc-time { color: var(--brand-danger) !important; }
     .active-desk-card.alarm-blink .adc-name { color: var(--brand-danger) !important; }
     #grid-active .student-btn:not(.active-desk-card) { width: 100% !important; height: 100% !important; margin: 0 !important; border-radius: 18px; position: absolute; top:0; left:0; display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
@@ -585,7 +595,7 @@ customStyle.innerHTML = `
 
     /* ⭐ 주간 전체 출결 뷰 특화 CSS (고급형 진한 사선 적용) */
     .weekly-table-wrapper { flex: 1; overflow-y: auto; overflow-x: auto; margin-top: 15px; border-radius: 12px; border: 2px solid #cbd5e1; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
-    .weekly-table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 2140px; table-layout: fixed; }
+    .weekly-table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 2280px; table-layout: fixed; }
     .weekly-table th { background: #f1f5f9; font-weight: 900; color: #0f172a; font-size: 16px; text-align: center; border-right: 1px solid #cbd5e1; border-bottom: 3px solid #94a3b8; margin: 0; }
     .weekly-table th.main-date-th { position: sticky; top: 0; z-index: 10; height: 46px; box-sizing: border-box; font-size: 15px !important; padding: 6px 4px !important; }
     .weekly-table th.sub-th { position: sticky; top: 46px; z-index: 10; height: 36px; font-size: 13px !important; color: #475569; background: #f8fafc; border-bottom: 2px solid #cbd5e1; box-sizing: border-box; padding: 6px 4px !important; }
@@ -622,7 +632,14 @@ customStyle.innerHTML = `
     .weekly-summary-remain.need { color: #d97706; background: #fffbeb; }
     .weekly-summary-remain.done { color: #16a34a; background: #f0fdf4; }
     .weekly-summary-remain.over { color: #2563eb; background: #eff6ff; }
+    .weekly-summary-praise { font-size: 15px !important; font-weight: 900; color: #b45309; background: #fffbeb; white-space: nowrap; }
+    .weekly-summary-penalty { font-size: 15px !important; font-weight: 900; color: #b91c1c; background: #fef2f2; white-space: nowrap; }
     .weekly-table th.summary-th { background: #e0f2fe; color: #0369a1; font-size: 15px !important; }
+    .monthly-mod-summary { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+    .monthly-mod-pill { flex: 1; min-width: 140px; padding: 10px 14px; border-radius: 12px; font-weight: 800; font-size: 14px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    .monthly-mod-pill.praise { background: linear-gradient(145deg, #fef3c7, #fde68a); color: #92400e; border: 1.5px solid #fbbf24; }
+    .monthly-mod-pill.penalty { background: linear-gradient(145deg, #fecaca, #fca5a5); color: #7f1d1d; border: 1.5px solid #f87171; }
+    .monthly-mod-pill strong { display: block; font-size: 22px; margin-top: 4px; font-family: 'Montserrat', 'Pretendard', sans-serif; }
     #student-memo-toast-root { position: fixed; inset: 0; pointer-events: none; z-index: 10000; overflow: visible; }
     .student-memo-anchor-popup { position: fixed; transform: translate(-50%, calc(-100% - 8px)); max-width: min(300px, 44vw); min-width: 120px; background: linear-gradient(135deg, #1e3a8a, #2563eb); color: #fff; padding: 11px 14px; border-radius: 12px; box-shadow: 0 8px 26px rgba(37,99,235,0.5); border: 2px solid rgba(255,255,255,0.28); font-family: var(--app-font, 'Pretendard', sans-serif); opacity: 0; transition: opacity 0.28s ease, transform 0.28s ease; pointer-events: none; z-index: 10001; }
     .student-memo-anchor-popup.visible { opacity: 1; transform: translate(-50%, calc(-100% - 12px)); animation: memoToastPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); }
@@ -671,7 +688,7 @@ customStyle.innerHTML = `
     .stats-bar-fill.rate { background: linear-gradient(90deg, #34d399, #059669); }
     .stats-bar-fill.mins { background: linear-gradient(90deg, #60a5fa, #2563eb); }
     .stats-bar-fill.praise { background: linear-gradient(90deg, #fbbf24, #f59e0b); }
-    .stats-bar-fill.warn { background: linear-gradient(90deg, #fb923c, #ea580c); }
+    .stats-bar-fill.penalty { background: linear-gradient(90deg, #f87171, #ef4444); }
     .stats-bar-val { font-size: 13px; font-weight: 900; font-family: 'JetBrains Mono', monospace; color: var(--text-main); text-align: right; }
     .stats-summary-row { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; padding: 12px 16px 14px; background: rgba(248,250,252,0.6); }
     .stats-summary-pill { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; font-size: 12px; font-weight: 800; color: var(--text-muted); text-align: center; line-height: 1.35; min-width: 0; }
@@ -764,7 +781,7 @@ customStyle.innerHTML = `
         .roster-desk-slot:not(:has(.student-btn)) .desk-num { font-size: 26px; }
         .active-desk-card .adc-name { font-size: 15px !important; }
         .active-desk-card .adc-time { font-size: 34px !important; }
-        .active-desk-card .adc-praise-btn, .active-desk-card .adc-warn-btn { font-size: 9px !important; }
+        .active-desk-card .adc-praise-btn, .active-desk-card .adc-penalty-btn { font-size: 9px !important; }
         .active-desk-card .adc-time-btn, .active-desk-card .adc-act-btn { font-size: 9px !important; padding: 6px 0 !important; }
         .custom-col-finish { min-height: 210px !important; max-height: none !important; }
         .split-box { min-height: 160px !important; }
@@ -2118,7 +2135,7 @@ function injectHistoryUI() {
                     <div id="historyStudentList" style="overflow-y:auto; flex:1;"></div>
                 </div>
                 <div class="history-content">
-                    <p class="history-view-hint hint-monthly">왼쪽 목록에서 학생을 선택하면, 달력에서 날짜별 학습시간·출결 시간·쿠폰·메모를 확인할 수 있습니다.</p>
+                    <p class="history-view-hint hint-monthly">왼쪽 목록에서 학생을 선택하면, 달력에서 날짜별 학습시간·출결·칭찬·벌점·메모를 확인할 수 있습니다.</p>
                     <div class="calendar-header" style="position: relative;">
                         <div style="display:flex; align-items:center; gap:10px;">
                             <button class="cal-nav-btn" onclick="changeHistoryMonth(-1)">◀ 이전</button>
@@ -2131,6 +2148,7 @@ function injectHistoryUI() {
                             <button class="export-btn" onclick="exportMonthlyToExcel()" style="position: static; padding: 8px 12px; font-size:13px;">💾 엑셀 저장</button>
                         </div>
                     </div>
+                    <div class="monthly-mod-summary" id="monthlyModSummary" style="display:none;"></div>
                     <div class="cal-grid-header">
                         <div class="cal-day-header" style="color:#ef4444;">일</div><div class="cal-day-header">월</div><div class="cal-day-header">화</div><div class="cal-day-header">수</div><div class="cal-day-header">목</div><div class="cal-day-header">금</div><div class="cal-day-header" style="color:#3b82f6;">토</div>
                     </div>
@@ -2145,12 +2163,11 @@ function injectHistoryUI() {
                             <button id="btnToggleRegOff" class="btn-reg-off" onclick="toggleRegOffDay()">📅 매주 이 요일 휴무</button>
                             <button id="btnDeleteDay" class="btn-danger-outline" onclick="deleteHistoryDate()">🗑️ 리셋</button>
                         </div>
-                        <div class="detail-stats" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:15px;">
+                        <div class="detail-stats" style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:15px;">
                             <div class="detail-stat-item">⏱️ 총 학습<br><span id="detailTotalMins" style="color:var(--accent); font-size:20px; display:block; margin-top:5px;">0</span>분</div>
                             <div class="detail-stat-item">⏰ 출결 시간<br><span id="detailTimeLogs" style="color:var(--text-main); font-size:14px; display:block; margin-top:5px; font-family:'JetBrains Mono';">-</span></div>
-                            <div class="detail-stat-item">⭐ 칭찬<br><span id="detailCoupons" style="color:#f59e0b; font-size:20px; display:block; margin-top:5px;">0</span>회</div>
-                            <div class="detail-stat-item">⚠️ 경고<br><span id="detailWarnings" style="color:#ea580c; font-size:20px; display:block; margin-top:5px;">0</span>회</div>
-                            <div class="detail-stat-item">🚨 벌칙<br><span id="detailPenalties" style="color:var(--brand-danger); font-size:20px; display:block; margin-top:5px;">0</span>회</div>
+                            <div class="detail-stat-item">😊 칭찬<br><span id="detailCoupons" style="color:#f59e0b; font-size:20px; display:block; margin-top:5px;">0</span>회</div>
+                            <div class="detail-stat-item">😠 벌점<br><span id="detailPenalties" style="color:var(--brand-danger); font-size:20px; display:block; margin-top:5px;">0</span>회</div>
                         </div>
                         <textarea id="detailNoteInput" class="detail-textarea" placeholder="특이사항(비고)을 입력하세요..."></textarea>
                         <p id="detailLeaveHint" class="history-view-hint" style="display:none; margin: -8px 0 12px 0; padding: 10px 12px; font-size: 13px; border-left-color: #64748b;">🚫 휴원일에는 아래 메모란에 <strong>휴원 사유</strong>를 적어 주세요.</p>
@@ -2161,7 +2178,7 @@ function injectHistoryUI() {
             </div>
 
             <div id="weekly-history-container">
-                <p class="history-view-hint hint-weekly">모든 학생의 주간 출결을 한 표에서 확인합니다. 수업 시작~종료·학습 분은 타이머가 자동 기록하며, 월~금 합계와 주간 목표(기본 250분)를 비교해 부족·초과 분을 확인할 수 있습니다.</p>
+                <p class="history-view-hint hint-weekly">모든 학생의 주간 출결을 한 표에서 확인합니다. 수업 시작~종료·학습 분·칭찬·벌점은 타이머가 자동 기록하며, 월~금 합계와 주간 목표(기본 250분)를 비교해 부족·초과 분을 확인할 수 있습니다.</p>
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; position: relative;">
                     <div style="display:flex; align-items:center; gap:10px; margin: 0 auto;">
                         <button class="cal-nav-btn" onclick="changeWeeklyDate(-7)">◀ 이전 주</button>
@@ -2180,7 +2197,7 @@ function injectHistoryUI() {
             </div>
 
             <div id="stats-history-container">
-                <p class="history-view-hint hint-stats">주간·월간 출석율, 학습시간, 칭찬·경고 순위를 그래프로 한눈에 비교합니다.</p>
+                <p class="history-view-hint hint-stats">주간·월간 출석율, 학습시간, 칭찬·벌점 순위를 그래프로 한눈에 비교합니다.</p>
                 <div class="stats-control-panel">
                     <div class="stats-toolbar-row stats-toolbar-period">
                         <div class="stats-toolbar-group">
@@ -2197,8 +2214,8 @@ function injectHistoryUI() {
                         <div class="stats-segmented stats-metric-segmented">
                             <button id="stats-btn-rate" class="stats-period-btn active" onclick="switchStatsMetric('rate')">📊 출석율</button>
                             <button id="stats-btn-mins" class="stats-period-btn" onclick="switchStatsMetric('mins')">⏱️ 학습시간</button>
-                            <button id="stats-btn-praise" class="stats-period-btn" onclick="switchStatsMetric('praise')">⭐ 칭찬</button>
-                            <button id="stats-btn-warn" class="stats-period-btn" onclick="switchStatsMetric('warn')">⚠️ 경고</button>
+                            <button id="stats-btn-praise" class="stats-period-btn" onclick="switchStatsMetric('praise')">😊 칭찬</button>
+                            <button id="stats-btn-penalty" class="stats-period-btn" onclick="switchStatsMetric('penalty')">😠 벌점</button>
                         </div>
                     </div>
                     <div class="stats-summary-row" id="statsSummaryRow"></div>
@@ -2334,8 +2351,26 @@ function getDayRecordMinutes(record) {
 }
 
 function renderHistoryCalendar() {
-    const gridEl = document.getElementById('historyCalGrid'); const titleEl = document.getElementById('historyMonthTitle'); if(!gridEl || !titleEl) return;
-    titleEl.innerText = `${currentHistoryYear}년 ${currentHistoryMonth + 1}월 - ${currentHistoryStudent ? currentHistoryStudent : '학생을 선택하세요'}`; gridEl.innerHTML = ''; if(!currentHistoryStudent) return; 
+    const gridEl = document.getElementById('historyCalGrid'); const titleEl = document.getElementById('historyMonthTitle'); const summaryEl = document.getElementById('monthlyModSummary'); if(!gridEl || !titleEl) return;
+    titleEl.innerText = `${currentHistoryYear}년 ${currentHistoryMonth + 1}월 - ${currentHistoryStudent ? currentHistoryStudent : '학생을 선택하세요'}`; gridEl.innerHTML = '';
+    if (summaryEl) {
+        if (!currentHistoryStudent) { summaryEl.style.display = 'none'; summaryEl.innerHTML = ''; }
+        else {
+            const studentData = studentHistory[currentHistoryStudent] || {};
+            let monthCoupons = 0, monthPenalties = 0;
+            const daysInMonth = new Date(currentHistoryYear, currentHistoryMonth + 1, 0).getDate();
+            for (let i = 1; i <= daysInMonth; i++) {
+                const dateStr = `${currentHistoryYear}-${String(currentHistoryMonth+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+                const rec = studentData[dateStr];
+                if (rec) { monthCoupons += rec.coupon || 0; monthPenalties += rec.penalty || 0; }
+            }
+            summaryEl.style.display = 'flex';
+            summaryEl.innerHTML = `
+                <div class="monthly-mod-pill praise">😊 이번 달 칭찬<strong>${monthCoupons}회</strong></div>
+                <div class="monthly-mod-pill penalty">😠 이번 달 벌점<strong>${monthPenalties}회</strong></div>`;
+        }
+    }
+    if(!currentHistoryStudent) return; 
     
     const firstDay = new Date(currentHistoryYear, currentHistoryMonth, 1).getDay(); const daysInMonth = new Date(currentHistoryYear, currentHistoryMonth + 1, 0).getDate();
     for(let i=0; i<firstDay; i++) { let empty = document.createElement('div'); empty.className = 'cal-day empty-cell'; gridEl.appendChild(empty); }
@@ -2387,9 +2422,9 @@ function renderHistoryCalendar() {
         if(record && (dayMins > 0 || (record.timeLogs && record.timeLogs.length > 0) || record.coupon > 0 || record.warnings > 0 || record.penalty > 0)) {
             if (dayMins > 0) contentHtml += `<div class="cal-record-mins">${dayMins}분 학습</div>`;
             else if (record.timeLogs && record.timeLogs.length > 0) contentHtml += `<div class="cal-record-summary" style="color:var(--accent); font-size:16px;">출결 기록</div>`;
-            else contentHtml += `<div class="cal-record-summary" style="color:var(--accent); font-size:14px;">칭찬·경고 기록</div>`;
+            else contentHtml += `<div class="cal-record-summary" style="color:var(--accent); font-size:14px;">칭찬·벌점 기록</div>`;
             if (record.timeLogs && record.timeLogs.length > 0) { contentHtml += `<div style="font-size:11px; color:#64748b; font-weight:bold; margin-top:4px; background:#e2e8f0; border-radius:4px; padding:2px 4px; font-family:'JetBrains Mono', monospace;">${record.timeLogs.join('<br>')}</div>`; }
-            let mods = []; if(record.coupon > 0) mods.push(`⭐${record.coupon}`); if(record.warnings > 0) mods.push(`⚠️${record.warnings}`); if(record.penalty > 0) mods.push(`🚨${record.penalty}`);
+            let mods = []; if(record.coupon > 0) mods.push(`😊${record.coupon}`); if(record.penalty > 0) mods.push(`😠${record.penalty}`);
             if(mods.length > 0) contentHtml += `<div class="cal-record-mods">${mods.join(' ')}</div>`;
         } else if (isAcadHoliday) { 
             contentHtml += `<div style="margin-top:auto; text-align:center; font-size:28px; opacity:0.8;">🏝️</div>`; 
@@ -2439,12 +2474,11 @@ window.selectHistoryDate = function(dateStr, record) {
     if(record) {
         document.getElementById('detailTotalMins').innerText = getDayRecordMinutes(record);
         document.getElementById('detailCoupons').innerText = record.coupon || 0;
-        document.getElementById('detailWarnings').innerText = record.warnings || 0;
         document.getElementById('detailPenalties').innerText = record.penalty || 0;
         document.getElementById('detailTimeLogs').innerHTML = (record.timeLogs && record.timeLogs.length > 0) ? record.timeLogs.join('<br>') : '-';
         document.getElementById('detailNoteInput').value = record.note || ""; document.getElementById('btnDeleteDay').style.display = "inline-block";
     } else {
-        document.getElementById('detailTotalMins').innerText = "0"; document.getElementById('detailCoupons').innerText = "0"; document.getElementById('detailWarnings').innerText = "0"; document.getElementById('detailPenalties').innerText = "0";
+        document.getElementById('detailTotalMins').innerText = "0"; document.getElementById('detailCoupons').innerText = "0"; document.getElementById('detailPenalties').innerText = "0";
         document.getElementById('detailTimeLogs').innerHTML = "-";
         document.getElementById('detailNoteInput').value = ""; document.getElementById('btnDeleteDay').style.display = "none"; 
     }
@@ -2694,7 +2728,7 @@ function updateDeskModeToggleButtonUI() {
     const btn = document.getElementById('btnToggleDeskUIMode');
     if (!btn) return;
     btn.innerHTML = activeDeskUIMode === 'integrated' ? '💊 간단 카드' : '⏱️ 타이머 결합';
-    btn.title = activeDeskUIMode === 'integrated' ? '수업중 카드를 간단한 알약 형태로 전환' : '수업중 카드에 타이머·칭찬·경고 결합';
+    btn.title = activeDeskUIMode === 'integrated' ? '수업중 카드를 간단한 알약 형태로 전환' : '수업중 카드에 타이머·칭찬·벌점 결합';
 }
 
 function applyDeskUIModeBodyClass() {
@@ -3183,37 +3217,7 @@ window.applyModifier = function(id, type) {
     updateBoxUI(id); updateStudentStatus(name); if (rosterViewMode === 'list') renderListView(); updateGauge(name, target.remainingTime, target.totalTime); saveToStorage();
 };
 window.applyPraise = function(id) { applyModifier(id, 'coupon'); };
-window.applyWarning = function(id) {
-    initAudio();
-    playUISound('click');
-    const target = timers[id];
-    const name = target.student;
-    if (name === "(empty)") return;
-    if (!studentModifiers[name]) studentModifiers[name] = { coupon: 0, penalty: 0, warnings: 0 };
-    const mods = studentModifiers[name];
-    if (!mods.warnings) mods.warnings = 0;
-    if (mods.warnings >= 2) return;
-    mods.warnings++;
-    recordWarningToHistory(name);
-    if (mods.warnings >= 2) {
-        mods.penalty++;
-        recordModifierToHistory(name, 'penalty');
-        if (target.isOver) {
-            absorbOvertimeIntoTotal(target);
-            target.remainingTime = 300;
-            target.totalTime += 300;
-        } else {
-            target.remainingTime += 300;
-            if (target.totalTime < target.remainingTime) target.totalTime = target.remainingTime;
-            if (target.remainingTime > 0) { target.isOver = false; target.overTime = 0; }
-        }
-    }
-    updateBoxUI(id);
-    updateStudentStatus(name);
-    if (rosterViewMode === 'list') renderListView();
-    updateGauge(name, target.remainingTime, target.totalTime);
-    saveToStorage();
-};
+window.applyPenalty = function(id) { applyModifier(id, 'penalty'); };
 window.toggleDeskTimer = function(id) {
     initAudio();
     const t = timers[id];
@@ -3270,6 +3274,25 @@ function updateRosterTimeDisplay(id) {
     el.classList.toggle('rdp-time-paused', t.isPaused && !t.isOver);
 }
 
+function updateIntegratedStartTimeDisplay(id) {
+    const t = timers[id];
+    if (!t || t.student === "(empty)") return;
+    const btn = document.getElementById('btn-' + t.student);
+    if (!btn) return;
+    const el = btn.querySelector('.adc-start-time');
+    if (!el) return;
+    const name = t.student;
+    if (t.startTimeStr) {
+        el.className = 'adc-start-time';
+        el.innerHTML = `⏰ ${t.startTimeStr}`;
+        el.onclick = (e) => { e.stopPropagation(); editActiveStartTime(name); };
+    } else {
+        el.className = 'adc-start-time placeholder';
+        el.innerHTML = '시작전';
+        el.onclick = null;
+    }
+}
+
 function syncDeskSlotLevelClass(slot, lvl) {
     if (!slot) return;
     ['PRE', 'BASIC', 'INTER', 'ADV', 'PREP', 'GUEST'].forEach(l => slot.classList.remove('rdp-lvl-' + l));
@@ -3302,6 +3325,7 @@ function updateDeskCardAfterTimerChange(id) {
     if (activeDeskUIMode === 'integrated') {
         updateIntegratedDeskSlotState(id);
         updateRosterTimeDisplay(id);
+        updateIntegratedStartTimeDisplay(id);
     } else {
         renderSimpleDeskCard(id);
         updateGauge(t.student, t.remainingTime, t.totalTime);
@@ -3367,9 +3391,8 @@ function renderSimpleDeskCard(id) {
     if (!modRow) return;
     const mods = studentModifiers[name] || { coupon: 0, penalty: 0, warnings: 0 };
     let modHtml = '';
-    if (mods.coupon > 0) modHtml += `<span class="mod-badge coupon" onclick="removeModifier('${name}', 'coupon', event)">⭐ x${mods.coupon}</span>`;
-    if (mods.warnings > 0) modHtml += `<span class="mod-badge warn" onclick="event.stopPropagation()">⚠️ x${mods.warnings}</span>`;
-    if (mods.penalty > 0) modHtml += `<span class="mod-badge penalty" onclick="removeModifier('${name}', 'penalty', event)">🚨 x${mods.penalty}</span>`;
+    if (mods.coupon > 0) modHtml += `<span class="mod-badge coupon" onclick="removeModifier('${name}', 'coupon', event)">😊 x${mods.coupon}</span>`;
+    if (mods.penalty > 0) modHtml += `<span class="mod-badge penalty" onclick="removeModifier('${name}', 'penalty', event)">😠 x${mods.penalty}</span>`;
     modRow.innerHTML = modHtml;
 
     const oldModContainer = btn.querySelector('.card-mod-container');
@@ -3402,7 +3425,6 @@ function renderActiveDeskCard(id) {
     const studentInfo = studentMasterList.find(s => s.name === name);
     const isBday = studentInfo ? isTodayBirthday(studentInfo.birthday) : false;
     const mods = studentModifiers[name] || { coupon: 0, penalty: 0, warnings: 0 };
-    if (!mods.warnings) mods.warnings = 0;
 
     slot.classList.add('has-student');
     slot.querySelectorAll('.roster-placeholder').forEach(el => el.remove());
@@ -3418,9 +3440,8 @@ function renderActiveDeskCard(id) {
     btn.className = `student-btn level-${lvl} active-desk-card ${stateClass}${isBday ? ' bday-card' : ''}`;
 
     let statusBadgeHtml = '';
-    if (mods.coupon > 0) statusBadgeHtml += `<span class="adc-badge praise">⭐ -5분</span>`;
-    if (mods.warnings > 0) statusBadgeHtml += `<span class="adc-badge warn">⚠️ ${mods.warnings}/2</span>`;
-    if (mods.penalty > 0) statusBadgeHtml += `<span class="adc-badge penalty-applied">🚨 +5분</span>`;
+    if (mods.coupon > 0) statusBadgeHtml += `<span class="adc-badge praise">😊 x${mods.coupon}</span>`;
+    if (mods.penalty > 0) statusBadgeHtml += `<span class="adc-badge penalty-applied">😠 x${mods.penalty}</span>`;
 
     let playBtnLabel, playBtnClass;
     if (isPlaying) {
@@ -3438,7 +3459,6 @@ function renderActiveDeskCard(id) {
         ? `<div class="adc-start-time" onclick="event.stopPropagation(); editActiveStartTime('${name}')">⏰ ${t.startTimeStr}</div>`
         : `<div class="adc-start-time placeholder">시작전</div>`;
     const deskNum = String(id + 1).padStart(2, '0');
-    const warnDisabled = mods.warnings >= 2 ? 'disabled' : '';
 
     btn.innerHTML = `
         <div class="adc-top-block">
@@ -3455,8 +3475,8 @@ function renderActiveDeskCard(id) {
         </div>
         <div class="adc-controls">
             <div class="adc-row">
-                <button type="button" class="adc-praise-btn" onclick="event.stopPropagation(); applyPraise(${id})">⭐ 칭찬</button>
-                <button type="button" class="adc-warn-btn" ${warnDisabled} onclick="event.stopPropagation(); applyWarning(${id})">⚠️ 경고</button>
+                <button type="button" class="adc-praise-btn" onclick="event.stopPropagation(); applyPraise(${id})">😊 칭찬</button>
+                <button type="button" class="adc-penalty-btn" onclick="event.stopPropagation(); applyPenalty(${id})">😠 벌점</button>
             </div>
             <div class="adc-row">
                 <button type="button" class="adc-time-btn" onclick="event.stopPropagation(); adjustTime(${id}, 300)">+05</button>
@@ -3474,7 +3494,7 @@ function renderActiveDeskCard(id) {
     btn.draggable = !useTap;
     if (!useTap) {
         btn.ondragstart = (e) => {
-            if (e.target.closest('.adc-cancel, .adc-praise-btn, .adc-warn-btn, .adc-time-btn, .adc-act-btn, .adc-start-time, .adc-badge')) { e.preventDefault(); return; }
+            if (e.target.closest('.adc-cancel, .adc-praise-btn, .adc-penalty-btn, .adc-time-btn, .adc-act-btn, .adc-start-time, .adc-badge')) { e.preventDefault(); return; }
             draggedName = name;
             draggedNameForList = name;
             draggedFromAbsent = absentSet.has(name);
@@ -4158,11 +4178,11 @@ function updateBoxUI(id) {
     let cancelWaitingBtn = ''; if (isRunningEmpty) { cancelWaitingBtn = `<div class="action-btn-row" style="margin-top: -15px; margin-bottom: 15px;"><button class="action-btn" style="background: var(--brand-danger); color: white; font-size: 14px; border:none; padding: 10px;" onclick="resetTimerData(${id}, true); playUISound('cancel');">✖ 대기 취소</button></div>`; }
 
     let mods = studentModifiers[t.student] || {coupon:0, penalty:0}; let boxModHtml = '';
-    if (mods.coupon > 0) boxModHtml += `<span class="mod-badge coupon" onclick="removeModifier('${t.student}', 'coupon', event)">🎟️ x${mods.coupon}</span>`;
-    if (mods.penalty > 0) boxModHtml += `<span class="mod-badge penalty" onclick="removeModifier('${t.student}', 'penalty', event)">🚨 x${mods.penalty}</span>`;
+    if (mods.coupon > 0) boxModHtml += `<span class="mod-badge coupon" onclick="removeModifier('${t.student}', 'coupon', event)">😊 x${mods.coupon}</span>`;
+    if (mods.penalty > 0) boxModHtml += `<span class="mod-badge penalty" onclick="removeModifier('${t.student}', 'penalty', event)">😠 x${mods.penalty}</span>`;
     let boxModContainer = boxModHtml ? `<div class="mod-badge-container">${boxModHtml}</div>` : '';
 
-    let extraBtnRow = isAssigned ? `<div class="action-btn-row" style="margin-top:-5px; margin-bottom:8px; gap:8px;"><button class="action-btn" style="background:#f59e0b; color:white; padding:8px; border:none; font-size:13px;" onclick="applyModifier(${id}, 'coupon')">🎟️ 5분 일찍</button><button class="action-btn" style="background:#ef4444; color:white; padding:8px; border:none; font-size:13px;" onclick="applyModifier(${id}, 'penalty')">🚨 5분 추가</button></div>` : '';
+    let extraBtnRow = isAssigned ? `<div class="action-btn-row" style="margin-top:-5px; margin-bottom:8px; gap:8px;"><button class="action-btn" style="background:#f59e0b; color:white; padding:8px; border:none; font-size:13px;" onclick="applyModifier(${id}, 'coupon')">😊 칭찬</button><button class="action-btn" style="background:#ef4444; color:white; padding:8px; border:none; font-size:13px;" onclick="applyModifier(${id}, 'penalty')">😠 벌점</button></div>` : '';
 
     const panelDraggable = (isAssigned || isRunningEmpty) && !isTapAssignMode();
     box.innerHTML = `<div class="desk-id" style="opacity: ${(isAssigned || isRunningEmpty) ? '1' : '0.4'}">${numDisplay}</div><div class="${panelClass}" draggable="${panelDraggable}" style="${panelStyle}"><div class="student-name-display" ${isAssigned ? `style="cursor:pointer;" onclick="playUISound('tab'); switchView('roster');"` : ''}>${nameDisplay}</div>${boxModContainer}<div class="time-display" id="display-${id}" style="visibility: ${(isAssigned || isRunningEmpty) ? 'visible' : 'hidden'}">${t.isOver ? '+'+formatTime(t.overTime) : formatTime(t.remainingTime)}</div></div>${cancelWaitingBtn}${extraBtnRow}<div class="time-controls"><button class="time-btn btn-3d-sm" onclick="adjustTime(${id}, 3000)">+50</button><button class="time-btn btn-3d-sm" onclick="adjustTime(${id}, 600)">+10</button><button class="time-btn btn-3d-sm" onclick="adjustTime(${id}, 300)">+05</button><button class="time-btn btn-3d-sm" onclick="adjustTime(${id}, 60)">+01</button><button class="time-btn btn-3d-sm minus" onclick="adjustTime(${id}, -600)">-10</button><button class="time-btn btn-3d-sm minus" onclick="adjustTime(${id}, -300)">-05</button><button class="time-btn btn-3d-sm minus" onclick="adjustTime(${id}, -60)">-01</button><button class="time-btn btn-3d-sm clear" onclick="clearTime(${id})">${tLang.btnClear}</button></div><div class="action-btn-row"><button class="action-btn btn-start" onclick="startTimer(${id})">${t.isPaused ? '▶️ 재개' : tLang.btnStart}</button></div><div class="action-btn-row"><button class="action-btn btn-stop" onclick="stopTimer(${id})">${tLang.btnStop}</button><button class="action-btn btn-cancel" onclick="cancelSession(${id})">${tLang.btnCancel}</button></div><div class="action-btn-row"><button class="action-btn btn-finish" onclick="finishSession(${id})">${tLang.btnFinish}</button></div>`;
@@ -4312,7 +4332,13 @@ function startTimer(id, isResume = false) {
             maybePersistRunningTimers();
         }
     }, 250);
-    if (target.student !== "(empty)") updateStudentStatus(target.student); if (rosterViewMode === 'list') renderListView(); updateBoxUI(id);
+    if (target.student !== "(empty)") updateStudentStatus(target.student);
+    if (rosterViewMode === 'list') renderListView();
+    updateBoxUI(id);
+    if (rosterViewMode !== 'list') {
+        if (target.student === "(empty)") updateRosterSlotUI(id);
+        else if (activeDeskUIMode === 'integrated') updateIntegratedStartTimeDisplay(id);
+    }
     if (!isResume && target.student !== "(empty)") {
         maybeTriggerBirthdayCelebration(target.student, id);
         showStudentDayMemoPopup(target.student);
@@ -4320,7 +4346,7 @@ function startTimer(id, isResume = false) {
 }
 
 function resumeTimer(id) { startTimer(id, true); }
-function stopTimer(id) { if (timers[id].interval) { clearInterval(timers[id].interval); timers[id].interval = null; timers[id].isPaused = true; playUISound('stop'); if (timers[id].student !== "(empty)") updateStudentStatus(timers[id].student); if (rosterViewMode === 'list') renderListView(); updateBoxUI(id); saveToStorage(); } else if (saveToStorageTimer) { saveToStorage(); } }
+function stopTimer(id) { if (timers[id].interval) { clearInterval(timers[id].interval); timers[id].interval = null; timers[id].isPaused = true; playUISound('stop'); if (timers[id].student !== "(empty)") updateStudentStatus(timers[id].student); if (rosterViewMode !== 'list' && timers[id].student === "(empty)") updateRosterSlotUI(id); if (rosterViewMode === 'list') renderListView(); updateBoxUI(id); saveToStorage(); } else if (saveToStorageTimer) { saveToStorage(); } }
 function clearTime(id) { playUISound('cancel'); timers[id].remainingTime = 0; timers[id].totalTime = 0; timers[id].overTime = 0; timers[id].isOver = false; timers[id].isPaused = false; stopTimer(id); updateBoxUI(id); if(timers[id].student !== "(empty)") updateGauge(timers[id].student, 0, 1); if (rosterViewMode === 'list') renderListView(); saveToStorage(); }
 function cancelSession(id) { playUISound('cancel'); const sn = timers[id].student; if(sn !== "(empty)") { if (timers[id].startTimeStr) recordDeskSessionCancel(id, sn); attendanceMap.delete(sn); } resetTimerData(id, true); }
 
@@ -4371,7 +4397,7 @@ function finishSession(id) {
 
 function resetTimerData(id, resetUI) { if(timers[id].interval) { clearInterval(timers[id].interval); timers[id].interval = null; } const sn = timers[id].student; if (sn !== "(empty)" && !finishedSet.has(sn)) delete finishedTimerSnapshot[sn]; timers[id] = { student: "(empty)", remainingTime: 0, totalTime: 0, overTime: 0, interval: null, isOver: false, isPaused: false, lastTick: 0, startTimeStr: undefined }; updateBoxUI(id); if (resetUI && sn !== "(empty)") updateStudentStatus(sn); if (rosterViewMode !== 'list') updateRosterSlotUI(id); if (rosterViewMode === 'list') renderListView(); saveToStorage(); }
 function adjustTime(id, sec) { playUISound('click'); const t = timers[id]; if (t.isOver && sec > 0) { absorbOvertimeIntoTotal(t); t.remainingTime = sec; t.totalTime += sec; } else if (t.isOver && sec < 0) { t.overTime = Math.max(0, t.overTime + sec); } else { t.remainingTime = Math.max(0, t.remainingTime + sec); if(t.remainingTime > t.totalTime || t.totalTime === 0) { t.totalTime = t.remainingTime; } if(t.remainingTime > 0) { t.isOver = false; t.overTime = 0; } } updateBoxUI(id); updateDeskCardAfterTimerChange(id); if (t.student !== "(empty)") updateGauge(t.student, t.remainingTime, t.totalTime); saveToStorage(); }
-function updateGauge(studentName, remaining, total) { const btn = document.getElementById("btn-" + studentName); if (!btn) return; const gauge = btn.querySelector(".gauge-bg"); if (!gauge || total <= 0) return; if (btn.classList.contains('active-desk-card')) { gauge.style.width = "0%"; return; } gauge.style.display = ''; gauge.style.width = Math.max(0, Math.min(100, ((total - remaining) / total) * 100)) + "%"; }
+function updateGauge(studentName, remaining, total) { const btn = document.getElementById("btn-" + studentName); if (!btn) return; const gauge = btn.querySelector(".gauge-bg"); if (!gauge || total <= 0) return; if (btn.classList.contains('active-desk-card')) { gauge.style.width = "0%"; return; } const pct = Math.max(0, Math.min(100, ((total - remaining) / total) * 100)); gauge.style.display = ''; gauge.style.width = pct + "%"; gauge.classList.toggle('gauge-active', pct > 0 && pct < 100 && (btn.classList.contains('playing') || btn.classList.contains('pill-desk-card'))); }
 function formatTime(t) { return `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`; }
 
 // ==========================================
@@ -4923,7 +4949,7 @@ function computeStudentStatsInRange(startDate, endDate) {
         let attendedDays = 0;
         let totalMinutes = 0;
         let totalCoupons = 0;
-        let totalWarnings = 0;
+        let totalPenalties = 0;
         const weeklyTarget = getStudentWeeklyTarget(name);
         const expectedWeekdays = getStudentExpectedWeekdays(name);
         const history = studentHistory[name] || {};
@@ -4942,7 +4968,7 @@ function computeStudentStatsInRange(startDate, endDate) {
                 const mins = getDayRecordMinutes(record);
                 if (mins > 0) totalMinutes += mins;
                 totalCoupons += record.coupon || 0;
-                totalWarnings += record.warnings || 0;
+                totalPenalties += record.penalty || 0;
             }
             cursor.setDate(cursor.getDate() + 1);
         }
@@ -4952,7 +4978,7 @@ function computeStudentStatsInRange(startDate, endDate) {
         const attendanceRate = periodTarget > 0
             ? Math.min(100, Math.round((totalMinutes / periodTarget) * 100))
             : 0;
-        results.push({ name, grade: studentMasterList.find(s => s.name === name)?.grade || '', expectedDays, expectedWeekdays, attendedDays, attendanceRate, totalMinutes, totalCoupons, totalWarnings, periodTarget, weeklyTarget });
+        results.push({ name, grade: studentMasterList.find(s => s.name === name)?.grade || '', expectedDays, expectedWeekdays, attendedDays, attendanceRate, totalMinutes, totalCoupons, totalPenalties, periodTarget, weeklyTarget });
     });
     return results;
 }
@@ -5024,11 +5050,12 @@ window.switchStatsPeriod = function(period) {
 
 window.switchStatsMetric = function(metric) {
     playUISound('click');
+    if (metric === 'warn') metric = 'penalty';
     statsChartMode = metric;
     document.getElementById('stats-btn-rate')?.classList.toggle('active', metric === 'rate');
     document.getElementById('stats-btn-mins')?.classList.toggle('active', metric === 'mins');
     document.getElementById('stats-btn-praise')?.classList.toggle('active', metric === 'praise');
-    document.getElementById('stats-btn-warn')?.classList.toggle('active', metric === 'warn');
+    document.getElementById('stats-btn-penalty')?.classList.toggle('active', metric === 'penalty');
     renderStatsCharts();
 };
 
@@ -5053,6 +5080,7 @@ window.renderStatsCharts = function() {
     const summaryEl = document.getElementById('statsSummaryRow');
     const gridEl = document.getElementById('statsChartsGrid');
     if (!navEl || !summaryEl || !gridEl) return;
+    if (statsChartMode === 'warn') statsChartMode = 'penalty';
 
     let startDate, endDate, periodLabel;
     if (statsPeriodMode === 'weekly') {
@@ -5087,22 +5115,22 @@ window.renderStatsCharts = function() {
     const byRate = [...stats].filter(s => s.expectedWeekdays > 0 && s.periodTarget > 0).sort((a, b) => b.attendanceRate - a.attendanceRate || b.totalMinutes - a.totalMinutes);
     const byMins = [...stats].sort((a, b) => b.totalMinutes - a.totalMinutes || b.attendanceRate - a.attendanceRate);
     const byPraise = [...stats].filter(s => s.totalCoupons > 0).sort((a, b) => b.totalCoupons - a.totalCoupons || a.name.localeCompare(b.name, 'ko-KR'));
-    const byWarn = [...stats].filter(s => s.totalWarnings > 0).sort((a, b) => b.totalWarnings - a.totalWarnings || a.name.localeCompare(b.name, 'ko-KR'));
+    const byPenalty = [...stats].filter(s => s.totalPenalties > 0).sort((a, b) => b.totalPenalties - a.totalPenalties || a.name.localeCompare(b.name, 'ko-KR'));
     const maxRate = byRate.length ? byRate[0].attendanceRate : 100;
     const maxMins = byMins.length ? Math.max(byMins[0].totalMinutes, 1) : 1;
     const maxPraise = byPraise.length ? byPraise[0].totalCoupons : 1;
-    const maxWarn = byWarn.length ? byWarn[0].totalWarnings : 1;
+    const maxPenalty = byPenalty.length ? byPenalty[0].totalPenalties : 1;
     const avgRate = byRate.length ? Math.round(byRate.reduce((s, x) => s + x.attendanceRate, 0) / byRate.length) : 0;
     const topMins = byMins[0];
     const topPraise = byPraise[0];
-    const topWarn = byWarn[0];
+    const topPenalty = byPenalty[0];
 
     summaryEl.innerHTML = `
         <div class="stats-summary-pill">평균 출석율<strong>${avgRate}%</strong></div>
         <div class="stats-summary-pill">학습 1위<strong>${topMins && topMins.totalMinutes > 0 ? topMins.name + ' ' + topMins.totalMinutes + '분' : '-'}</strong></div>
         <div class="stats-summary-pill">출석 1위<strong>${byRate[0] ? byRate[0].name + ' ' + byRate[0].attendanceRate + '%' : '-'}</strong></div>
         <div class="stats-summary-pill">칭찬 1위<strong>${topPraise ? topPraise.name + ' ' + topPraise.totalCoupons + '회' : '-'}</strong></div>
-        <div class="stats-summary-pill">경고 1위<strong>${topWarn ? topWarn.name + ' ' + topWarn.totalWarnings + '회' : '-'}</strong></div>`;
+        <div class="stats-summary-pill">벌점 1위<strong>${topPenalty ? topPenalty.name + ' ' + topPenalty.totalPenalties + '회' : '-'}</strong></div>`;
 
     let chartItems, chartMax, chartTitle, chartSub, valueKey, suffix, barColor;
     if (statsChartMode === 'mins') {
@@ -5110,10 +5138,10 @@ window.renderStatsCharts = function() {
         chartTitle = '⏱️ 학습시간 순위'; chartSub = '월~금 누적 수업 분 (많을수록 상위)';
     } else if (statsChartMode === 'praise') {
         chartItems = byPraise; chartMax = maxPraise; valueKey = 'totalCoupons'; suffix = '회'; barColor = '#f59e0b';
-        chartTitle = '⭐ 칭찬 순위'; chartSub = '기간 내 칭찬(5분 일찍) 받은 횟수';
-    } else if (statsChartMode === 'warn') {
-        chartItems = byWarn; chartMax = maxWarn; valueKey = 'totalWarnings'; suffix = '회'; barColor = '#ea580c';
-        chartTitle = '⚠️ 경고 순위'; chartSub = '기간 내 경고 받은 횟수 (2회 시 5분 추가)';
+        chartTitle = '😊 칭찬 순위'; chartSub = '기간 내 칭찬 받은 횟수';
+    } else if (statsChartMode === 'penalty') {
+        chartItems = byPenalty; chartMax = maxPenalty; valueKey = 'totalPenalties'; suffix = '회'; barColor = '#ef4444';
+        chartTitle = '😠 벌점 순위'; chartSub = '기간 내 벌점 받은 횟수';
     } else {
         chartItems = byRate; chartMax = maxRate; valueKey = 'attendanceRate'; suffix = '%'; barColor = '#059669';
         chartTitle = '📊 출석율 순위';
@@ -5230,12 +5258,14 @@ window.renderWeeklyTable = function() {
         `;
     });
     theadHtml += `
-        <th colspan="3" class="main-date-th summary-th col-divider">주간 (월~금)</th>
+        <th colspan="5" class="main-date-th summary-th col-divider">주간 (월~금)</th>
     </tr>`;
     subHeadHtml += `
         <th class="sub-th summary-th">합계</th>
         <th class="sub-th summary-th">목표</th>
-        <th class="sub-th summary-th col-divider">잔여/초과</th>
+        <th class="sub-th summary-th">잔여/초과</th>
+        <th class="sub-th summary-th">😊칭찬</th>
+        <th class="sub-th summary-th col-divider">😠벌점</th>
     </tr>`;
     theadHtml += subHeadHtml;
     document.getElementById('weeklyTableHead').innerHTML = theadHtml;
@@ -5249,7 +5279,7 @@ window.renderWeeklyTable = function() {
         }
         let cols = '<col style="width:118px"><col style="width:68px">';
         for (let i = 0; i < 7; i++) cols += '<col style="width:82px"><col style="width:82px"><col style="width:54px">';
-        cols += '<col style="width:72px"><col style="width:68px"><col style="width:96px">';
+        cols += '<col style="width:72px"><col style="width:68px"><col style="width:96px"><col style="width:58px"><col style="width:58px">';
         colgroup.innerHTML = cols;
     }
     
@@ -5258,6 +5288,8 @@ window.renderWeeklyTable = function() {
     studentsData.forEach((sd, sIdx) => {
         let isLastRow = (sIdx === studentsData.length - 1);
         let weekTotalMins = 0;
+        let weekTotalCoupons = 0;
+        let weekTotalPenalties = 0;
         
         tbodyHtml += `<tr>`;
         tbodyHtml += `<td class="weekly-name-cell fixed-col-name" style="z-index:4;">${sd.name}</td>`;
@@ -5274,7 +5306,13 @@ window.renderWeeklyTable = function() {
             let record = (studentHistory[sd.name] && studentHistory[sd.name][dateKey]) ? studentHistory[sd.name][dateKey] : null;
             let isRegOff = studentRegularOffs[sd.name]?.includes(d.getDay());
             const dayMins = (record && record.totalMinutes > 0) ? record.totalMinutes : 0;
-            if (dayIdx < 5) weekTotalMins += dayMins;
+            if (dayIdx < 5) {
+                weekTotalMins += dayMins;
+                if (record) {
+                    weekTotalCoupons += record.coupon || 0;
+                    weekTotalPenalties += record.penalty || 0;
+                }
+            }
             
             let noClassClass = ((record && record.isNoClassDay) || isRegOff) ? 'weekly-no-class-cell' : '';
             
@@ -5318,7 +5356,9 @@ window.renderWeeklyTable = function() {
 
         tbodyHtml += `<td class="weekly-summary-total col-divider">${weekTotalMins}분</td>`;
         tbodyHtml += `<td class="weekly-summary-target">${weekTarget}분</td>`;
-        tbodyHtml += `<td class="${remainClass} col-divider">${remainHtml}</td>`;
+        tbodyHtml += `<td class="${remainClass}">${remainHtml}</td>`;
+        tbodyHtml += `<td class="weekly-summary-praise">${weekTotalCoupons > 0 ? weekTotalCoupons + '회' : '-'}</td>`;
+        tbodyHtml += `<td class="weekly-summary-penalty col-divider">${weekTotalPenalties > 0 ? weekTotalPenalties + '회' : '-'}</td>`;
         tbodyHtml += `</tr>`;
     });
     
@@ -5347,7 +5387,7 @@ window.exportMonthlyToExcel = function() {
     if (!currentHistoryStudent) { alert("학생을 먼저 선택해 주세요."); return; }
     playUISound('click');
     
-    let csvData = ["날짜,요일,총학습시간(분),출결로그,칭찬,경고,벌칙,비고"]; 
+    let csvData = ["날짜,요일,총학습시간(분),출결로그,칭찬,벌점,비고"]; 
     const daysInMonth = new Date(currentHistoryYear, currentHistoryMonth + 1, 0).getDate();
     const daysArr = ['일', '월', '화', '수', '목', '금', '토'];
     const studentData = studentHistory[currentHistoryStudent] || {};
@@ -5362,23 +5402,22 @@ window.exportMonthlyToExcel = function() {
         row.push(dateStr); 
         row.push(daysArr[dayOfWeek]); 
         
-        if (record && (record.totalMinutes > 0 || record.coupon > 0 || record.warnings > 0 || record.penalty > 0 || (record.timeLogs && record.timeLogs.length > 0))) {
+        if (record && (record.totalMinutes > 0 || record.coupon > 0 || record.penalty > 0 || (record.timeLogs && record.timeLogs.length > 0))) {
             row.push(record.totalMinutes || 0);
             let logStr = (record.timeLogs && record.timeLogs.length > 0) ? record.timeLogs.join(" / ") : "-";
             row.push(`"${logStr}"`); 
             row.push(record.coupon || 0);
-            row.push(record.warnings || 0);
             row.push(record.penalty || 0);
             let noteStr = record.note ? record.note.replace(/\n/g, " ") : "";
             row.push(`"${noteStr}"`);
         } else if (academyHolidays.includes(dateStr)) {
-            row.push(0, "학원 휴무일", 0, 0, 0, "");
+            row.push(0, "학원 휴무일", 0, 0, "");
         } else if (record && record.isNoClassDay) {
-            row.push(0, "휴원", 0, 0, 0, "");
+            row.push(0, "휴원", 0, 0, "");
         } else if (regOffs.includes(dayOfWeek)) {
-            row.push(0, "정규휴무", 0, 0, 0, "");
+            row.push(0, "정규휴무", 0, 0, "");
         } else {
-            row.push(0, "-", 0, 0, 0, "");
+            row.push(0, "-", 0, 0, "");
         }
         csvData.push(row.join(","));
     }
@@ -5407,8 +5446,8 @@ window.exportWeeklyToExcel = function() {
         headerRow1.push(dateStr, "", "");
         headerRow2.push("시작", "종료", "분");
     }
-    headerRow1.push("주간합계(월~금)", "주간목표", "잔여/초과");
-    headerRow2.push("", "", "");
+    headerRow1.push("주간합계(월~금)", "", "", "", "");
+    headerRow2.push("합계", "목표", "잔여/초과", "칭찬", "벌점");
     
     let csvData = [headerRow1.join(","), headerRow2.join(",")];
 
@@ -5428,12 +5467,20 @@ window.exportWeeklyToExcel = function() {
     studentsData.forEach(sd => {
         let row = [sd.name, sd.grade];
         let weekTotalMins = 0;
+        let weekTotalCoupons = 0;
+        let weekTotalPenalties = 0;
         days.forEach((d, dayIdx) => {
             let dateKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
             let record = (studentHistory[sd.name] && studentHistory[sd.name][dateKey]) ? studentHistory[sd.name][dateKey] : null;
             let isRegOff = studentRegularOffs[sd.name]?.includes(d.getDay());
             const dayMins = (record && record.totalMinutes > 0) ? record.totalMinutes : 0;
-            if (dayIdx < 5) weekTotalMins += dayMins;
+            if (dayIdx < 5) {
+                weekTotalMins += dayMins;
+                if (record) {
+                    weekTotalCoupons += record.coupon || 0;
+                    weekTotalPenalties += record.penalty || 0;
+                }
+            }
             
             if (record && record.timeLogs && record.timeLogs.length > 0) {
                 let ext = extractStartEnd(record.timeLogs);
@@ -5451,7 +5498,7 @@ window.exportWeeklyToExcel = function() {
         const weekTarget = getStudentWeeklyTarget(sd.name);
         const weekDiff = weekTarget - weekTotalMins;
         let remainLabel = weekDiff > 0 ? `${weekDiff}분 부족` : (weekDiff < 0 ? `${Math.abs(weekDiff)}분 초과` : '완료');
-        row.push(weekTotalMins, weekTarget, `"${remainLabel}"`);
+        row.push(weekTotalMins, weekTarget, `"${remainLabel}"`, weekTotalCoupons, weekTotalPenalties);
         csvData.push(row.join(","));
     });
     
