@@ -247,7 +247,15 @@ customStyle.innerHTML = `
     .roster-desk-slot.has-student { height: auto !important; min-height: 0 !important; max-height: none !important; display: flex !important; flex-direction: column !important; align-items: stretch !important; justify-content: stretch !important; padding: 0 !important; overflow: hidden !important; border-style: solid !important; border-width: 2px !important; background: transparent !important; border-radius: 16px !important; transition: border-color 0.25s, box-shadow 0.25s; }
     body.roster-desk-integrated #grid-active .roster-desk-slot.has-student { height: clamp(260px, calc((100vh - 260px) / 2), 320px) !important; min-height: clamp(260px, calc((100vh - 260px) / 2), 320px) !important; max-height: clamp(260px, calc((100vh - 260px) / 2), 320px) !important; }
     .roster-desk-slot.has-student.rdp-paused { border-color: #94a3b8 !important; box-shadow: 0 2px 10px rgba(100,116,139,0.12); }
-    .roster-desk-slot.has-student.rdp-over { border-color: var(--brand-danger) !important; box-shadow: 0 4px 18px rgba(239,68,68,0.2); animation: modern-alarm-glow 1.2s infinite cubic-bezier(0.4, 0, 0.2, 1) !important; }
+    .roster-desk-slot.has-student.rdp-over,
+    .roster-desk-slot.has-student.rdp-over.rdp-playing,
+    .roster-desk-slot.has-student.rdp-over[class*="rdp-lvl-"] {
+        border-color: #ef4444 !important;
+        border-style: solid !important;
+        border-width: 3px !important;
+        box-shadow: 0 0 14px rgba(239,68,68,0.62), 0 0 34px rgba(239,68,68,0.34), inset 0 0 16px rgba(239,68,68,0.14) !important;
+        animation: modern-alarm-glow 1s infinite cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
     @keyframes rdp-neon-breathe { 0%, 100% { opacity: 1; } 50% { opacity: 0.88; } }
     .roster-desk-slot.has-student.rdp-playing.rdp-lvl-PRE { border-color: #e6c200 !important; box-shadow: 0 0 8px rgba(255,215,0,0.7), 0 0 22px rgba(255,215,0,0.48), 0 0 40px rgba(255,215,0,0.28) !important; animation: rdp-neon-breathe 2.4s ease-in-out infinite; }
     .roster-desk-slot.has-student.rdp-playing.rdp-lvl-BASIC { border-color: #ff00a3 !important; box-shadow: 0 0 8px rgba(255,0,163,0.65), 0 0 22px rgba(255,0,163,0.45), 0 0 40px rgba(255,0,163,0.26) !important; animation: rdp-neon-breathe 2.4s ease-in-out infinite; }
@@ -264,6 +272,39 @@ customStyle.innerHTML = `
     #grid-active .roster-desk-slot.has-student.rdp-playing.rdp-lvl-PREP .student-btn.active-desk-card { background: linear-gradient(165deg, rgba(121,85,72,0.36) 0%, rgba(121,85,72,0.14) 50%, rgba(245,235,230,0.28) 100%) !important; }
     #grid-active .roster-desk-slot.has-student.rdp-playing.rdp-lvl-GUEST .student-btn.active-desk-card { background: linear-gradient(165deg, rgba(148,163,184,0.38) 0%, rgba(148,163,184,0.15) 50%, rgba(241,245,249,0.3) 100%) !important; }
     #grid-active .roster-desk-slot.has-student.rdp-playing:not([class*="rdp-lvl-"]) .student-btn.active-desk-card { background: linear-gradient(165deg, rgba(59,130,246,0.22) 0%, rgba(59,130,246,0.08) 50%, rgba(239,246,255,0.35) 100%) !important; }
+    /* 수업중(재생) 카드 — 물 흐르듯 움직이는 네온 라이트 테두리 */
+    @property --neon-angle { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
+    @keyframes neon-flow-spin { to { --neon-angle: 360deg; } }
+    .student-btn.active-desk-card { --neon-c: #3b82f6; }
+    .student-btn.active-desk-card.level-PRE { --neon-c: #ffd21f; }
+    .student-btn.active-desk-card.level-BASIC { --neon-c: #ff2fb8; }
+    .student-btn.active-desk-card.level-INTER { --neon-c: #ff8a3d; }
+    .student-btn.active-desk-card.level-ADV { --neon-c: #21c7fa; }
+    .student-btn.active-desk-card.level-PREP { --neon-c: #b08978; }
+    .student-btn.active-desk-card.level-GUEST { --neon-c: #a3b1c2; }
+    #grid-active .roster-desk-slot.has-student.rdp-playing .student-btn.active-desk-card::after {
+        content: ''; position: absolute; inset: 0; border-radius: 14px; padding: 2.5px; pointer-events: none; z-index: 6;
+        background: conic-gradient(from var(--neon-angle), transparent 0deg, transparent 190deg, var(--neon-c) 250deg, #ffffff 285deg, var(--neon-c) 320deg, transparent 360deg);
+        -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+        -webkit-mask-composite: xor; mask-composite: exclude;
+        animation: neon-flow-spin 2.6s linear infinite;
+        filter: drop-shadow(0 0 4px var(--neon-c));
+    }
+    body.roster-desk-pill .student-btn.pill-desk-card { --neon-c: #3b82f6; }
+    body.roster-desk-pill .student-btn.pill-desk-card.level-PRE { --neon-c: #ffd21f; }
+    body.roster-desk-pill .student-btn.pill-desk-card.level-BASIC { --neon-c: #ff2fb8; }
+    body.roster-desk-pill .student-btn.pill-desk-card.level-INTER { --neon-c: #ff8a3d; }
+    body.roster-desk-pill .student-btn.pill-desk-card.level-ADV { --neon-c: #21c7fa; }
+    body.roster-desk-pill .student-btn.pill-desk-card.level-PREP { --neon-c: #b08978; }
+    body.roster-desk-pill .student-btn.pill-desk-card.level-GUEST { --neon-c: #a3b1c2; }
+    body.roster-desk-pill #grid-active .roster-desk-slot.has-student.rdp-playing .student-btn.pill-desk-card::after {
+        content: ''; position: absolute; inset: 0; border-radius: 20px; padding: 3px; pointer-events: none; z-index: 6;
+        background: conic-gradient(from var(--neon-angle), transparent 0deg, transparent 190deg, var(--neon-c) 250deg, #ffffff 285deg, var(--neon-c) 320deg, transparent 360deg);
+        -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+        -webkit-mask-composite: xor; mask-composite: exclude;
+        animation: neon-flow-spin 2.6s linear infinite;
+        filter: drop-shadow(0 0 4px var(--neon-c));
+    }
     #grid-active .roster-desk-slot.has-student.rdp-paused.rdp-lvl-PRE .student-btn.active-desk-card { background: linear-gradient(165deg, rgba(255,215,0,0.32) 0%, rgba(255,215,0,0.1) 100%) !important; }
     #grid-active .roster-desk-slot.has-student.rdp-paused.rdp-lvl-BASIC .student-btn.active-desk-card { background: linear-gradient(165deg, rgba(255,0,163,0.26) 0%, rgba(255,0,163,0.07) 100%) !important; }
     #grid-active .roster-desk-slot.has-student.rdp-paused.rdp-lvl-INTER .student-btn.active-desk-card { background: linear-gradient(165deg, rgba(240,112,31,0.28) 0%, rgba(240,112,31,0.08) 100%) !important; }
@@ -271,8 +312,10 @@ customStyle.innerHTML = `
     #grid-active .roster-desk-slot.has-student.rdp-paused.rdp-lvl-PREP .student-btn.active-desk-card { background: linear-gradient(165deg, rgba(121,85,72,0.24) 0%, rgba(121,85,72,0.07) 100%) !important; }
     #grid-active .roster-desk-slot.has-student.rdp-paused.rdp-lvl-GUEST .student-btn.active-desk-card { background: linear-gradient(165deg, rgba(148,163,184,0.28) 0%, rgba(148,163,184,0.08) 100%) !important; }
     #grid-active .roster-desk-slot.has-student.rdp-paused:not([class*="rdp-lvl-"]) .student-btn.active-desk-card { background: linear-gradient(165deg, rgba(248,250,252,0.95) 0%, rgba(241,245,249,0.85) 100%) !important; }
-    #grid-active .roster-desk-slot.has-student.rdp-over .student-btn.active-desk-card { background: linear-gradient(165deg, rgba(254,226,226,0.55) 0%, rgba(255,245,245,0.4) 100%) !important; }
-    #grid-active .roster-desk-slot.has-student.rdp-over .student-btn.active-desk-card .adc-name { color: var(--brand-danger) !important; }
+    #grid-active .roster-desk-slot.has-student.rdp-over .student-btn.active-desk-card { background: linear-gradient(165deg, rgba(254,226,226,0.72) 0%, rgba(255,245,245,0.55) 100%) !important; box-shadow: inset 0 0 0 2px rgba(239,68,68,0.35), inset 0 1px 0 rgba(255,255,255,0.45) !important; }
+    #grid-active .roster-desk-slot.has-student.rdp-over .student-btn.active-desk-card .adc-name { color: var(--brand-danger) !important; text-shadow: 0 2px 10px rgba(239,68,68,0.35) !important; }
+    .active-desk-card .adc-over-alert { display: none; width: 100%; flex-shrink: 0; text-align: center; font-size: 13px; font-weight: 900; color: #991b1b; background: linear-gradient(90deg, rgba(254,226,226,0.95), rgba(254,202,202,0.98), rgba(254,226,226,0.95)); border: 1.5px solid rgba(239,68,68,0.45); border-radius: 8px; padding: 5px 8px; margin-bottom: 4px; letter-spacing: 0.04em; animation: blinker 0.7s linear infinite; box-shadow: 0 2px 10px rgba(239,68,68,0.2); }
+    .active-desk-card.alarm-blink .adc-over-alert { display: block; }
     .active-desk-card .adc-header { display: flex; align-items: center; gap: 6px; flex-shrink: 0; width: 100%; padding-top: 8px; }
     .active-desk-card .adc-desk-num { font-family: 'Montserrat', 'Pretendard', sans-serif; font-size: 10px; font-weight: 800; color: var(--text-muted); background: rgba(0,0,0,0.05); padding: 2px 6px; border-radius: 6px; flex-shrink: 0; letter-spacing: 0.5px; }
     .active-desk-card .adc-name-wrap { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; padding: 12px 4px 6px; }
@@ -280,8 +323,17 @@ customStyle.innerHTML = `
     .active-desk-card .adc-top-block { flex-shrink: 0; display: flex; flex-direction: column; width: 100%; }
     .active-desk-card .adc-controls { flex-shrink: 0; display: flex; flex-direction: column; gap: 5px; width: 100%; padding-bottom: 1px; }
     body.roster-desk-pill #grid-active .roster-desk-slot.has-student { height: clamp(178px, calc((100vh - 310px) / 2), 196px) !important; min-height: 178px !important; max-height: 196px !important; padding: 0 !important; border-style: dashed !important; border-width: 3px !important; overflow: hidden !important; }
-    body.roster-desk-pill #grid-active .roster-desk-slot.has-student .student-btn.pill-desk-card { width: 100% !important; height: 100% !important; border-radius: 20px !important; position: relative !important; top: auto !important; left: auto !important; display: flex !important; flex-direction: column !important; align-items: stretch !important; justify-content: flex-start !important; padding: 6px 10px 10px !important; gap: 0 !important; box-sizing: border-box !important; animation: none !important; transform: none !important; }
-    body.roster-desk-pill #grid-active .student-btn.pill-desk-card.playing { animation: none !important; transform: none !important; border-width: 3px !important; }
+    body.roster-desk-pill #grid-active .roster-desk-slot.has-student.rdp-over { border-style: solid !important; border-color: #ef4444 !important; border-width: 3px !important; animation: modern-alarm-glow 1s infinite cubic-bezier(0.4, 0, 0.2, 1) !important; box-shadow: 0 0 14px rgba(239,68,68,0.62), 0 0 34px rgba(239,68,68,0.34) !important; }
+    body.roster-desk-pill #grid-active .roster-desk-slot.has-student .student-btn.pill-desk-card { width: 100% !important; height: 100% !important; border-radius: 20px !important; position: relative !important; top: auto !important; left: auto !important; display: flex !important; flex-direction: column !important; align-items: stretch !important; justify-content: flex-start !important; padding: 6px 10px 10px !important; gap: 0 !important; box-sizing: border-box !important; transform: none !important; }
+    body.roster-desk-pill #grid-active .student-btn.pill-desk-card.playing { transform: none !important; border-width: 3px !important; }
+    body.roster-desk-pill #grid-active .student-btn.pill-desk-card.alarm-blink { animation: modern-alarm-glow 1s infinite cubic-bezier(0.4, 0, 0.2, 1) !important; border: 3px solid var(--brand-danger) !important; background: linear-gradient(165deg, rgba(254,226,226,0.88) 0%, rgba(255,241,242,0.95) 100%) !important; z-index: 20; box-shadow: inset 0 0 0 1px rgba(239,68,68,0.25), 0 0 16px rgba(239,68,68,0.35) !important; }
+    body.roster-desk-pill .pill-desk-card.alarm-blink .gauge-bg { display: none !important; }
+    body.roster-desk-pill .pill-desk-card.alarm-blink .alarm-alert-text { display: block !important; font-size: 15px !important; font-weight: 900 !important; color: #991b1b !important; letter-spacing: 0.06em !important; margin: 2px 0 4px !important; padding: 4px 8px !important; background: rgba(254,202,202,0.55) !important; border-radius: 8px !important; border: 1px solid rgba(239,68,68,0.35) !important; animation: blinker 0.7s linear infinite !important; }
+    body.roster-desk-pill .pill-desk-card.alarm-blink .name-text { font-size: 36px !important; color: var(--brand-danger) !important; text-shadow: 0 2px 12px rgba(239,68,68,0.35) !important; }
+    body.roster-desk-pill .pill-desk-card .pill-over-time { display: none; font-family: 'Montserrat', 'Pretendard', sans-serif; font-size: 30px; font-weight: 900; color: var(--brand-danger); letter-spacing: -0.03em; line-height: 1; margin: 2px 0 4px; text-shadow: 0 0 12px rgba(239,68,68,0.45); font-variant-numeric: tabular-nums; white-space: nowrap; max-width: 100%; overflow: hidden; animation: over-time-pulse 1.2s ease-in-out infinite; }
+    body.roster-desk-pill .pill-desk-card.alarm-blink .pill-over-time { display: block !important; }
+    body.roster-desk-pill .pill-desk-card.alarm-blink .pill-over-time.rdp-time-long { font-size: 23px; letter-spacing: -0.04em; }
+    @keyframes over-time-pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.04); opacity: 0.92; } }
     body.roster-desk-pill .pill-desk-card .pill-top-bar { display: flex; justify-content: space-between; align-items: center; width: 100%; flex-shrink: 0; min-height: 30px; padding: 0 2px; position: relative; z-index: 12; }
     body.roster-desk-pill .pill-desk-card .card-cancel-btn { position: static !important; display: flex !important; width: 28px; height: 28px; flex-shrink: 0; margin: 0; }
     body.roster-desk-pill .pill-desk-card .pill-start-time { position: static !important; display: none; font-size: 14px; font-weight: 900; padding: 6px 10px; margin: 0; flex-shrink: 0; cursor: pointer; border-radius: 8px; background: #2563eb; border: 2px solid #60a5fa; color: #fff; font-family: 'Montserrat', 'Pretendard', sans-serif; box-shadow: 0 4px 8px rgba(0,0,0,0.25); font-variant-numeric: tabular-nums; }
@@ -295,7 +347,7 @@ customStyle.innerHTML = `
     body.roster-desk-pill .pill-desk-card .status-badge { display: none !important; }
     body.roster-desk-pill .pill-desk-card .name-text { margin: 0 !important; flex: 0 0 auto; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 44px !important; line-height: 1.06; padding: 0 4px; min-height: 0; width: 100%; }
     body.roster-desk-pill .pill-desk-card.playing .name-text { font-size: 48px !important; }
-    body.roster-desk-pill .pill-desk-card.alarm-blink .name-text { font-size: 42px !important; }
+    body.roster-desk-pill .pill-desk-card.alarm-blink .pill-mod-row { min-height: 0 !important; max-height: 0 !important; margin: 0 !important; visibility: hidden !important; }
     body.roster-desk-pill .pill-desk-card .quick-controls { position: static !important; display: flex !important; width: 100%; padding: 0; margin: 0; flex-shrink: 0; }
     body.roster-desk-pill .pill-desk-card .gauge-bg { display: block !important; border-radius: 20px 0 0 20px; overflow: hidden; transition: width 0.75s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: inset 0 1px 0 rgba(255,255,255,0.45), inset 0 -1px 0 rgba(0,0,0,0.06); opacity: 0.95; }
     body.roster-desk-pill .pill-desk-card .gauge-bg::before { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(255,255,255,0.38) 0%, rgba(255,255,255,0.08) 42%, rgba(0,0,0,0.06) 100%); pointer-events: none; }
@@ -310,14 +362,18 @@ customStyle.innerHTML = `
     body.roster-desk-pill .pill-desk-card.level-GUEST .gauge-bg { background: linear-gradient(135deg, rgba(148,163,184,0.84) 0%, rgba(100,116,139,0.74) 100%) !important; }
     .active-desk-card .adc-cancel { width: 24px; height: 24px; border: none; border-radius: 8px; background: rgba(239,68,68,0.12); color: var(--brand-danger); font-size: 11px; font-weight: 900; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 0; line-height: 1; transition: 0.15s; }
     .active-desk-card .adc-cancel:hover { background: var(--brand-danger); color: #fff; }
-    .active-desk-card .adc-time-block { flex-shrink: 0; display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; width: 100%; padding: 0 0 2px; }
+    .active-desk-card .adc-time-block { flex-shrink: 0; display: flex; align-items: flex-start; justify-content: space-between; gap: 6px; width: 100%; padding: 0 0 2px; overflow: visible; min-width: 0; }
     .active-desk-card .adc-start-time { font-size: 15px; font-weight: 900; color: #fff; cursor: pointer; flex-shrink: 0; padding: 6px 12px; line-height: 1.2; border-radius: 8px; background: #2563eb; border: 2px solid #60a5fa; font-family: 'Montserrat', 'Pretendard', sans-serif; font-variant-numeric: tabular-nums; min-width: 72px; text-align: center; align-self: flex-start; margin-top: 2px; box-shadow: 0 4px 8px rgba(0,0,0,0.25); }
     .active-desk-card .adc-start-time.placeholder { color: var(--text-muted); background: rgba(0,0,0,0.03); border-color: transparent; cursor: default; font-weight: 700; font-size: 11px; box-shadow: none; }
     .active-desk-card .adc-start-time:not(.placeholder):hover { background: #1d4ed8; }
-    .active-desk-card .adc-time { font-family: 'Montserrat', 'Pretendard', sans-serif; font-size: 44px; font-weight: 800; text-align: right; line-height: 1; letter-spacing: -0.04em; color: var(--time-color); flex: 1; min-width: 0; pointer-events: none; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; align-self: flex-start; margin-top: -2px; }
-    .active-desk-card .adc-time.rdp-time-running { color: #059669; }
+    .active-desk-card.alarm-blink .adc-start-time:not(.placeholder) { font-size: 11px; padding: 4px 7px; min-width: 0; box-shadow: none; opacity: 0.85; }
+    .active-desk-card .adc-time { font-family: 'Montserrat', 'Pretendard', sans-serif; font-size: 44px; font-weight: 800; text-align: right; line-height: 1; letter-spacing: -0.04em; color: var(--time-color); flex: 1 1 auto; min-width: 0; pointer-events: none; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; align-self: flex-start; margin-top: -2px; white-space: nowrap; overflow: visible; }
+    .active-desk-card .adc-time.rdp-time-running { color: #047857; font-size: 48px; font-weight: 900; letter-spacing: -0.05em; text-shadow: 0 0 14px rgba(16,185,129,0.5), 0 2px 3px rgba(0,0,0,0.14); animation: adc-time-glow 1.8s ease-in-out infinite; }
+    .active-desk-card .adc-time.rdp-time-running.rdp-time-long { font-size: 36px; }
+    @keyframes adc-time-glow { 0%, 100% { text-shadow: 0 0 10px rgba(16,185,129,0.42), 0 2px 3px rgba(0,0,0,0.14); } 50% { text-shadow: 0 0 22px rgba(16,185,129,0.78), 0 2px 5px rgba(0,0,0,0.16); } }
     .active-desk-card .adc-time.rdp-time-paused { color: var(--text-muted); }
-    .active-desk-card .adc-time.rdp-time-over { color: var(--brand-danger); }
+    .active-desk-card .adc-time.rdp-time-over { color: var(--brand-danger); font-size: clamp(24px, 6vw, 34px); font-weight: 900; letter-spacing: -0.05em; text-shadow: 0 0 12px rgba(239,68,68,0.42); animation: over-time-pulse 1.2s ease-in-out infinite; flex-shrink: 1; max-width: 100%; overflow: hidden; }
+    .active-desk-card .adc-time.rdp-time-over.rdp-time-long { font-size: clamp(19px, 5vw, 26px); letter-spacing: -0.06em; }
     .active-desk-card .adc-status-badges { display: flex; justify-content: center; align-items: center; gap: 6px; flex-wrap: nowrap; flex-shrink: 0; min-height: 26px; margin: 3px 0 5px; overflow: visible; }
     .active-desk-card .adc-status-badges:empty { visibility: hidden; min-height: 0; margin: 0; }
     .active-desk-card .adc-badge { font-size: 12px; font-weight: 900; padding: 4px 11px; border-radius: 999px; white-space: nowrap; font-family: 'Pretendard', sans-serif; flex-shrink: 0; box-shadow: 0 2px 6px rgba(0,0,0,0.14); letter-spacing: 0.02em; }
@@ -336,6 +392,7 @@ customStyle.innerHTML = `
     .active-desk-card .adc-praise-btn:active, .active-desk-card .adc-penalty-btn:active, .active-desk-card .adc-time-btn:active, .active-desk-card .adc-act-btn:active, .active-desk-card .adc-cancel:active { transform: scale(0.96); }
     .active-desk-card.alarm-blink .adc-time { color: var(--brand-danger) !important; }
     .active-desk-card.alarm-blink .adc-name { color: var(--brand-danger) !important; }
+    .active-desk-card.alarm-blink .adc-status-badges { display: none !important; }
     #grid-active .student-btn:not(.active-desk-card) { width: 100% !important; height: 100% !important; margin: 0 !important; border-radius: 18px; position: absolute; top:0; left:0; display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
 
     #grid-finished { display: flex !important; flex-direction: row !important; flex-wrap: wrap !important; gap: 10px !important; margin: 0 !important; }
@@ -3270,6 +3327,7 @@ function updateRosterTimeDisplay(id) {
     const timeStr = t.isOver ? '+' + formatTime(t.overTime) : formatTime(t.remainingTime);
     el.textContent = timeStr;
     el.classList.toggle('rdp-time-over', t.isOver);
+    el.classList.toggle('rdp-time-long', timeStr.length >= 7);
     el.classList.toggle('rdp-time-running', t.interval !== null && !t.isOver);
     el.classList.toggle('rdp-time-paused', t.isPaused && !t.isOver);
 }
@@ -3304,7 +3362,7 @@ function updateIntegratedDeskSlotState(id) {
     const t = timers[id];
     if (!slot || !t || t.student === "(empty)") return;
     const isPlaying = t.interval !== null;
-    slot.classList.toggle('rdp-playing', isPlaying);
+    slot.classList.toggle('rdp-playing', isPlaying && !t.isOver);
     slot.classList.toggle('rdp-paused', t.isPaused && !t.isOver);
     slot.classList.toggle('rdp-over', t.isOver);
     syncDeskSlotLevelClass(slot, studentLevels[t.student] || '');
@@ -3352,6 +3410,9 @@ function renderSimpleDeskCard(id) {
 
     slot.classList.remove('rdp-playing', 'rdp-paused', 'rdp-over');
     slot.classList.add('has-student');
+    slot.classList.toggle('rdp-playing', (t.interval !== null || t.isPaused) && !t.isOver);
+    slot.classList.toggle('rdp-paused', t.isPaused && !t.isOver);
+    slot.classList.toggle('rdp-over', t.isOver);
     slot.querySelectorAll('.roster-placeholder').forEach(el => el.remove());
     syncDeskSlotLevelClass(slot, lvl);
 
@@ -3361,7 +3422,7 @@ function renderSimpleDeskCard(id) {
     btn.className = `student-btn level-${lvl} pill-desk-card ${stateClass}${isBday ? ' bday-card' : ''}`;
 
     if (!btn.querySelector('.pill-top-bar')) {
-        btn.innerHTML = `<div class="gauge-bg"></div><button class="guest-delete-btn" onclick="event.stopPropagation(); removeGuest('${name}')">✖</button><div class="alarm-alert-text">${tLang.statusTimeUp}</div><div class="pill-top-bar"><button type="button" class="card-cancel-btn" onclick="event.stopPropagation(); cancelFromCard('${name}')">✖</button><div class="pill-start-time start-time-badge"></div></div><div class="pill-center"><div class="name-text">${name}</div><div class="pill-mod-row"></div></div><div class="quick-controls"><button class="quick-btn q-start" onclick="event.stopPropagation(); quickStart('${name}')">${tLang.quickStart}</button><button class="quick-btn q-finish" onclick="event.stopPropagation(); quickFinish('${name}')">${tLang.quickFinish}</button></div>`;
+        btn.innerHTML = `<div class="gauge-bg"></div><button class="guest-delete-btn" onclick="event.stopPropagation(); removeGuest('${name}')">✖</button><div class="alarm-alert-text">${tLang.statusTimeUp}</div><div class="pill-top-bar"><button type="button" class="card-cancel-btn" onclick="event.stopPropagation(); cancelFromCard('${name}')">✖</button><div class="pill-start-time start-time-badge"></div></div><div class="pill-center"><div class="name-text">${name}</div><div class="pill-over-time"></div><div class="pill-mod-row"></div></div><div class="quick-controls"><button class="quick-btn q-start" onclick="event.stopPropagation(); quickStart('${name}')">${tLang.quickStart}</button><button class="quick-btn q-finish" onclick="event.stopPropagation(); quickFinish('${name}')">${tLang.quickFinish}</button></div>`;
         const useTap = isTapAssignMode();
         btn.draggable = !useTap;
         if (!useTap) {
@@ -3394,6 +3455,21 @@ function renderSimpleDeskCard(id) {
     if (mods.coupon > 0) modHtml += `<span class="mod-badge coupon" onclick="removeModifier('${name}', 'coupon', event)">😊 x${mods.coupon}</span>`;
     if (mods.penalty > 0) modHtml += `<span class="mod-badge penalty" onclick="removeModifier('${name}', 'penalty', event)">😠 x${mods.penalty}</span>`;
     modRow.innerHTML = modHtml;
+
+    const overTimeEl = btn.querySelector('.pill-over-time');
+    if (overTimeEl) {
+        if (t.isOver) {
+            const overStr = '+' + formatTime(t.overTime);
+            overTimeEl.textContent = overStr;
+            overTimeEl.classList.toggle('rdp-time-long', overStr.length >= 7);
+            overTimeEl.style.display = 'block';
+        } else {
+            overTimeEl.textContent = '';
+            overTimeEl.style.display = 'none';
+        }
+    }
+    const alarmEl = btn.querySelector('.alarm-alert-text');
+    if (alarmEl) alarmEl.style.display = t.isOver ? 'block' : 'none';
 
     const oldModContainer = btn.querySelector('.card-mod-container');
     if (oldModContainer) oldModContainer.remove();
@@ -3428,7 +3504,7 @@ function renderActiveDeskCard(id) {
 
     slot.classList.add('has-student');
     slot.querySelectorAll('.roster-placeholder').forEach(el => el.remove());
-    slot.classList.toggle('rdp-playing', isPlaying);
+    slot.classList.toggle('rdp-playing', isPlaying && !t.isOver);
     slot.classList.toggle('rdp-paused', t.isPaused && !t.isOver);
     slot.classList.toggle('rdp-over', t.isOver);
     syncDeskSlotLevelClass(slot, lvl);
@@ -3462,6 +3538,7 @@ function renderActiveDeskCard(id) {
 
     btn.innerHTML = `
         <div class="adc-top-block">
+            <div class="adc-over-alert">⏰ ${tLang.statusTimeUp}</div>
             <div class="adc-header">
                 <span class="adc-desk-num">${deskNum}</span>
                 <div class="adc-name-wrap"><span class="adc-name name-text">${name}</span></div>
